@@ -52,7 +52,7 @@ import { collection, doc, setDoc, deleteDoc, query, orderBy } from "firebase/fir
 import Link from "next/link";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
-import { dict } from "@/lib/i18n";
+import { useTranslation } from "@/components/language-provider";
 
 const KIT_OPTIONS = [
   { label: "Home 1: Pink/Grey", color: "text-pink-500" },
@@ -70,6 +70,7 @@ export default function GamesPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { dict } = useTranslation();
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -537,11 +538,11 @@ export default function GamesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="edit-startTime">{dict.games.dialog.start}</Label>
-                  <Input id="edit-startTime" type="time" value={formData.startTime} onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} />
+                  <Input id="edit-startTime" type="time" value={formData.startTime} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-endTime">{dict.games.dialog.end}</Label>
-                  <Input id="edit-endTime" type="time" value={formData.endTime} onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} />
+                  <Input id="edit-endTime" type="time" value={formData.endTime} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
                 </div>
               </div>
               <div className="grid gap-2">

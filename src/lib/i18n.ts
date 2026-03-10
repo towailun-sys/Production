@@ -1,9 +1,8 @@
 /**
- * Centralized Dictionary for UI Strings
- * 
- * Edit this file to change the language or wording of the application.
+ * Centralized Dictionaries for UI Strings
  */
-export const dict = {
+
+const baseDict = {
   common: {
     save: "Save",
     cancel: "Cancel",
@@ -42,7 +41,8 @@ export const dict = {
     players: "Players",
     games: "Games",
     signIn: "Sign In",
-    signOut: "Log Out"
+    signOut: "Log Out",
+    language: "Language"
   },
   dashboard: {
     welcome: "Welcome back",
@@ -133,4 +133,13 @@ export const dict = {
     signinRequired: "Sign in required",
     signinDesc: "Please sign in with your Google account to manage your availability for upcoming team events."
   }
+};
+
+export type Dictionary = typeof baseDict;
+
+export const en: Dictionary = baseDict;
+
+export const zh: Dictionary = {
+  ...baseDict,
+  // Temporarily English, to be updated by user later
 };

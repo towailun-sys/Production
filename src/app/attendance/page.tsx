@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
-import { dict } from "@/lib/i18n";
+import { useTranslation } from "@/components/language-provider";
 
 const KIT_MAP: Record<string, string> = {
   "Home 1: Pink/Grey": "text-pink-500",
@@ -55,6 +55,7 @@ export default function AttendancePage() {
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
+  const { dict } = useTranslation();
 
   const gameRef = useMemoFirebase(() => {
     if (isUserLoading || !user || !gameId) return null;
@@ -244,6 +245,8 @@ function GameRosterList({
 }) {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
+  const { dict } = useTranslation();
+  
   const playerRef = useMemoFirebase(() => {
     if (isUserLoading || !user) return null;
     return doc(firestore, "players", user.uid);
@@ -369,6 +372,7 @@ function GameRosterList({
 
 function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: { game: Game, userId: string, onStatusChange: (id: string, s: AttendanceStatus) => void, isCondensed?: boolean }) {
   const firestore = useFirestore();
+  const { dict } = useTranslation();
   const attendanceRef = useMemoFirebase(() => doc(firestore, "games", game.id, "attendanceRecords", userId), [firestore, game.id, userId]);
   const { data: attendance } = useDoc<any>(attendanceRef);
   

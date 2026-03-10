@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   LogOut,
-  LogIn
+  LogIn,
+  Languages
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { dict } from "@/lib/i18n";
+import { useTranslation } from "@/components/language-provider";
 
 export function MainNav() {
   const pathname = usePathname();
@@ -36,6 +37,7 @@ export function MainNav() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const { toast } = useToast();
+  const { language, setLanguage, dict } = useTranslation();
 
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
@@ -53,19 +55,11 @@ export function MainNav() {
       if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
         return;
       }
-
       console.error("Login failed:", error);
-      
-      let description = error.message || "Could not complete Google authentication.";
-      
-      if (error.code === 'auth/operation-not-allowed') {
-        description = "Google Sign-In is not enabled in your Firebase Console. Please go to Authentication > Sign-in method and enable Google.";
-      }
-
       toast({
         variant: "destructive",
         title: "Sign in failed",
-        description,
+        description: error.message || "Could not complete Google authentication.",
       });
     }
   };
@@ -118,7 +112,6 @@ export function MainNav() {
             <span className="font-headline text-xl font-bold tracking-tight">{dict.nav.title}</span>
           </div>
 
-          {/* Desktop Nav */}
           <div className="hidden md:flex items-center space-x-6">
             {routes.map((route) => (
               <Link
@@ -134,7 +127,25 @@ export function MainNav() {
               </Link>
             ))}
 
-            <div className="ml-4 border-l border-primary-foreground/20 pl-6">
+            <div className="ml-4 flex items-center gap-4 border-l border-primary-foreground/20 pl-6">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="text-primary-foreground hover:text-accent gap-2 font-bold h-8">
+                    <Languages className="h-4 w-4" />
+                    {language === 'en' ? 'EN' : 'ZH'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>{dict.nav.language}</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => setLanguage('en')} className={cn(language === 'en' && "bg-accent/10 font-bold")}>
+                    English
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage('zh')} className={cn(language === 'zh' && "bg-accent/10 font-bold")}>
+                    中文 (Chinese)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               {isUserLoading ? (
                 <div className="h-8 w-8 animate-pulse rounded-full bg-primary-foreground/20" />
               ) : user ? (
@@ -173,6 +184,17 @@ export function MainNav() {
           </div>
 
           <div className="md:hidden flex items-center gap-4">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-primary-foreground">
+                  <Languages className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setLanguage('en')}>English</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setLanguage('zh')}>中文</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             {user && (
               <Avatar className="h-8 w-8 border-2 border-accent">
                 <AvatarImage src={user.photoURL || ""} alt={user.displayName || "User"} />
@@ -188,7 +210,6 @@ export function MainNav() {
         </div>
       </div>
 
-      {/* Mobile Nav */}
       {isOpen && (
         <div className="md:hidden border-t bg-primary animate-in slide-in-from-top-4 duration-200">
           <div className="space-y-1 px-4 pb-3 pt-2">

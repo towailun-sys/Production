@@ -63,7 +63,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@
 import { collection, doc, deleteDoc, setDoc } from "firebase/firestore";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
-import { dict } from "@/lib/i18n";
+import { useTranslation } from "@/components/language-provider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,29 +73,30 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 
-const POSITIONS: { value: PlayerPosition; label: string }[] = [
-  { value: "GK", label: dict.common.positions.gk },
-  { value: "DF", label: dict.common.positions.df },
-  { value: "MF", label: dict.common.positions.mf },
-  { value: "FW", label: dict.common.positions.fw },
-];
-
-const STATUS_OPTIONS: { value: PlayerStatus; label: string; icon: any; color: string }[] = [
-  { value: "Active", label: dict.common.status.active, icon: Activity, color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-  { value: "Injured", label: dict.common.status.injured, icon: HeartPulse, color: "text-rose-600 bg-rose-50 border-rose-200" },
-  { value: "Not Available", label: dict.common.status.notAvailable, icon: Ban, color: "text-slate-600 bg-slate-50 border-slate-200" },
-  { value: "Pending for Club Fee", label: dict.common.status.feePending, icon: CreditCard, color: "text-amber-600 bg-amber-50 border-amber-200" },
-];
-
 export default function PlayersPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { dict } = useTranslation();
 
   const [search, setSearch] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+
+  const POSITIONS: { value: PlayerPosition; label: string }[] = [
+    { value: "GK", label: dict.common.positions.gk },
+    { value: "DF", label: dict.common.positions.df },
+    { value: "MF", label: dict.common.positions.mf },
+    { value: "FW", label: dict.common.positions.fw },
+  ];
+
+  const STATUS_OPTIONS: { value: PlayerStatus; label: string; icon: any; color: string }[] = [
+    { value: "Active", label: dict.common.status.active, icon: Activity, color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
+    { value: "Injured", label: dict.common.status.injured, icon: HeartPulse, color: "text-rose-600 bg-rose-50 border-rose-200" },
+    { value: "Not Available", label: dict.common.status.notAvailable, icon: Ban, color: "text-slate-600 bg-slate-50 border-slate-200" },
+    { value: "Pending for Club Fee", label: dict.common.status.feePending, icon: CreditCard, color: "text-amber-600 bg-amber-50 border-amber-200" },
+  ];
 
   const playerRef = useMemoFirebase(() => {
     if (isUserLoading || !user) return null;
@@ -599,27 +600,29 @@ export default function PlayersPage() {
                 </div>
               </div>
               <div className="flex items-center space-x-4 p-3 border rounded-lg bg-muted/30">
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="edit-isCaptain" 
-                    checked={formData.isCaptain}
-                    onCheckedChange={(val) => setFormData({ ...formData, isCaptain: val as boolean })}
-                  />
-                  <Label htmlFor="edit-isCaptain" className="font-bold flex items-center gap-1.5 cursor-pointer">
-                    <Crown className="h-4 w-4 text-accent" />
-                    {dict.players.dialog.captain}
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox 
-                    id="edit-isAdmin" 
-                    checked={formData.isAdmin}
-                    onCheckedChange={(val) => setFormData({ ...formData, isAdmin: val as boolean })}
-                  />
-                  <Label htmlFor="edit-isAdmin" className="font-bold flex items-center gap-1.5 cursor-pointer">
-                    <ShieldCheck className="h-4 w-4 text-primary" />
-                    {dict.players.dialog.admin}
-                  </Label>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="edit-isCaptain" 
+                      checked={formData.isCaptain}
+                      onCheckedChange={(val) => setFormData({ ...formData, isCaptain: val as boolean })}
+                    />
+                    <Label htmlFor="edit-isCaptain" className="font-bold flex items-center gap-1.5 cursor-pointer">
+                      <Crown className="h-4 w-4 text-accent" />
+                      {dict.players.dialog.captain}
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="edit-isAdmin" 
+                      checked={formData.isAdmin}
+                      onCheckedChange={(val) => setFormData({ ...formData, isAdmin: val as boolean })}
+                    />
+                    <Label htmlFor="edit-isAdmin" className="font-bold flex items-center gap-1.5 cursor-pointer">
+                      <ShieldCheck className="h-4 w-4 text-primary" />
+                      {dict.players.dialog.admin}
+                    </Label>
+                  </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -644,7 +647,7 @@ export default function PlayersPage() {
                   <Label htmlFor="edit-status">{dict.common.status}</Label>
                   <Select 
                     value={formData.status} 
-                    onValueChange={(val: PlayerStatus) => setFormData({ ...formData, status: val })}
+                    onValueChange={(val: PlayerStatus) => setLanguage({ ...formData, status: val })}
                   >
                     <SelectTrigger id="edit-status">
                       <SelectValue placeholder="Select status" />
@@ -688,7 +691,7 @@ export default function PlayersPage() {
 
         <Card className="border-none shadow-lg overflow-hidden">
           <CardHeader className="bg-white border-b py-4 px-6 flex flex-row items-center justify-between">
-            <div className="relative w-full max-w-sm">
+            <div className="relative w-full max-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
                 placeholder={dict.players.searchPlaceholder}

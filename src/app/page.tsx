@@ -36,7 +36,7 @@ import { collection, query, orderBy, limit, where, doc, setDoc, deleteDoc } from
 import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
-import { dict } from "@/lib/i18n";
+import { useTranslation } from "@/components/language-provider";
 
 const KIT_MAP: Record<string, string> = {
   "Home 1: Pink/Grey": "text-pink-500",
@@ -53,6 +53,7 @@ const getKitColorClass = (kitLabel: string) => {
 function UserAttendanceToggle({ gameId, userId }: { gameId: string, userId: string }) {
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { dict } = useTranslation();
   
   const attendanceRef = useMemoFirebase(() => 
     doc(firestore, "games", gameId, "attendanceRecords", userId), 
@@ -116,6 +117,8 @@ function UserAttendanceToggle({ gameId, userId }: { gameId: string, userId: stri
 
 function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string, allPlayers: Player[], userId: string | undefined }) {
   const firestore = useFirestore();
+  const { dict } = useTranslation();
+  
   const attendanceQuery = useMemoFirebase(() => {
     if (!userId) return null;
     return collection(firestore, "games", gameId, "attendanceRecords");
@@ -167,6 +170,8 @@ export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
+  const { dict } = useTranslation();
+  
   const [isSeeding, setIsSeeding] = useState(false);
   const [isClaimingAdmin, setIsClaimingAdmin] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
