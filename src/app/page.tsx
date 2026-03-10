@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -91,7 +90,7 @@ function UserAttendanceToggle({ gameId, userId }: { gameId: string, userId: stri
         variant={currentStatus === 'Confirmed' ? "default" : "outline"}
         className={cn(
           "flex-1 h-9 text-xs font-bold transition-all", 
-          currentStatus === 'Confirmed' ? "bg-accent hover:bg-accent/90 border-accent" : "hover:border-accent hover:text-accent"
+          currentStatus === 'Confirmed' ? "bg-primary hover:bg-primary/90 border-primary" : "hover:border-primary hover:text-primary"
         )}
         onClick={() => updateStatus('Confirmed')}
       >
@@ -135,8 +134,8 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
   return (
     <div className="mt-4 pt-3 border-t border-dashed">
       <div className="flex items-center gap-1.5 mb-2">
-        <Check className="h-3 w-3 text-accent" />
-        <span className="text-[10px] font-bold text-accent uppercase tracking-wider">Confirmed Squad ({confirmedPlayers.length})</span>
+        <Check className="h-3 w-3 text-primary" />
+        <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Confirmed Squad ({confirmedPlayers.length})</span>
       </div>
       <div className="flex flex-wrap gap-1.5">
         {confirmedPlayers.map((p) => (
@@ -356,7 +355,7 @@ export default function DashboardPage() {
                   variant="outline" 
                   size="sm" 
                   disabled={isSeeding}
-                  className="border-dashed border-accent text-accent hover:bg-accent/5"
+                  className="border-dashed border-primary text-primary hover:bg-primary/5"
                   onClick={handleSeedData}
                 >
                   {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
@@ -402,9 +401,9 @@ export default function DashboardPage() {
           <div className="grid gap-8 lg:grid-cols-4">
             <div className="lg:col-span-3 space-y-8">
               {!currentPlayer && preEnteredProfile ? (
-                <Card className="border-accent border-2 bg-accent/5 shadow-xl animate-in zoom-in-95 duration-500">
+                <Card className="border-primary border-2 bg-primary/5 shadow-xl animate-in zoom-in-95 duration-500">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-accent">
+                    <CardTitle className="flex items-center gap-2 text-primary">
                       <Sparkles className="h-6 w-6" />
                       We found your profile!
                     </CardTitle>
@@ -418,7 +417,7 @@ export default function DashboardPage() {
                         <p className="text-sm font-bold">{preEnteredProfile.name} {preEnteredProfile.nickname && `"${preEnteredProfile.nickname}"`} {preEnteredProfile.number && <Badge variant="outline" className="ml-1">#{preEnteredProfile.number}</Badge>}</p>
                         <p className="text-xs text-muted-foreground">Team {preEnteredProfile.team} • {preEnteredProfile.status}</p>
                       </div>
-                      <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-accent hover:bg-accent/90 gap-2">
+                      <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-primary hover:bg-primary/90 gap-2">
                         {isLinking ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />}
                         Claim Profile
                       </Button>
@@ -548,7 +547,7 @@ export default function DashboardPage() {
                                       variant="outline" 
                                       className={cn(
                                         "border-none text-white",
-                                        game.team === 'All' ? "bg-accent" : 
+                                        game.team === 'All' ? "bg-primary" : 
                                         currentPlayer.team === game.team ? "bg-emerald-600" : "bg-muted text-muted-foreground"
                                       )}
                                     >
@@ -584,10 +583,10 @@ export default function DashboardPage() {
             </div>
 
             <div className="space-y-8">
-              <Card className="border-accent/10 shadow-lg bg-accent/5">
+              <Card className="border-primary/10 shadow-lg bg-primary/5">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Trophy className="h-5 w-5 text-accent" />
+                    <Trophy className="h-5 w-5 text-primary" />
                     Squad Teammates
                   </CardTitle>
                 </CardHeader>
@@ -624,7 +623,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="pt-4 border-t">
                     <Link href="/players">
-                      <Button className="w-full bg-accent hover:bg-accent/90 shadow-md">
+                      <Button className="w-full bg-primary hover:bg-primary/90 shadow-md">
                         {currentPlayer?.isAdmin ? "Manage All Players" : "View Full Squad"}
                       </Button>
                     </Link>
@@ -645,7 +644,7 @@ export default function DashboardPage() {
                     <p className="font-bold text-foreground mb-2 text-xs">TEAM CODING</p>
                     <div className="flex items-center gap-2 mb-1">
                       <div className="h-2 w-2 rounded-full bg-primary" />
-                      <span className="text-primary font-bold text-[10px]">Team A (Blue)</span>
+                      <span className="text-primary font-bold text-[10px]">Team A (Green)</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <div className="h-2 w-2 rounded-full bg-indigo-600" />
