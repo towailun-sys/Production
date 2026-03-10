@@ -10,14 +10,46 @@ import {
   LayoutDashboard, 
   CheckCircle2,
   Menu,
-  X
+  X,
+  LogOut,
+  LogIn
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useUser, useAuth } from "@/firebase";
+import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function MainNav() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
+
+  const handleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
+  };
 
   const routes = [
     {
@@ -70,9 +102,54 @@ export function MainNav() {
                 {route.label}
               </Link>
             ))}
+
+            <div className="ml-4 border-l border-primary-foreground/20 pl-6">
+              {isUserLoading ? (
+                <div className="h-8 w-8 animate-pulse rounded-full bg-primary-foreground/20" />
+              ) : user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Avatar className="h-8 w-8 border-2 border-accent">
+                        <AvatarImage src={user.photoURL || ""} alt={user.displayName || "User"} />
+                        <AvatarFallback className="bg-accent text-accent-foreground text-xs">
+                          {user.displayName?.split(' ').map(n => n[0]).join('') || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user.displayName}</p>
+                        <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button onClick={handleLogin} variant="outline" size="sm" className="bg-white text-primary hover:bg-accent hover:text-white border-none font-bold gap-2">
+                  <LogIn className="h-4 w-4" />
+                  Sign In
+                </Button>
+              )}
+            </div>
           </div>
 
-          <div className="md:hidden">
+          <div className="md:hidden flex items-center gap-4">
+            {user && (
+              <Avatar className="h-8 w-8 border-2 border-accent">
+                <AvatarImage src={user.photoURL || ""} alt={user.displayName || "User"} />
+                <AvatarFallback className="bg-accent text-accent-foreground text-xs">
+                  {user.displayName?.split(' ').map(n => n[0]).join('') || "U"}
+                </AvatarFallback>
+              </Avatar>
+            )}
             <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)} className="text-primary-foreground">
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
@@ -98,6 +175,17 @@ export function MainNav() {
                 {route.label}
               </Link>
             ))}
+            {!isUserLoading && !user && (
+              <Button onClick={handleLogin} variant="outline" className="w-full mt-4 bg-white text-primary border-none font-bold">
+                Sign In with Google
+              </Button>
+            )}
+            {user && (
+              <Button onClick={handleLogout} variant="ghost" className="w-full mt-4 text-primary-foreground/80 hover:text-white justify-start gap-3 px-3">
+                <LogOut className="h-5 w-5" />
+                Sign Out
+              </Button>
+            )}
           </div>
         </div>
       )}

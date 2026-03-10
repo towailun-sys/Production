@@ -1,12 +1,10 @@
-
 "use client";
 
-import { useState, useEffect } from "react";
 import { MainNav } from "@/components/layout/main-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   Calendar, 
@@ -18,9 +16,10 @@ import {
   Shirt
 } from "lucide-react";
 import Link from "next/link";
-import { Game, Player, Attendance } from "@/lib/types";
+import { Game, Player } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { getStoredPlayers, getStoredGames, getStoredAttendance } from "@/lib/local-store";
+import { useCollection, useFirestore, useMemoFirebase } from "@/firebase";
+import { collection, query, orderBy, limit, where } from "firebase/firestore";
 
 const KIT_MAP: Record<string, string> = {
   "Home 1: Pink/Grey": "text-pink-500",
@@ -35,27 +34,22 @@ const getKitColorClass = (kitLabel: string) => {
 };
 
 export default function DashboardPage() {
-  const [players, setPlayers] = useState<Player[]>([]);
-  const [games, setGames] = useState<Game[]>([]);
-  const [attendance, setAttendance] = useState<Attendance[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const firestore = useFirestore();
 
-  useEffect(() => {
-    setPlayers(getStoredPlayers());
-    setGames(getStoredGames());
-    setAttendance(getStoredAttendance());
-    setIsLoaded(true);
-  }, []);
+  const gamesQuery = useMemoFirebase(() => {
+    const now = new Date().toISOString();
+    return query(
+      collection(firestore, "games"),
+      where("date", ">=", now.split('T')[0]),
+      orderBy("date", "asc"),
+      limit(5)
+    );
+  }, [firestore]);
 
-  if (!isLoaded) return null;
-
-  const now = new Date();
-  now.setHours(0, 0, 0, 0);
-
-  const upcomingGames = games
-    .filter(game => new Date(game.date) >= now)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(0, 5);
+  const { data: upcomingGames, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
+  
+  const playersQuery = useMemoFirebase(() => collection(firestore, "players"), [firestore]);
+  const { data: players } = useCollection<Player>(playersQuery);
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -84,19 +78,16 @@ export default function DashboardPage() {
               </div>
 
               <div className="grid gap-6">
-                {upcomingGames.length === 0 ? (
+                {isGamesLoading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <Card key={i} className="h-40 animate-pulse bg-muted/50" />
+                  ))
+                ) : !upcomingGames || upcomingGames.length === 0 ? (
                   <Card className="p-12 text-center border-dashed border-2">
                     <p className="text-muted-foreground">No upcoming games scheduled.</p>
                   </Card>
                 ) : (
                   upcomingGames.map((game) => {
-                    const gameAttendance = attendance.filter(a => a.gameId === game.id);
-                    const confirmedPlayers = gameAttendance
-                      .filter(a => a.status === 'Confirmed')
-                      .map(a => players.find(p => p.id === a.playerId))
-                      .filter((p): p is Player => !!p);
-                    
-                    const confirmedCount = confirmedPlayers.length;
                     const totalExpected = 11;
 
                     return (
@@ -142,42 +133,13 @@ export default function DashboardPage() {
                               <div>
                                 <div className="flex items-center justify-between mb-4">
                                   <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Availability</p>
-                                  <Badge variant="outline" className={cn(
-                                    "font-bold",
-                                    confirmedCount >= totalExpected ? "border-accent text-accent bg-accent/5" : "text-amber-600 border-amber-200 bg-amber-50"
-                                  )}>
-                                    {confirmedCount} / {totalExpected} Min
+                                  <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50">
+                                    Coach Mode
                                   </Badge>
                                 </div>
 
                                 <div className="flex -space-x-2 overflow-hidden mb-4">
-                                  <TooltipProvider>
-                                    {confirmedPlayers.slice(0, 8).map((player) => (
-                                      <Tooltip key={player.id}>
-                                        <TooltipTrigger asChild>
-                                          <Avatar className="border-2 border-background h-8 w-8 ring-1 ring-muted">
-                                            <AvatarFallback className="text-[10px] bg-primary/10 text-primary font-bold">
-                                              {player.name.split(' ').map(n => n[0]).join('')}
-                                            </AvatarFallback>
-                                          </Avatar>
-                                        </TooltipTrigger>
-                                        <TooltipContent>
-                                          <div className="text-xs">
-                                            <p className="font-bold">{player.name} <span className="opacity-70">(Team {player.team})</span></p>
-                                            <p className="text-muted-foreground">{player.preferredPositions.join(', ')}</p>
-                                          </div>
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    ))}
-                                  </TooltipProvider>
-                                  {confirmedCount > 8 && (
-                                    <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-background bg-muted text-[10px] font-bold ring-1 ring-muted">
-                                      +{confirmedCount - 8}
-                                    </div>
-                                  )}
-                                  {confirmedCount === 0 && (
-                                    <p className="text-xs italic text-muted-foreground">No confirmations yet</p>
-                                  )}
+                                   <p className="text-xs italic text-muted-foreground">Sign in to check attendance</p>
                                 </div>
                               </div>
 
@@ -208,11 +170,11 @@ export default function DashboardPage() {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Active Players</span>
-                  <span className="font-bold">{players.length}</span>
+                  <span className="font-bold">{players?.length || 0}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-muted-foreground">Avg. Attendance</span>
-                  <span className="font-bold text-accent">84%</span>
+                  <span className="text-sm text-muted-foreground">Target Min.</span>
+                  <span className="font-bold text-accent">11 Players</span>
                 </div>
                 <div className="pt-4">
                   <Link href="/players">
