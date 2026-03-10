@@ -181,7 +181,8 @@ export default function DashboardPage() {
     return query(collection(firestore, "players"), where("email", "==", user.email), limit(1));
   }, [firestore, user, currentPlayer, isUserLoading]);
   const { data: matchedProfiles } = useCollection<Player>(emailMatchQuery);
-  const preEnteredProfile = matchedProfiles?.[0];
+  // Find a profile that isn't the current UID to avoid infinite loop
+  const preEnteredProfile = matchedProfiles?.find(p => p.id !== user?.uid);
 
   const gamesQuery = useMemoFirebase(() => {
     if (isUserLoading || !user) return null;
@@ -216,13 +217,16 @@ export default function DashboardPage() {
       isLinked: true 
     };
 
+    // 1. Create the new profile document with user's UID
     setDoc(newDocRef, claimData)
       .then(() => {
-        // Only delete if it's not the same document (it shouldn't be if we reached here)
-        if (preEnteredProfile.id !== user.uid) {
-          const oldDocRef = doc(firestore, "players", preEnteredProfile.id);
-          deleteDoc(oldDocRef);
-        }
+        // 2. Delete the old placeholder record (security rules now allow this via email match)
+        const oldDocRef = doc(firestore, "players", preEnteredProfile.id);
+        deleteDoc(oldDocRef)
+          .catch((err) => {
+            console.error("Cleanup of placeholder failed:", err);
+          });
+
         toast({
           title: "Profile Claimed!",
           description: `Welcome to the squad, ${preEnteredProfile.nickname || preEnteredProfile.name}.`,
@@ -254,14 +258,12 @@ export default function DashboardPage() {
     
     const adminRef = doc(firestore, "players", user.uid);
     
-    // Use partial data for merging to avoid overwriting existing profile data
     const adminData: Partial<Player> = {
       id: user.uid,
       isAdmin: true,
       isLinked: true
     };
 
-    // Only set defaults if no profile exists at all
     if (!currentPlayer) {
       Object.assign(adminData, {
         name: user.displayName || "Admin User",

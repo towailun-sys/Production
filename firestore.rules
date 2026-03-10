@@ -14,15 +14,6 @@ rules_version = '2';
  * - /games/{gameId}: Scheduled events accessible to all authenticated players.
  * - /games/{gameId}/attendanceRecords/{playerUid}: Subcollection for tracking event 
  *   participation, keyed by the player's UID for rapid lookups and ownership validation.
- * 
- * Key Security Decisions:
- * - Admin Role: Managed via an `isAdmin` boolean field on the player's own profile.
- * - Public Read: Standard game data and attendance lists are readable by all 
- *   authenticated players to facilitate coordination, but writes are strictly controlled.
- * - Relational Integrity: On document creation, the rules enforce that internal 
- *   ID fields (like playerId or gameId) match the path parameters.
- * - Denormalization: Attendance records include both the gameId and playerId 
- *   to allow for direct ownership checks without multi-level document lookups.
  */
 
 service cloud.firestore {
@@ -45,6 +36,11 @@ service cloud.firestore {
       return isSignedIn() && get(/databases/$(database)/documents/players/$(request.auth.uid)).data.isAdmin == true;
     }
 
+    /** @description Checks if the authenticated user's email matches the document's email. */
+    function matchesEmail(email) {
+      return isSignedIn() && request.auth.token.email == email;
+    }
+
     /** @description Combined check for ownership and document existence for updates/deletes. */
     function isExistingOwner(userId) {
       return resource != null && isOwner(userId);
@@ -58,25 +54,27 @@ service cloud.firestore {
     // --- Collection Rules ---
 
     /**
-     * @description Player profiles. Owners can manage their own; Admins manage all.
-     * @path /players/{playerUid}
-     * @allow (create) User 'abc' creates document '/players/abc'.
-     * @deny (update) User 'abc' attempts to modify document '/players/xyz'.
-     * @principle Enforces path-based ownership and relational integrity for user profiles.
+     * @description Player profiles. 
+     * - Owners manage their own.
+     * - Admins manage all.
+     * - Users can manage/delete profiles that match their email (for claiming placeholders).
      */
     match /players/{playerUid} {
       allow get, list: if isSignedIn();
+      
       allow create: if isSignedIn() && (isOwner(playerUid) || isAdmin()) && request.resource.data.id == playerUid;
-      allow update: if (isExistingOwner(playerUid) || isExistingAdmin()) && request.resource.data.id == resource.data.id;
-      allow delete: if isExistingAdmin();
+      
+      allow update: if (
+        isExistingOwner(playerUid) || 
+        isExistingAdmin() || 
+        (resource != null && matchesEmail(resource.data.email))
+      ) && request.resource.data.id == resource.data.id;
+      
+      allow delete: if isExistingAdmin() || (resource != null && matchesEmail(resource.data.email));
     }
 
     /**
      * @description Game and session schedules. Read-only for players; Admin-only writes.
-     * @path /games/{gameId}
-     * @allow (get) Any signed-in player views a game details.
-     * @deny (create) A non-admin player attempts to schedule a new game.
-     * @principle Restricts structural changes to administrative roles while allowing shared read access.
      */
     match /games/{gameId} {
       allow get, list: if isSignedIn();
@@ -85,10 +83,6 @@ service cloud.firestore {
 
       /**
        * @description Individual player attendance for a game.
-       * @path /games/{gameId}/attendanceRecords/{playerUid}
-       * @allow (update) User 'abc' changes their status to 'Confirmed' for game 'game123'.
-       * @deny (create) User 'abc' tries to create an attendance record for User 'xyz'.
-       * @principle Uses subcollection paths to enforce ownership and ensure context-aware participation.
        */
       match /attendanceRecords/{playerUid} {
         allow get, list: if isSignedIn();
