@@ -26,7 +26,7 @@ import {
   Check
 } from "lucide-react";
 import Link from "next/link";
-import { Game, Player, TeamType, Attendance } from "@/lib/types";
+import { Game, Player, Attendance } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, query, orderBy, limit, where, doc, setDoc, deleteDoc } from "firebase/firestore";
@@ -44,12 +44,13 @@ const getKitColorClass = (kitLabel: string) => {
   return KIT_MAP[kitLabel] || "text-muted-foreground";
 };
 
-function GameAttendancePreview({ gameId, allPlayers }: { gameId: string, allPlayers: Player[] }) {
+function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string, allPlayers: Player[], userId: string | undefined }) {
   const firestore = useFirestore();
-  const attendanceQuery = useMemoFirebase(() => 
-    collection(firestore, "games", gameId, "attendanceRecords"), 
-    [firestore, gameId]
-  );
+  const attendanceQuery = useMemoFirebase(() => {
+    if (!userId) return null;
+    return collection(firestore, "games", gameId, "attendanceRecords");
+  }, [firestore, gameId, userId]);
+  
   const { data: attendanceDocs, isLoading } = useCollection<Attendance>(attendanceQuery);
 
   if (isLoading) return <div className="h-4 w-24 animate-pulse bg-muted rounded mt-2" />;
@@ -99,22 +100,22 @@ export default function DashboardPage() {
 
   // Get current player profile by UID
   const playerRef = useMemoFirebase(() => {
-    if (!user) return null;
+    if (isUserLoading || !user) return null;
     return doc(firestore, "players", user.uid);
-  }, [firestore, user]);
+  }, [firestore, user, isUserLoading]);
   const { data: currentPlayer, isLoading: isProfileLoading } = useDoc<Player>(playerRef);
 
   // Search for matching pre-entered profile by Email
   const emailMatchQuery = useMemoFirebase(() => {
-    if (!user || currentPlayer) return null;
+    if (isUserLoading || !user || currentPlayer) return null;
     return query(collection(firestore, "players"), where("email", "==", user.email), limit(1));
-  }, [firestore, user, currentPlayer]);
+  }, [firestore, user, currentPlayer, isUserLoading]);
   const { data: matchedProfiles } = useCollection<Player>(emailMatchQuery);
   const preEnteredProfile = matchedProfiles?.[0];
 
   // Query games
   const gamesQuery = useMemoFirebase(() => {
-    if (!user) return null;
+    if (isUserLoading || !user) return null;
     const now = new Date().toISOString().split('T')[0];
     
     return query(
@@ -123,14 +124,14 @@ export default function DashboardPage() {
       orderBy("date", "asc"),
       limit(5)
     );
-  }, [firestore, user]);
+  }, [firestore, user, isUserLoading]);
 
   const { data: upcomingGames, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
   
   const playersQuery = useMemoFirebase(() => {
-    if (!user) return null;
+    if (isUserLoading || !user) return null;
     return collection(firestore, "players");
-  }, [firestore, user]);
+  }, [firestore, user, isUserLoading]);
   
   const { data: players } = useCollection<Player>(playersQuery);
 
@@ -424,7 +425,7 @@ export default function DashboardPage() {
                                 )}
                               </div>
 
-                              <GameAttendancePreview gameId={game.id} allPlayers={players || []} />
+                              <GameAttendancePreview gameId={game.id} allPlayers={players || []} userId={user?.uid} />
                             </div>
 
                             <div className="bg-muted/30 p-6 md:w-80 border-t md:border-t-0 md:border-l flex flex-col justify-between">

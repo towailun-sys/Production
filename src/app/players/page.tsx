@@ -84,9 +84,9 @@ export default function PlayersPage() {
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
 
   const playerRef = useMemoFirebase(() => {
-    if (!user) return null;
+    if (isUserLoading || !user) return null;
     return doc(firestore, "players", user.uid);
-  }, [firestore, user]);
+  }, [firestore, user, isUserLoading]);
   const { data: currentPlayer } = useDoc<Player>(playerRef);
   
   const [formData, setFormData] = useState<{
@@ -108,9 +108,9 @@ export default function PlayersPage() {
   });
 
   const playersQuery = useMemoFirebase(() => {
-    if (!user) return null;
+    if (isUserLoading || !user) return null;
     return collection(firestore, "players");
-  }, [firestore, user]);
+  }, [firestore, user, isUserLoading]);
 
   const { data: players, isLoading: isPlayersLoading } = useCollection<Player>(playersQuery);
 

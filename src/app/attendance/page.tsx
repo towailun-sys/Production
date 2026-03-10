@@ -17,7 +17,8 @@ import {
   Lock,
   Users,
   ChevronLeft,
-  MoreVertical
+  MoreVertical,
+  Loader2
 } from "lucide-react";
 import { Game, AttendanceStatus, Player, Attendance } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -54,13 +55,17 @@ export default function AttendancePage() {
   const { user, isUserLoading } = useUser();
 
   // If gameId is present, we are viewing a specific game's roster
-  const gameRef = useMemoFirebase(() => gameId ? doc(firestore, "games", gameId) : null, [firestore, gameId]);
+  const gameRef = useMemoFirebase(() => {
+    if (isUserLoading || !user || !gameId) return null;
+    return doc(firestore, "games", gameId);
+  }, [firestore, user, isUserLoading, gameId]);
+  
   const { data: specificGame, isLoading: isGameLoading } = useDoc<Game>(gameRef);
 
   const gamesQuery = useMemoFirebase(() => {
-    if (!user || gameId) return null;
+    if (isUserLoading || !user || gameId) return null;
     return query(collection(firestore, "games"), orderBy("date", "asc"));
-  }, [firestore, user, gameId]);
+  }, [firestore, user, gameId, isUserLoading]);
 
   const { data: games, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
 
@@ -89,7 +94,7 @@ export default function AttendancePage() {
       <div className="min-h-screen bg-background">
         <MainNav />
         <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </main>
       </div>
     );
@@ -113,7 +118,31 @@ export default function AttendancePage() {
   }
 
   // View Specific Game Roster
-  if (gameId && specificGame) {
+  if (gameId) {
+    if (isGameLoading) {
+      return (
+        <div className="min-h-screen bg-background">
+          <MainNav />
+          <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <p className="mt-4 text-muted-foreground">Loading roster...</p>
+          </main>
+        </div>
+      );
+    }
+
+    if (!specificGame) {
+      return (
+        <div className="min-h-screen bg-background">
+          <MainNav />
+          <main className="container mx-auto px-4 py-20 text-center">
+            <h1 className="text-2xl font-headline">Game not found</h1>
+            <Link href="/games" className="text-primary hover:underline mt-4 inline-block">Return to Schedule</Link>
+          </main>
+        </div>
+      );
+    }
+
     return (
       <div className="min-h-screen bg-background pb-12">
         <MainNav />
@@ -196,14 +225,23 @@ function GameRosterList({
   onStatusChange: (gameId: string, status: AttendanceStatus, targetPlayerId?: string) => void;
 }) {
   const firestore = useFirestore();
-  const { user } = useUser();
-  const playerRef = useMemoFirebase(() => user ? doc(firestore, "players", user.uid) : null, [firestore, user]);
+  const { user, isUserLoading } = useUser();
+  const playerRef = useMemoFirebase(() => {
+    if (isUserLoading || !user) return null;
+    return doc(firestore, "players", user.uid);
+  }, [firestore, user, isUserLoading]);
   const { data: currentPlayer } = useDoc<Player>(playerRef);
 
-  const playersQuery = useMemoFirebase(() => collection(firestore, "players"), [firestore]);
+  const playersQuery = useMemoFirebase(() => {
+    if (isUserLoading || !user) return null;
+    return collection(firestore, "players");
+  }, [firestore, user, isUserLoading]);
   const { data: players } = useCollection<Player>(playersQuery);
   
-  const attendanceQuery = useMemoFirebase(() => collection(firestore, "games", gameId, "attendanceRecords"), [firestore, gameId]);
+  const attendanceQuery = useMemoFirebase(() => {
+    if (isUserLoading || !user) return null;
+    return collection(firestore, "games", gameId, "attendanceRecords");
+  }, [firestore, gameId, user, isUserLoading]);
   const { data: attendanceDocs } = useCollection<Attendance>(attendanceQuery);
 
   const getStatus = (playerId: string) => {
