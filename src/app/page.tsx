@@ -22,10 +22,11 @@ import {
   UserCheck,
   Fingerprint,
   Copy,
-  Sparkles
+  Sparkles,
+  Check
 } from "lucide-react";
 import Link from "next/link";
-import { Game, Player, TeamType } from "@/lib/types";
+import { Game, Player, TeamType, Attendance } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, query, orderBy, limit, where, doc, setDoc, deleteDoc } from "firebase/firestore";
@@ -42,6 +43,51 @@ const KIT_MAP: Record<string, string> = {
 const getKitColorClass = (kitLabel: string) => {
   return KIT_MAP[kitLabel] || "text-muted-foreground";
 };
+
+function GameAttendancePreview({ gameId, allPlayers }: { gameId: string, allPlayers: Player[] }) {
+  const firestore = useFirestore();
+  const attendanceQuery = useMemoFirebase(() => 
+    collection(firestore, "games", gameId, "attendanceRecords"), 
+    [firestore, gameId]
+  );
+  const { data: attendanceDocs, isLoading } = useCollection<Attendance>(attendanceQuery);
+
+  if (isLoading) return <div className="h-4 w-24 animate-pulse bg-muted rounded mt-2" />;
+  
+  const confirmedPlayerIds = attendanceDocs
+    ?.filter(a => a.status === 'Confirmed')
+    .map(a => a.playerId) || [];
+
+  if (confirmedPlayerIds.length === 0) {
+    return <p className="text-[10px] text-muted-foreground italic mt-2">No confirmations yet.</p>;
+  }
+
+  const confirmedNicknames = confirmedPlayerIds
+    .map(id => {
+      const p = allPlayers.find(player => player.id === id);
+      return p?.nickname || p?.name || "Unknown";
+    });
+
+  return (
+    <div className="mt-4 pt-3 border-t border-dashed">
+      <div className="flex items-center gap-1.5 mb-2">
+        <Check className="h-3 w-3 text-accent" />
+        <span className="text-[10px] font-bold text-accent uppercase tracking-wider">Confirmed Squad ({confirmedNicknames.length})</span>
+      </div>
+      <div className="flex flex-wrap gap-1.5">
+        {confirmedNicknames.map((nick, idx) => (
+          <Badge 
+            key={idx} 
+            variant="secondary" 
+            className="text-[9px] py-0 px-2 h-5 bg-accent/10 text-accent border-accent/20 font-medium"
+          >
+            {nick}
+          </Badge>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
@@ -92,15 +138,13 @@ export default function DashboardPage() {
     if (!user || !preEnteredProfile) return;
     setIsLinking(true);
     try {
-      // 1. Create new record with UID as doc ID
       const newDocRef = doc(firestore, "players", user.uid);
       await setDoc(newDocRef, {
         ...preEnteredProfile,
         id: user.uid,
-        email: user.email // Ensure email is current
+        email: user.email 
       });
 
-      // 2. Delete the old pre-entry record
       const oldDocRef = doc(firestore, "players", preEnteredProfile.id);
       await deleteDoc(oldDocRef);
 
@@ -163,7 +207,7 @@ export default function DashboardPage() {
     
     const sampleGames = [
       { id: "seed-g1", date: new Date().toISOString().split('T')[0], startTime: "19:00", endTime: "21:00", location: "Central Sports Complex", type: "League", team: "A", opponent: "Blue Arrows FC", kitColors: "Home 1: Pink/Grey" },
-      { id: "seed-g2", date: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0], startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", kitColors: "Home 2: New White / New White" },
+      { id: "seed-g2", date: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0], startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", opponent: "N/A", kitColors: "Home 2: New White / New White" },
       { id: "seed-g3", date: new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0], startTime: "20:00", endTime: "22:00", location: "Power League North", type: "Internal", team: "B", opponent: "N/A", kitColors: "Away 1: Black/Black" },
     ];
 
@@ -379,6 +423,8 @@ export default function DashboardPage() {
                                   </div>
                                 )}
                               </div>
+
+                              <GameAttendancePreview gameId={game.id} allPlayers={players || []} />
                             </div>
 
                             <div className="bg-muted/30 p-6 md:w-80 border-t md:border-t-0 md:border-l flex flex-col justify-between">
