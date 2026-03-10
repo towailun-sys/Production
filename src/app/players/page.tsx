@@ -488,11 +488,11 @@ export default function PlayersPage() {
                       >
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="A" id="team-a" />
-                          <Label htmlFor="team-a" className="font-bold text-primary">{dict.common.team} A</Label>
+                          <Label htmlFor="team-a" className="font-bold text-primary">{dict.common.teams.A}</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="B" id="team-b" />
-                          <Label htmlFor="team-b" className="font-bold text-indigo-600">{dict.common.team} B</Label>
+                          <Label htmlFor="team-b" className="font-bold text-indigo-600">{dict.common.teams.B}</Label>
                         </div>
                       </RadioGroup>
                     </div>
@@ -635,11 +635,11 @@ export default function PlayersPage() {
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="A" id="edit-team-a" />
-                      <Label htmlFor="edit-team-a" className="font-bold text-primary">{dict.common.team} A</Label>
+                      <Label htmlFor="edit-team-a" className="font-bold text-primary">{dict.common.teams.A}</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="B" id="edit-team-b" />
-                      <Label htmlFor="edit-team-b" className="font-bold text-indigo-600">{dict.common.team} B</Label>
+                      <Label htmlFor="edit-team-b" className="font-bold text-indigo-600">{dict.common.teams.B}</Label>
                     </div>
                   </RadioGroup>
                 </div>
@@ -787,7 +787,7 @@ export default function PlayersPage() {
                               "font-bold",
                               player.team === 'A' ? "bg-primary" : "bg-indigo-600"
                             )}>
-                              {dict.common.team} {player.team || 'A'}
+                              {dict.common.teams[player.team as 'A' | 'B']}
                             </Badge>
                           </TableCell>
                           <TableCell>

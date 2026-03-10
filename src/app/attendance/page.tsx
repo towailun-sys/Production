@@ -164,7 +164,7 @@ export default function AttendancePage() {
           
           <header className="mb-8">
             <div className="flex items-center gap-3 mb-2">
-              <Badge className="bg-primary">{dict.common.gameTypes[specificGame.type] || specificGame.type}</Badge>
+              <Badge className="bg-primary font-bold">{dict.common.gameTypes[specificGame.type] || specificGame.type}</Badge>
               <Badge 
                 variant="outline"
                 className={cn(
@@ -174,7 +174,7 @@ export default function AttendancePage() {
                   "bg-muted text-muted-foreground"
                 )}
               >
-                {dict.common.team} {specificGame.team}
+                {dict.common.teams[specificGame.team]}
               </Badge>
             </div>
             <h1 className="text-3xl font-headline">
@@ -319,7 +319,7 @@ function GameRosterList({
                         "font-bold",
                         player.team === 'A' ? "text-primary" : "text-indigo-600"
                       )}>
-                        {dict.common.team} {player.team}
+                        {dict.common.teams[player.team as 'A' | 'B']}
                       </span>
                       {" • "}{player.preferredPositions?.map(p => dict.common.positions[p.toLowerCase() as keyof typeof dict.common.positions] || p).join(', ') || dict.common.any}
                     </div>
@@ -431,7 +431,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
       <CardHeader className="border-b bg-white/50 pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="border-primary/20 text-primary">
+            <Badge variant="outline" className="border-primary/20 text-primary font-bold">
               {dict.common.gameTypes[game.type] || game.type}
             </Badge>
             <Badge 
@@ -443,7 +443,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
                 "bg-muted text-muted-foreground"
               )}
             >
-              {dict.common.team} {game.team}
+              {dict.common.teams[game.team]}
             </Badge>
           </div>
           <div className="flex items-center gap-1.5 text-sm font-bold">

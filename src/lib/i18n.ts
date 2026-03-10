@@ -14,6 +14,11 @@ const baseDict = {
     join: "Join",
     linked: "Linked",
     team: "Team",
+    teams: {
+      A: "Team A",
+      B: "Team B",
+      All: "For all Team"
+    },
     admin: "Admin",
     captain: "Captain",
     any: "Any",
@@ -155,6 +160,11 @@ const zhDict: typeof baseDict = {
     join: "出席",
     linked: "已連結",
     team: "隊伍",
+    teams: {
+      A: "隊伍A",
+      B: "隊伍B",
+      All: "全部隊伍"
+    },
     admin: "管理員",
     captain: "隊長",
     any: "不限",

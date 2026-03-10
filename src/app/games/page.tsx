@@ -280,7 +280,7 @@ export default function GamesPage() {
           {currentPlayer?.isAdmin && (
             <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if(!open) resetForm(); }}>
               <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-primary/90 gap-2">
+                <Button className="bg-primary hover:bg-primary/90 gap-2 font-bold">
                   <Plus className="h-4 w-4" />
                   {dict.games.scheduleGame}
                 </Button>
@@ -320,9 +320,9 @@ export default function GamesPage() {
                           <SelectValue placeholder="Select team" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="A">Team A</SelectItem>
-                          <SelectItem value="B">Team B</SelectItem>
-                          <SelectItem value="All">All Squads</SelectItem>
+                          <SelectItem value="A">{dict.common.teams.A}</SelectItem>
+                          <SelectItem value="B">{dict.common.teams.B}</SelectItem>
+                          <SelectItem value="All">{dict.common.teams.All}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -378,7 +378,7 @@ export default function GamesPage() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleAddGame} className="bg-primary w-full">{dict.games.dialog.create}</Button>
+                  <Button onClick={handleAddGame} className="bg-primary w-full font-bold">{dict.games.dialog.create}</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -429,7 +429,7 @@ export default function GamesPage() {
                           )}
                         >
                           <Users className="h-3 w-3" />
-                          {dict.common.team} {game.team}
+                          {dict.common.teams[game.team]}
                         </Badge>
                       </div>
                       <h3 className="text-xl font-headline font-bold">
@@ -524,9 +524,9 @@ export default function GamesPage() {
                       <SelectValue placeholder="Select team" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="A">Team A</SelectItem>
-                      <SelectItem value="B">Team B</SelectItem>
-                      <SelectItem value="All">All Squads</SelectItem>
+                      <SelectItem value="A">{dict.common.teams.A}</SelectItem>
+                      <SelectItem value="B">{dict.common.teams.B}</SelectItem>
+                      <SelectItem value="All">{dict.common.teams.All}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -582,7 +582,7 @@ export default function GamesPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleUpdateGame} className="bg-primary w-full">{dict.games.dialog.update}</Button>
+              <Button onClick={handleUpdateGame} className="bg-primary w-full font-bold">{dict.games.dialog.update}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

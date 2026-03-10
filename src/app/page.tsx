@@ -452,7 +452,7 @@ export default function DashboardPage() {
                           {preEnteredProfile.isCaptain && <Crown className="h-4 w-4 text-accent" />}
                           {preEnteredProfile.name} {preEnteredProfile.nickname && `"${preEnteredProfile.nickname}"`} {preEnteredProfile.number && <Badge variant="outline" className="ml-1">#{preEnteredProfile.number}</Badge>}
                         </div>
-                        <div className="text-xs text-muted-foreground">{dict.common.team} {preEnteredProfile.team} • {dict.common.statusTypes[preEnteredProfile.status.toLowerCase().replace(/\s+/g, '') as keyof typeof dict.common.statusTypes] || preEnteredProfile.status}</div>
+                        <div className="text-xs text-muted-foreground">{dict.common.teams[preEnteredProfile.team as 'A' | 'B']} • {dict.common.statusTypes[preEnteredProfile.status.toLowerCase().replace(/\s+/g, '') as keyof typeof dict.common.statusTypes] || preEnteredProfile.status}</div>
                       </div>
                       <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-primary hover:bg-primary/90 gap-2 font-bold">
                         {isLinking ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />}
@@ -498,8 +498,8 @@ export default function DashboardPage() {
                     <Calendar className="h-6 w-6 text-primary" />
                     {dict.dashboard.upcomingFixtures}
                     {currentPlayer && (
-                      <Badge variant="outline" className="ml-2 bg-primary/10 text-primary border-primary/20">
-                        {currentPlayer.isAdmin ? dict.dashboard.fullAccess : dict.dashboard.teamView(currentPlayer.team)}
+                      <Badge variant="outline" className="ml-2 bg-primary/10 text-primary border-primary/20 font-bold">
+                        {currentPlayer.isAdmin ? dict.dashboard.fullAccess : dict.dashboard.teamView(dict.common.teams[currentPlayer.team])}
                       </Badge>
                     )}
                   </h2>
@@ -526,7 +526,7 @@ export default function DashboardPage() {
                           <div className="flex flex-col md:flex-row">
                             <div className="p-6 flex-1">
                               <div className="flex items-center gap-3 mb-4">
-                                <Badge variant={game.type === 'League' ? 'default' : 'secondary'} className="rounded-md">
+                                <Badge variant={game.type === 'League' ? 'default' : 'secondary'} className="rounded-md font-bold">
                                   {dict.common.gameTypes[game.type] || game.type}
                                 </Badge>
                                 <Badge 
@@ -538,7 +538,7 @@ export default function DashboardPage() {
                                     "bg-muted text-muted-foreground"
                                   )}
                                 >
-                                  {dict.common.team} {game.team}
+                                  {dict.common.teams[game.team]}
                                 </Badge>
                                 <span className="text-sm font-bold text-muted-foreground flex items-center gap-1">
                                   <Clock className="h-3.5 w-3.5" />
@@ -580,7 +580,7 @@ export default function DashboardPage() {
                                     <Badge 
                                       variant="outline" 
                                       className={cn(
-                                        "border-none text-white",
+                                        "border-none text-white font-bold",
                                         game.team === 'All' ? "bg-primary" : 
                                         currentPlayer.team === game.team ? "bg-emerald-600" : "bg-muted text-muted-foreground"
                                       )}
@@ -662,7 +662,7 @@ export default function DashboardPage() {
                               p.team === 'A' ? "bg-primary" : "bg-indigo-600"
                             )}
                           >
-                            T{p.team}
+                            {p.team}
                           </Badge>
                         )}
                       </div>
