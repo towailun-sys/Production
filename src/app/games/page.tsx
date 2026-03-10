@@ -49,9 +49,9 @@ import { useToast } from "@/hooks/use-toast";
 
 const KIT_OPTIONS = [
   { label: "Home 1: Pink/Grey", color: "text-pink-500" },
-  { label: "Home 2: White/White", color: "text-slate-400" },
-  { label: "Away 1: Black/Black", color: "text-slate-900" },
-  { label: "Away 2: White/White", color: "text-slate-400" },
+  { label: "Home 2: New White / New White", color: "text-slate-300" },
+  { label: "Away 1: Black/Black", color: "text-slate-950" },
+  { label: "Away 2: White/White", color: "text-slate-300" },
   { label: "TBD", color: "text-muted-foreground" }
 ];
 
@@ -148,7 +148,7 @@ export default function GamesPage() {
     
     setTimeout(() => {
       setIsEditOpen(true);
-    }, 100);
+    }, 150);
   };
 
   const handleUpdateGame = () => {

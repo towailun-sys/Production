@@ -24,9 +24,9 @@ import { getStoredPlayers, getStoredGames, getStoredAttendance } from "@/lib/loc
 
 const KIT_MAP: Record<string, string> = {
   "Home 1: Pink/Grey": "text-pink-500",
-  "Home 2: White/White": "text-slate-400",
-  "Away 1: Black/Black": "text-slate-900",
-  "Away 2: White/White": "text-slate-400",
+  "Home 2: New White / New White": "text-slate-300",
+  "Away 1: Black/Black": "text-slate-950",
+  "Away 2: White/White": "text-slate-300",
   "TBD": "text-muted-foreground"
 };
 
