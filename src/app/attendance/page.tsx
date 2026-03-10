@@ -12,7 +12,6 @@ import {
   Clock, 
   MapPin, 
   Calendar,
-  AlertCircle,
   Shirt,
   Lock,
   Users,
@@ -25,6 +24,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, query, orderBy, doc, setDoc } from "firebase/firestore";
+import Link from "next/link";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,7 +33,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import Link from "next/link";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
@@ -56,7 +55,6 @@ export default function AttendancePage() {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
 
-  // If gameId is present, we are viewing a specific game's roster
   const gameRef = useMemoFirebase(() => {
     if (isUserLoading || !user || !gameId) return null;
     return doc(firestore, "games", gameId);
@@ -128,7 +126,6 @@ export default function AttendancePage() {
     );
   }
 
-  // View Specific Game Roster
   if (gameId) {
     if (isGameLoading) {
       return (
@@ -193,7 +190,6 @@ export default function AttendancePage() {
     );
   }
 
-  // View "My Attendance" (General List)
   return (
     <div className="min-h-screen bg-background pb-12">
       <MainNav />
@@ -282,10 +278,12 @@ function GameRosterList({
               <div key={player.id} className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
-                    {player.name[0]}
+                    {player.number || player.name[0]}
                   </div>
                   <div>
-                    <p className="font-bold">{player.name} {player.nickname && <span className="text-muted-foreground text-xs italic font-normal">"{player.nickname}"</span>}</p>
+                    <p className="font-bold">
+                      {player.name} {player.nickname && <span className="text-muted-foreground text-xs italic font-normal">"{player.nickname}"</span>}
+                    </p>
                     <p className="text-xs text-muted-foreground">Team {player.team} • {player.preferredPositions?.join(', ') || 'Any'}</p>
                   </div>
                 </div>
@@ -403,7 +401,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
           <div className="flex items-center gap-1.5 text-sm font-medium">
             {currentStatus === 'Pending' ? (
               <span className="flex items-center text-amber-600">
-                <AlertCircle className="h-4 w-4 mr-1" />
+                <Check className="h-4 w-4 mr-1 invisible" />
                 Confirmation Required
               </span>
             ) : (

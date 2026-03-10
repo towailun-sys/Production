@@ -123,34 +123,30 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
 
   if (isLoading) return <div className="h-4 w-24 animate-pulse bg-muted rounded mt-2" />;
   
-  const confirmedPlayerIds = attendanceDocs
+  const confirmedPlayers = attendanceDocs
     ?.filter(a => a.status === 'Confirmed')
-    .map(a => a.playerId) || [];
+    .map(a => allPlayers.find(p => p.id === a.playerId))
+    .filter(Boolean) as Player[] || [];
 
-  if (confirmedPlayerIds.length === 0) {
+  if (confirmedPlayers.length === 0) {
     return <p className="text-[10px] text-muted-foreground italic mt-2">No confirmations yet.</p>;
   }
-
-  const confirmedNicknames = confirmedPlayerIds
-    .map(id => {
-      const p = allPlayers.find(player => player.id === id);
-      return p?.nickname || p?.name || "Unknown";
-    });
 
   return (
     <div className="mt-4 pt-3 border-t border-dashed">
       <div className="flex items-center gap-1.5 mb-2">
         <Check className="h-3 w-3 text-accent" />
-        <span className="text-[10px] font-bold text-accent uppercase tracking-wider">Confirmed Squad ({confirmedNicknames.length})</span>
+        <span className="text-[10px] font-bold text-accent uppercase tracking-wider">Confirmed Squad ({confirmedPlayers.length})</span>
       </div>
       <div className="flex flex-wrap gap-1.5">
-        {confirmedNicknames.map((nick, idx) => (
+        {confirmedPlayers.map((p) => (
           <Badge 
-            key={idx} 
+            key={p.id} 
             variant="secondary" 
             className="text-[9px] py-0 px-2 h-5 bg-accent/10 text-accent border-accent/20 font-medium"
           >
-            {nick}
+            {p.number && <span className="mr-1 opacity-60">#{p.number}</span>}
+            {p.nickname || p.name}
           </Badge>
         ))}
       </div>
@@ -416,7 +412,7 @@ export default function DashboardPage() {
                     </p>
                     <div className="p-4 bg-white rounded-lg border flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-bold">{preEnteredProfile.name} {preEnteredProfile.nickname && `"${preEnteredProfile.nickname}"`}</p>
+                        <p className="text-sm font-bold">{preEnteredProfile.name} {preEnteredProfile.nickname && `"${preEnteredProfile.nickname}"`} {preEnteredProfile.number && <Badge variant="outline" className="ml-1">#{preEnteredProfile.number}</Badge>}</p>
                         <p className="text-xs text-muted-foreground">Team {preEnteredProfile.team} • {preEnteredProfile.status}</p>
                       </div>
                       <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-accent hover:bg-accent/90 gap-2">
@@ -582,10 +578,10 @@ export default function DashboardPage() {
                     {players?.map((p) => (
                       <div key={p.id} className="py-2 flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full bg-primary/20 text-[10px] flex items-center justify-center font-bold text-primary shrink-0">
-                          {p.name[0]}
+                          {p.number || p.name[0]}
                         </div>
                         <div className="flex flex-col min-w-0">
-                          <span className="text-xs font-bold truncate">{p.name}</span>
+                          <span className="text-xs font-bold truncate">{p.nickname || p.name}</span>
                           <span className="text-[10px] text-muted-foreground truncate">{p.status}</span>
                         </div>
                         {p.team && <Badge variant="outline" className="ml-auto text-[8px] h-4 px-1 shrink-0">T{p.team}</Badge>}

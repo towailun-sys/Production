@@ -8,6 +8,7 @@ export interface Player {
   id: string;
   name: string;
   nickname?: string;
+  number?: number;
   email?: string;
   preferredPositions: PlayerPosition[];
   team: TeamType;

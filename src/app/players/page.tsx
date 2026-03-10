@@ -42,7 +42,6 @@ import {
   Filter, 
   Pencil, 
   Trash2, 
-  Mail, 
   Activity, 
   HeartPulse, 
   Ban, 
@@ -50,7 +49,8 @@ import {
   Lock, 
   Loader2, 
   ShieldCheck,
-  Fingerprint
+  Fingerprint,
+  Hash
 } from "lucide-react";
 import { Player, PlayerPosition, TeamType, PlayerStatus } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -95,6 +95,7 @@ export default function PlayersPage() {
     id: string;
     name: string;
     nickname: string;
+    number: string;
     email: string;
     preferredPositions: PlayerPosition[];
     team: TeamType;
@@ -103,6 +104,7 @@ export default function PlayersPage() {
     id: "",
     name: "",
     nickname: "",
+    number: "",
     email: "",
     preferredPositions: [],
     team: "A",
@@ -119,7 +121,8 @@ export default function PlayersPage() {
   const filteredPlayers = (players || []).filter(p => 
     p.name.toLowerCase().includes(search.toLowerCase()) || 
     p.nickname?.toLowerCase().includes(search.toLowerCase()) ||
-    p.email?.toLowerCase().includes(search.toLowerCase())
+    p.email?.toLowerCase().includes(search.toLowerCase()) ||
+    p.number?.toString().includes(search)
   );
 
   const handlePositionToggle = (pos: PlayerPosition) => {
@@ -150,6 +153,7 @@ export default function PlayersPage() {
       id: playerId,
       name: formData.name,
       nickname: formData.nickname || "",
+      number: formData.number ? parseInt(formData.number) : null,
       email: formData.email || "",
       preferredPositions: formData.preferredPositions,
       team: formData.team,
@@ -180,6 +184,7 @@ export default function PlayersPage() {
       id: player.id || "",
       name: player.name,
       nickname: player.nickname || "",
+      number: player.number?.toString() || "",
       email: player.email || "",
       preferredPositions: player.preferredPositions || [],
       team: player.team || "A",
@@ -199,6 +204,7 @@ export default function PlayersPage() {
       id: editingPlayer.id,
       name: formData.name,
       nickname: formData.nickname || "",
+      number: formData.number ? parseInt(formData.number) : null,
       email: formData.email || "",
       preferredPositions: formData.preferredPositions,
       team: formData.team,
@@ -244,6 +250,7 @@ export default function PlayersPage() {
       id: "",
       name: "",
       nickname: "",
+      number: "",
       email: "",
       preferredPositions: [],
       team: "A",
@@ -322,14 +329,26 @@ export default function PlayersPage() {
                   <DialogTitle className="font-headline">Add New Squad Member</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="name">Full Name</Label>
-                    <Input 
-                      id="name" 
-                      placeholder="John Doe" 
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input 
+                        id="name" 
+                        placeholder="John Doe" 
+                        value={formData.name}
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="number">Squad Number</Label>
+                      <Input 
+                        id="number" 
+                        type="number"
+                        placeholder="7" 
+                        value={formData.number}
+                        onChange={(e) => setFormData({ ...formData, number: e.target.value })}
+                      />
+                    </div>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="nickname">Nickname (Display Name)</Label>
@@ -349,7 +368,6 @@ export default function PlayersPage() {
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     />
-                    <p className="text-[10px] text-muted-foreground">Used for auto-linking when they sign in with Google.</p>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="id" className="flex items-center gap-2">
@@ -435,13 +453,24 @@ export default function PlayersPage() {
               <DialogTitle className="font-headline">Edit Player Profile</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-name">Full Name</Label>
-                <Input 
-                  id="edit-name" 
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-name">Full Name</Label>
+                  <Input 
+                    id="edit-name" 
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-number">Squad Number</Label>
+                  <Input 
+                    id="edit-number" 
+                    type="number"
+                    value={formData.number}
+                    onChange={(e) => setFormData({ ...formData, number: e.target.value })}
+                  />
+                </div>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-nickname">Nickname</Label>
@@ -549,6 +578,7 @@ export default function PlayersPage() {
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow>
+                    <TableHead className="w-[80px] text-center font-bold">#</TableHead>
                     <TableHead className="w-[250px] font-bold">Player Info</TableHead>
                     <TableHead className="font-bold text-center">Team</TableHead>
                     <TableHead className="font-bold">Status</TableHead>
@@ -559,7 +589,7 @@ export default function PlayersPage() {
                 <TableBody>
                   {filteredPlayers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                      <TableCell colSpan={6} className="h-32 text-center text-muted-foreground">
                         No players found.
                       </TableCell>
                     </TableRow>
@@ -567,10 +597,13 @@ export default function PlayersPage() {
                     filteredPlayers.map((player) => {
                       const statusCfg = getStatusConfig(player.status);
                       const StatusIcon = statusCfg.icon;
-                      const isLinked = player.id.length > 20; // Heuristic for Firebase UID
+                      const isLinked = player.id.length > 20;
                       
                       return (
                         <TableRow key={player.id} className="hover:bg-accent/5">
+                          <TableCell className="text-center font-headline font-bold text-lg text-primary">
+                            {player.number || <span className="text-muted-foreground text-xs italic">-</span>}
+                          </TableCell>
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-3">
                               <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
@@ -585,9 +618,6 @@ export default function PlayersPage() {
                                 </div>
                                 <div className="flex flex-col gap-0.5 mt-1">
                                   {player.nickname && <span className="text-xs text-primary font-bold">"{player.nickname}"</span>}
-                                  <span className="flex items-center text-[9px] font-mono text-muted-foreground gap-1">
-                                    {isLinked ? `UID: ${player.id.substring(0, 8)}...` : <Badge variant="secondary" className="text-[8px] h-3 px-1">UID Pending</Badge>}
-                                  </span>
                                   {player.email && <span className="text-[10px] text-muted-foreground">{player.email}</span>}
                                 </div>
                               </div>
