@@ -1,0 +1,23 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-football",
+      "description": "Football stadium at night",
+      "imageUrl": "https://picsum.photos/seed/squadflow-1/1200/600",
+      "imageHint": "football stadium"
+    },
+    {
+      "id": "team-huddle",
+      "description": "Football team huddling",
+      "imageUrl": "https://picsum.photos/seed/squadflow-2/600/400",
+      "imageHint": "football team"
+    },
+    {
+      "id": "player-action",
+      "description": "Football player in action",
+      "imageUrl": "https://picsum.photos/seed/squadflow-3/400/400",
+      "imageHint": "soccer player"
+    }
+  ]
+}
