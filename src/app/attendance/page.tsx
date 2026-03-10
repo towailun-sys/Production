@@ -164,7 +164,7 @@ export default function AttendancePage() {
           
           <header className="mb-8">
             <div className="flex items-center gap-3 mb-2">
-              <Badge className="bg-primary">{specificGame.type}</Badge>
+              <Badge className="bg-primary">{dict.common.gameTypes[specificGame.type] || specificGame.type}</Badge>
               <Badge 
                 variant="outline"
                 className={cn(
@@ -321,7 +321,7 @@ function GameRosterList({
                       )}>
                         {dict.common.team} {player.team}
                       </span>
-                      {" • "}{player.preferredPositions?.join(', ') || dict.common.any}
+                      {" • "}{player.preferredPositions?.map(p => dict.common.positions[p.toLowerCase() as keyof typeof dict.common.positions] || p).join(', ') || dict.common.any}
                     </div>
                   </div>
                 </div>
@@ -335,7 +335,7 @@ function GameRosterList({
                       status === 'Pending' && "border-amber-500 text-amber-600"
                     )}
                   >
-                    {status}
+                    {status === 'Confirmed' ? dict.common.confirm : status === 'Declined' ? dict.common.decline : 'Pending'}
                   </Badge>
 
                   {currentPlayer?.isAdmin && (
@@ -353,9 +353,6 @@ function GameRosterList({
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Declined', player.id)} className="text-destructive font-bold">
                           <X className="mr-2 h-4 w-4" /> {dict.common.decline}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Pending', player.id)} className="font-bold">
-                          <Clock className="mr-2 h-4 w-4" /> Pending
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -392,7 +389,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               currentStatus === 'Confirmed' ? "bg-accent" : 
               currentStatus === 'Declined' ? "bg-destructive" : "bg-amber-500"
             )}>
-              {currentStatus}
+              {currentStatus === 'Confirmed' ? dict.common.confirm : currentStatus === 'Declined' ? dict.common.decline : 'Pending'}
             </Badge>
           </div>
           <div className="grid gap-2">
@@ -435,7 +432,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="border-primary/20 text-primary">
-              {game.type}
+              {dict.common.gameTypes[game.type] || game.type}
             </Badge>
             <Badge 
               variant="outline"
@@ -461,7 +458,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
                 currentStatus === 'Confirmed' ? "text-accent" : "text-destructive"
               )}>
                 {currentStatus === 'Confirmed' ? <Check className="h-4 w-4 mr-1" /> : <X className="h-4 w-4 mr-1" />}
-                {currentStatus}
+                {currentStatus === 'Confirmed' ? dict.common.confirm : dict.common.decline}
               </span>
             )}
           </div>

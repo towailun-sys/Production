@@ -450,7 +450,7 @@ export default function DashboardPage() {
                           {preEnteredProfile.isCaptain && <Crown className="h-4 w-4 text-accent" />}
                           {preEnteredProfile.name} {preEnteredProfile.nickname && `"${preEnteredProfile.nickname}"`} {preEnteredProfile.number && <Badge variant="outline" className="ml-1">#{preEnteredProfile.number}</Badge>}
                         </div>
-                        <div className="text-xs text-muted-foreground">{dict.common.team} {preEnteredProfile.team} • {preEnteredProfile.status}</div>
+                        <div className="text-xs text-muted-foreground">{dict.common.team} {preEnteredProfile.team} • {dict.common.statusTypes[preEnteredProfile.status.toLowerCase().replace(/\s+/g, '') as keyof typeof dict.common.statusTypes] || preEnteredProfile.status}</div>
                       </div>
                       <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-primary hover:bg-primary/90 gap-2 font-bold">
                         {isLinking ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />}
@@ -525,7 +525,7 @@ export default function DashboardPage() {
                             <div className="p-6 flex-1">
                               <div className="flex items-center gap-3 mb-4">
                                 <Badge variant={game.type === 'League' ? 'default' : 'secondary'} className="rounded-md">
-                                  {game.type}
+                                  {dict.common.gameTypes[game.type] || game.type}
                                 </Badge>
                                 <Badge 
                                   variant="outline" 
@@ -650,7 +650,7 @@ export default function DashboardPage() {
                               </span>
                             )}
                           </div>
-                          <span className="text-[10px] text-muted-foreground truncate">{p.status}</span>
+                          <span className="text-[10px] text-muted-foreground truncate">{dict.common.statusTypes[p.status.toLowerCase().replace(/\s+/g, '') as keyof typeof dict.common.statusTypes] || p.status}</span>
                         </div>
                         {p.team && (
                           <Badge 

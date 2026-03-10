@@ -303,10 +303,10 @@ export default function GamesPage() {
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="Training">Training</SelectItem>
-                          <SelectItem value="League">League Match</SelectItem>
-                          <SelectItem value="Friendly">Friendly</SelectItem>
-                          <SelectItem value="Internal">Internal</SelectItem>
+                          <SelectItem value="Training">{dict.common.gameTypes.Training}</SelectItem>
+                          <SelectItem value="League">{dict.common.gameTypes.League}</SelectItem>
+                          <SelectItem value="Friendly">{dict.common.gameTypes.Friendly}</SelectItem>
+                          <SelectItem value="Internal">{dict.common.gameTypes.Internal}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -417,7 +417,7 @@ export default function GamesPage() {
                           game.type === 'Internal' ? "bg-indigo-600 text-white" :
                           "bg-muted text-foreground"
                         )}>
-                          {game.type}
+                          {dict.common.gameTypes[game.type] || game.type}
                         </Badge>
                         <Badge 
                           variant="secondary" 
@@ -507,10 +507,10 @@ export default function GamesPage() {
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Training">Training</SelectItem>
-                      <SelectItem value="League">League Match</SelectItem>
-                      <SelectItem value="Friendly">Friendly</SelectItem>
-                      <SelectItem value="Internal">Internal</SelectItem>
+                      <SelectItem value="Training">{dict.common.gameTypes.Training}</SelectItem>
+                      <SelectItem value="League">{dict.common.gameTypes.League}</SelectItem>
+                      <SelectItem value="Friendly">{dict.common.gameTypes.Friendly}</SelectItem>
+                      <SelectItem value="Internal">{dict.common.gameTypes.Internal}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

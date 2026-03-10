@@ -22,11 +22,18 @@ const baseDict = {
     training: "Team Training Session",
     internal: "Internal Squad Game",
     status: "Status",
+    statusLabel: "Status",
     statusTypes: {
       active: "Active",
       injured: "Injured",
       notAvailable: "Not Available",
       feePending: "Fee Pending"
+    },
+    gameTypes: {
+      Training: "Training",
+      League: "League Match",
+      Friendly: "Friendly Match",
+      Internal: "Internal Game"
     },
     positions: {
       gk: "GK",
@@ -136,7 +143,7 @@ const baseDict = {
   }
 };
 
-const zhDict = {
+const zhDict: typeof baseDict = {
   common: {
     save: "儲存",
     cancel: "取消",
@@ -156,11 +163,18 @@ const zhDict = {
     training: "球隊訓練",
     internal: "內部比賽",
     status: "狀態",
+    statusLabel: "狀態",
     statusTypes: {
       active: "現役",
       injured: "受傷",
       notAvailable: "退役/離隊",
       feePending: "有欠款"
+    },
+    gameTypes: {
+      Training: "訓練",
+      League: "聯賽",
+      Friendly: "友誼賽",
+      Internal: "內部賽"
     },
     positions: {
       gk: "龍門",
