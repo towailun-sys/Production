@@ -163,7 +163,17 @@ export default function AttendancePage() {
           <header className="mb-8">
             <div className="flex items-center gap-3 mb-2">
               <Badge className="bg-primary">{specificGame.type}</Badge>
-              <Badge variant="outline">Team {specificGame.team}</Badge>
+              <Badge 
+                variant="outline"
+                className={cn(
+                  "font-bold border-none text-white",
+                  specificGame.team === 'A' ? "bg-primary" : 
+                  specificGame.team === 'B' ? "bg-indigo-600" : 
+                  "bg-muted text-muted-foreground"
+                )}
+              >
+                Team {specificGame.team}
+              </Badge>
             </div>
             <h1 className="text-3xl font-headline">
               {specificGame.type === 'Training' ? 'Team Training Session' : 
@@ -277,14 +287,25 @@ function GameRosterList({
             return (
               <div key={player.id} className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
+                  <div className={cn(
+                    "h-10 w-10 rounded-full flex items-center justify-center font-bold",
+                    player.team === 'A' ? "bg-primary/10 text-primary" : "bg-indigo-100 text-indigo-700"
+                  )}>
                     {player.number || player.name[0]}
                   </div>
                   <div>
                     <p className="font-bold">
                       {player.name} {player.nickname && <span className="text-muted-foreground text-xs italic font-normal">"{player.nickname}"</span>}
                     </p>
-                    <p className="text-xs text-muted-foreground">Team {player.team} • {player.preferredPositions?.join(', ') || 'Any'}</p>
+                    <p className="text-xs text-muted-foreground">
+                      <span className={cn(
+                        "font-bold",
+                        player.team === 'A' ? "text-primary" : "text-indigo-600"
+                      )}>
+                        Team {player.team}
+                      </span>
+                      {" • "}{player.preferredPositions?.join(', ') || 'Any'}
+                    </p>
                   </div>
                 </div>
                 
@@ -396,6 +417,17 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
           <div className="flex items-center gap-2">
             <Badge variant="outline" className="border-primary/20 text-primary">
               {game.type}
+            </Badge>
+            <Badge 
+              variant="outline"
+              className={cn(
+                "font-bold border-none text-white",
+                game.team === 'A' ? "bg-primary" : 
+                game.team === 'B' ? "bg-indigo-600" : 
+                "bg-muted text-muted-foreground"
+              )}
+            >
+              Team {game.team}
             </Badge>
           </div>
           <div className="flex items-center gap-1.5 text-sm font-medium">

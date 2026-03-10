@@ -418,7 +418,15 @@ export default function GamesPage() {
                         )}>
                           {game.type}
                         </Badge>
-                        <Badge variant="secondary" className="bg-muted text-muted-foreground border-none flex gap-1 items-center">
+                        <Badge 
+                          variant="secondary" 
+                          className={cn(
+                            "border-none flex gap-1 items-center font-bold",
+                            game.team === 'A' ? "bg-primary text-white" : 
+                            game.team === 'B' ? "bg-indigo-600 text-white" : 
+                            "bg-muted text-muted-foreground"
+                          )}
+                        >
                           <Users className="h-3 w-3" />
                           Team {game.team}
                         </Badge>

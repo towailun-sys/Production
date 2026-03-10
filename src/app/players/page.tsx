@@ -411,11 +411,11 @@ export default function PlayersPage() {
                       >
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="A" id="team-a" />
-                          <Label htmlFor="team-a">A</Label>
+                          <Label htmlFor="team-a" className="font-bold text-primary">Team A</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="B" id="team-b" />
-                          <Label htmlFor="team-b">B</Label>
+                          <Label htmlFor="team-b" className="font-bold text-indigo-600">Team B</Label>
                         </div>
                       </RadioGroup>
                     </div>
@@ -532,11 +532,11 @@ export default function PlayersPage() {
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="A" id="edit-team-a" />
-                      <Label htmlFor="edit-team-a">A</Label>
+                      <Label htmlFor="edit-team-a" className="font-bold text-primary">Team A</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="B" id="edit-team-b" />
-                      <Label htmlFor="edit-team-b">B</Label>
+                      <Label htmlFor="edit-team-b" className="font-bold text-indigo-600">Team B</Label>
                     </div>
                   </RadioGroup>
                 </div>
@@ -666,7 +666,7 @@ export default function PlayersPage() {
                               "font-bold",
                               player.team === 'A' ? "bg-primary" : "bg-indigo-600"
                             )}>
-                              {player.team || 'A'}
+                              Team {player.team || 'A'}
                             </Badge>
                           </TableCell>
                           <TableCell>

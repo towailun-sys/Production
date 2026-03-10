@@ -143,7 +143,10 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
           <Badge 
             key={p.id} 
             variant="secondary" 
-            className="text-[9px] py-0 px-2 h-5 bg-accent/10 text-accent border-accent/20 font-medium"
+            className={cn(
+              "text-[9px] py-0 px-2 h-5 font-bold",
+              p.team === 'A' ? "bg-primary/10 text-primary border-primary/20" : "bg-indigo-100 text-indigo-700 border-indigo-200"
+            )}
           >
             {p.number && <span className="mr-1 opacity-60">#{p.number}</span>}
             {p.nickname || p.name}
@@ -493,7 +496,15 @@ export default function DashboardPage() {
                                 <Badge variant={game.type === 'League' ? 'default' : 'secondary'} className="rounded-md">
                                   {game.type}
                                 </Badge>
-                                <Badge variant="outline" className="text-xs font-bold uppercase">
+                                <Badge 
+                                  variant="outline" 
+                                  className={cn(
+                                    "text-xs font-bold uppercase border-none text-white",
+                                    game.team === 'A' ? "bg-primary" : 
+                                    game.team === 'B' ? "bg-indigo-600" : 
+                                    "bg-muted text-muted-foreground"
+                                  )}
+                                >
                                   Team {game.team}
                                 </Badge>
                                 <span className="text-sm font-bold text-muted-foreground flex items-center gap-1">
@@ -533,7 +544,14 @@ export default function DashboardPage() {
                                 <div className="flex items-center justify-between mb-4">
                                   <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Availability</p>
                                   {currentPlayer && (
-                                    <Badge variant="outline" className="text-accent border-accent/20 bg-accent/5">
+                                    <Badge 
+                                      variant="outline" 
+                                      className={cn(
+                                        "border-none text-white",
+                                        game.team === 'All' ? "bg-accent" : 
+                                        currentPlayer.team === game.team ? "bg-emerald-600" : "bg-muted text-muted-foreground"
+                                      )}
+                                    >
                                       {currentPlayer.team === game.team || game.team === 'All' ? 'My Game' : 'Other Team'}
                                     </Badge>
                                   )}
@@ -577,14 +595,27 @@ export default function DashboardPage() {
                   <div className="divide-y max-h-[400px] overflow-auto pr-2">
                     {players?.map((p) => (
                       <div key={p.id} className="py-2 flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-full bg-primary/20 text-[10px] flex items-center justify-center font-bold text-primary shrink-0">
+                        <div className={cn(
+                          "h-8 w-8 rounded-full text-[10px] flex items-center justify-center font-bold shrink-0",
+                          p.team === 'A' ? "bg-primary/20 text-primary" : "bg-indigo-100 text-indigo-700"
+                        )}>
                           {p.number || p.name[0]}
                         </div>
                         <div className="flex flex-col min-w-0">
                           <span className="text-xs font-bold truncate">{p.nickname || p.name}</span>
                           <span className="text-[10px] text-muted-foreground truncate">{p.status}</span>
                         </div>
-                        {p.team && <Badge variant="outline" className="ml-auto text-[8px] h-4 px-1 shrink-0">T{p.team}</Badge>}
+                        {p.team && (
+                          <Badge 
+                            variant="outline" 
+                            className={cn(
+                              "ml-auto text-[8px] h-4 px-1 shrink-0 font-bold border-none text-white",
+                              p.team === 'A' ? "bg-primary" : "bg-indigo-600"
+                            )}
+                          >
+                            T{p.team}
+                          </Badge>
+                        )}
                       </div>
                     ))}
                     {(!players || players.length === 0) && (
@@ -610,6 +641,17 @@ export default function DashboardPage() {
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground space-y-4">
                   <p>Check the squad roster for each game to see who is confirmed. Aim for 11+ players for match days!</p>
+                  <div className="p-3 bg-muted/40 rounded-lg">
+                    <p className="font-bold text-foreground mb-2 text-xs">TEAM CODING</p>
+                    <div className="flex items-center gap-2 mb-1">
+                      <div className="h-2 w-2 rounded-full bg-primary" />
+                      <span className="text-primary font-bold text-[10px]">Team A (Blue)</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-2 rounded-full bg-indigo-600" />
+                      <span className="text-indigo-600 font-bold text-[10px]">Team B (Indigo)</span>
+                    </div>
+                  </div>
                   <div className="p-3 bg-muted/40 rounded-lg">
                     <p className="font-bold text-foreground mb-1 text-xs">STANDARD KITS</p>
                     <p className="text-pink-500 font-medium text-[10px]">Home 1: Pink/Grey</p>
