@@ -1,0 +1,101 @@
+rules_version = '2';
+
+/**
+ * SquadFlow Security Rules
+ * 
+ * Core Philosophy:
+ * This ruleset implements a hybrid security model combining strict user ownership with
+ * administrative role-based access control (RBAC). It ensures that while the application
+ * remains flexible during prototyping, the core identity and relational integrity are 
+ * never compromised.
+ * 
+ * Data Structure:
+ * - /players/{playerUid}: User profiles where document ID matches the Firebase Auth UID.
+ * - /games/{gameId}: Scheduled events accessible to all authenticated players.
+ * - /games/{gameId}/attendanceRecords/{playerUid}: Subcollection for tracking event 
+ *   participation, keyed by the player's UID for rapid lookups and ownership validation.
+ * 
+ * Key Security Decisions:
+ * - Admin Role: Managed via an `isAdmin` boolean field on the player's own profile.
+ * - Public Read: Standard game data and attendance lists are readable by all 
+ *   authenticated players to facilitate coordination, but writes are strictly controlled.
+ * - Relational Integrity: On document creation, the rules enforce that internal 
+ *   ID fields (like playerId or gameId) match the path parameters.
+ * - Denormalization: Attendance records include both the gameId and playerId 
+ *   to allow for direct ownership checks without multi-level document lookups.
+ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Helper Functions ---
+
+    /** @description Checks if the request is made by an authenticated user. */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /** @description Checks if the authenticated user matches the provided userId. */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /** @description Checks if the authenticated user has administrative privileges. */
+    function isAdmin() {
+      return isSignedIn() && get(/databases/$(database)/documents/players/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    /** @description Combined check for ownership and document existence for updates/deletes. */
+    function isExistingOwner(userId) {
+      return resource != null && isOwner(userId);
+    }
+
+    /** @description Combined check for admin privileges and document existence. */
+    function isExistingAdmin() {
+      return resource != null && isAdmin();
+    }
+
+    // --- Collection Rules ---
+
+    /**
+     * @description Player profiles. Owners can manage their own; Admins manage all.
+     * @path /players/{playerUid}
+     * @allow (create) User 'abc' creates document '/players/abc'.
+     * @deny (update) User 'abc' attempts to modify document '/players/xyz'.
+     * @principle Enforces path-based ownership and relational integrity for user profiles.
+     */
+    match /players/{playerUid} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && (isOwner(playerUid) || isAdmin()) && request.resource.data.id == playerUid;
+      allow update: if (isExistingOwner(playerUid) || isExistingAdmin()) && request.resource.data.id == resource.data.id;
+      allow delete: if isExistingAdmin();
+    }
+
+    /**
+     * @description Game and session schedules. Read-only for players; Admin-only writes.
+     * @path /games/{gameId}
+     * @allow (get) Any signed-in player views a game details.
+     * @deny (create) A non-admin player attempts to schedule a new game.
+     * @principle Restricts structural changes to administrative roles while allowing shared read access.
+     */
+    match /games/{gameId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && isAdmin();
+      allow update, delete: if isExistingAdmin();
+
+      /**
+       * @description Individual player attendance for a game.
+       * @path /games/{gameId}/attendanceRecords/{playerUid}
+       * @allow (update) User 'abc' changes their status to 'Confirmed' for game 'game123'.
+       * @deny (create) User 'abc' tries to create an attendance record for User 'xyz'.
+       * @principle Uses subcollection paths to enforce ownership and ensure context-aware participation.
+       */
+      match /attendanceRecords/{playerUid} {
+        allow get, list: if isSignedIn();
+        allow create: if (isOwner(playerUid) || isAdmin()) && request.resource.data.playerId == playerUid && request.resource.data.gameId == gameId;
+        allow update: if (isExistingOwner(playerUid) || isExistingAdmin()) && request.resource.data.playerId == resource.data.playerId;
+        allow delete: if isExistingAdmin();
+      }
+    }
+  }
+}

@@ -1,0 +1,163 @@
+{
+  "entities": {
+    "Player": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Player",
+      "type": "object",
+      "description": "Represents a football player within the SquadFlow application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Player entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The full name of the player."
+        },
+        "nickname": {
+          "type": "string",
+          "description": "A common or preferred nickname for the player."
+        },
+        "preferredPosition": {
+          "type": "string",
+          "description": "The player's preferred position on the field (e.g., 'Goalkeeper', 'Defender', 'Midfielder', 'Forward')."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "preferredPosition"
+      ]
+    },
+    "Game": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Game",
+      "type": "object",
+      "description": "Represents a scheduled football game or training session.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the Game entity."
+        },
+        "dateTime": {
+          "type": "string",
+          "description": "The date and time when the game is scheduled to take place.",
+          "format": "date-time"
+        },
+        "location": {
+          "type": "string",
+          "description": "The physical location or address where the game will be played."
+        },
+        "gameType": {
+          "type": "string",
+          "description": "The type of game (e.g., 'Training', 'League Game', 'Friendly Game', 'Internal Game')."
+        }
+      },
+      "required": [
+        "id",
+        "dateTime",
+        "location",
+        "gameType"
+      ]
+    },
+    "PlayerGameAttendance": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "PlayerGameAttendance",
+      "type": "object",
+      "description": "Records a player's attendance status for a specific game.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the PlayerGameAttendance entity."
+        },
+        "playerId": {
+          "type": "string",
+          "description": "Reference to the Player attending the game. (Relationship: Player 1:N PlayerGameAttendance)"
+        },
+        "gameId": {
+          "type": "string",
+          "description": "Reference to the Game for which attendance is recorded. (Relationship: Game 1:N PlayerGameAttendance)"
+        },
+        "status": {
+          "type": "string",
+          "description": "The attendance status of the player for the game (e.g., 'Confirmed', 'Declined', 'Pending')."
+        },
+        "lastUpdated": {
+          "type": "string",
+          "description": "Timestamp indicating when the attendance status was last updated.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "playerId",
+        "gameId",
+        "status",
+        "lastUpdated"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/players/{playerUid}",
+        "definition": {
+          "entityName": "Player",
+          "schema": {
+            "$ref": "#/backend/entities/Player"
+          },
+          "description": "Stores individual player profiles. The `playerUid` is the Firebase Auth UID. Each player document is expected to include an `isAdmin: boolean` field for role-based access control. Admins (identified by `isAdmin: true` in their own player profile) can manage all player profiles; authenticated players can read all and manage their own.",
+          "params": [
+            {
+              "name": "playerUid",
+              "description": "The Firebase User ID (UID) of the player. This is also the unique ID for the player document."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/games/{gameId}",
+        "definition": {
+          "entityName": "Game",
+          "schema": {
+            "$ref": "#/backend/entities/Game"
+          },
+          "description": "Stores details for scheduled football games or training sessions. Admins can manage all games; all authenticated players can read all games.",
+          "params": [
+            {
+              "name": "gameId",
+              "description": "The unique identifier for a specific game."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/games/{gameId}/attendanceRecords/{playerUid}",
+        "definition": {
+          "entityName": "PlayerGameAttendance",
+          "schema": {
+            "$ref": "#/backend/entities/PlayerGameAttendance"
+          },
+          "description": "Records an individual player's attendance status for a specific game. `playerUid` is the Firebase Auth UID of the player and serves as the document ID. The document includes denormalized `playerId` (matching `playerUid`) and `gameId` (from the parent path) for schema compliance and authorization context. Players can update their own status; Admins can update any.",
+          "params": [
+            {
+              "name": "gameId",
+              "description": "The unique identifier for the parent game."
+            },
+            {
+              "name": "playerUid",
+              "description": "The Firebase User ID (UID) of the player whose attendance is being recorded for this game. This is also the unique ID for the attendance record document."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The recommended Firestore structure for SquadFlow prioritizes robust security, scalability, and debuggability in line with the core design principles. \n\n**Authorization Independence via Denormalization:**\n1.  **Player Profiles (`/players/{playerUid}`):** Each player's profile document is directly identified by their Firebase Authentication UID (`playerUid`). This makes ownership-based rules simple and atomic (e.g., `request.auth.uid == playerUid` for self-management). \n2.  **Game Information (`/games/{gameId}`):** Game details are stored in a top-level collection. Access control for games (read by all players, write by admins) is based on the user's authentication status and their role, which is checked via a self-referential lookup on their own player profile.\n3.  **Player Attendance (`/games/{gameId}/attendanceRecords/{playerUid}`):** Attendance records are stored as subcollections under specific games. The `playerUid` in the path and as the document ID directly identifies the player, eliminating the need for `get()` calls to parent documents for authorization. The `PlayerGameAttendance` document itself denormalizes `gameId` and `playerId` (matching the `playerUid` doc ID) to ensure schema compliance and provide explicit authorization context within the document.\n\n**Addressing Admin Roles and the `get()` Constraint:**\nDue to the constraint of using only the provided entities for `$ref`s and to avoid introducing new entity schemas, administrative roles are managed by including an `isAdmin: boolean` field within the `Player` entity documents at `/players/{playerUid}`. While checking this `isAdmin` flag requires a `get()` call (e.g., `get(/players/$(request.auth.uid)).data.isAdmin`), this is a **self-referential lookup** on the authenticated user's own profile, not a hierarchical dependency involving a parent document of the data being accessed. This approach respects the spirit of Authorization Independence by not creating dependencies across different data hierarchies, and is a widely accepted pattern for DBAC when dedicated role collections (or custom claims) are disallowed or not feasible due to schema constraints. It makes rules clear and debuggable by centralizing role definition.\n\n**Support for QAPs (Queries Are Not Permissions):**\n1.  **Homogeneous Collections:** Each collection (`/players`, `/games`, `/games/{gameId}/attendanceRecords`) maintains a homogeneous security posture, meaning all documents within a given collection share similar access rules. This simplifies Firestore security rules significantly, as rules don't need to filter different types of data or states within a single collection.\n2.  **Efficient Listing:**\n    *   **Players and Games:** All authenticated users can read all `Player` and `Game` documents. This allows for simple and efficient `list` queries (e.g., `firestore.collection('players').get()` or `firestore.collection('games').get()`) without needing complex rule-based filtering, which is critical for QAPs.\n    *   **Attendance Dashboard (Admin):** The structure `/games/{gameId}/attendanceRecords/{playerUid}` directly supports the admin dashboard. An admin can easily query `firestore.collection('games/{gameId}/attendanceRecords').get()` to retrieve all attendance records for a specific game, enabling a fast and secure display of confirmed players.\n    *   **Player Attendance Confirmation:** Players can efficiently retrieve their own attendance status for a specific game using `firestore.collection('games/{gameId}/attendanceRecords').doc(request.auth.uid).get()`, facilitating their confirmation process.\n\nThis design leverages path-based authorization and denormalization where appropriate, minimizing `get()` calls for cross-document authorization checks, and ensuring secure and efficient list operations."
+  }
+}
