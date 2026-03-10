@@ -212,7 +212,7 @@ export default function DashboardPage() {
                     Upcoming Fixtures
                     {currentPlayer && (
                       <Badge variant="outline" className="ml-2 bg-primary/10 text-primary border-primary/20">
-                        Team {currentPlayer.team}
+                        {currentPlayer.isAdmin ? "All Squads (Admin View)" : `Team ${currentPlayer.team}`}
                       </Badge>
                     )}
                   </h2>
@@ -234,7 +234,7 @@ export default function DashboardPage() {
                     </Card>
                   ) : (
                     upcomingGames
-                      .filter(g => !currentPlayer || g.team === 'All' || g.team === currentPlayer.team)
+                      .filter(g => !currentPlayer || currentPlayer.isAdmin || g.team === 'All' || g.team === currentPlayer.team)
                       .map((game) => (
                       <Card key={game.id} className="border-none shadow-md hover:shadow-lg transition-all overflow-hidden border-l-4 border-primary">
                         <CardContent className="p-0">
@@ -280,25 +280,27 @@ export default function DashboardPage() {
                             <div className="bg-muted/30 p-6 md:w-80 border-t md:border-t-0 md:border-l flex flex-col justify-between">
                               <div>
                                 <div className="flex items-center justify-between mb-4">
-                                  <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Quick Action</p>
+                                  <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Squad Management</p>
                                   <Badge variant="outline" className="text-accent border-accent/20 bg-accent/5">
                                     Active
                                   </Badge>
                                 </div>
-                                <p className="text-xs italic text-muted-foreground mb-4">View squad roster or update your status.</p>
+                                <p className="text-xs italic text-muted-foreground mb-4">
+                                  {currentPlayer?.isAdmin ? "Manage full squad attendance and roster." : "Register and check who else is going."}
+                                </p>
                               </div>
 
                               <div className="flex flex-col gap-2">
                                 <Link href={`/attendance?gameId=${game.id}`} className="w-full">
                                   <Button variant="outline" size="sm" className="w-full text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white gap-2">
                                     <Users className="h-3 w-3" />
-                                    Squad Roster
+                                    {currentPlayer?.isAdmin ? "Manage Roster" : "Squad Roster"}
                                   </Button>
                                 </Link>
                                 <Link href="/attendance" className="w-full">
                                   <Button variant="ghost" size="sm" className="w-full text-xs font-bold gap-2 text-muted-foreground">
                                     <CheckCircle2 className="h-3 w-3" />
-                                    My Status
+                                    Register
                                   </Button>
                                 </Link>
                               </div>
@@ -321,24 +323,27 @@ export default function DashboardPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="divide-y max-h-[300px] overflow-auto pr-2">
-                    {players?.slice(0, 10).map((p) => (
+                  <div className="divide-y max-h-[400px] overflow-auto pr-2">
+                    {players?.map((p) => (
                       <div key={p.id} className="py-2 flex items-center gap-2">
-                        <div className="h-6 w-6 rounded-full bg-primary/20 text-[10px] flex items-center justify-center font-bold text-primary">
+                        <div className="h-8 w-8 rounded-full bg-primary/20 text-[10px] flex items-center justify-center font-bold text-primary shrink-0">
                           {p.name[0]}
                         </div>
-                        <span className="text-xs font-medium truncate">{p.name}</span>
-                        {p.team && <Badge variant="outline" className="ml-auto text-[8px] h-4 px-1">T{p.team}</Badge>}
+                        <div className="flex flex-col min-w-0">
+                          <span className="text-xs font-bold truncate">{p.name}</span>
+                          <span className="text-[10px] text-muted-foreground truncate">{p.status}</span>
+                        </div>
+                        {p.team && <Badge variant="outline" className="ml-auto text-[8px] h-4 px-1 shrink-0">T{p.team}</Badge>}
                       </div>
                     ))}
-                    {!players || players.length === 0 && (
+                    {(!players || players.length === 0) && (
                       <p className="text-xs text-muted-foreground italic py-4">No teammates yet.</p>
                     )}
                   </div>
                   <div className="pt-4 border-t">
                     <Link href="/players">
                       <Button className="w-full bg-accent hover:bg-accent/90 shadow-md">
-                        {currentPlayer?.isAdmin ? "Manage Squad" : "View Full Squad"}
+                        {currentPlayer?.isAdmin ? "Manage All Players" : "View Full Squad"}
                       </Button>
                     </Link>
                   </div>

@@ -16,13 +16,22 @@ import {
   Shirt,
   Lock,
   Users,
-  ChevronLeft
+  ChevronLeft,
+  MoreVertical
 } from "lucide-react";
 import { Game, AttendanceStatus, Player, Attendance } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, query, orderBy, doc, setDoc } from "firebase/firestore";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 
 const KIT_MAP: Record<string, string> = {
@@ -55,29 +64,23 @@ export default function AttendancePage() {
 
   const { data: games, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
 
-  const handleStatusChange = (gameId: string, status: AttendanceStatus) => {
-    if (!user) {
-      toast({
-        variant: "destructive",
-        title: "Authentication Required",
-        description: "Please sign in to register your attendance.",
-      });
-      return;
-    }
+  const handleStatusChange = (gameId: string, status: AttendanceStatus, targetPlayerId?: string) => {
+    if (!user) return;
 
-    const attendanceRef = doc(firestore, "games", gameId, "attendanceRecords", user.uid);
+    const playerId = targetPlayerId || user.uid;
+    const attendanceRef = doc(firestore, "games", gameId, "attendanceRecords", playerId);
     
     setDoc(attendanceRef, {
-      id: user.uid,
-      playerId: user.uid,
+      id: playerId,
+      playerId: playerId,
       gameId: gameId,
       status: status,
       lastUpdated: new Date().toISOString()
     }, { merge: true });
 
     toast({
-      title: status === 'Confirmed' ? "Availability Confirmed" : "Availability Declined",
-      description: "Your status has been updated for this event.",
+      title: "Status Updated",
+      description: `Attendance set to ${status}.`,
     });
   };
 
@@ -139,7 +142,7 @@ export default function AttendancePage() {
 
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              <GameRosterList gameId={gameId} />
+              <GameRosterList gameId={gameId} onStatusChange={handleStatusChange} />
             </div>
             <div className="space-y-6">
               <AttendanceCard game={specificGame} userId={user.uid} onStatusChange={handleStatusChange} isCondensed />
@@ -185,8 +188,18 @@ export default function AttendancePage() {
   );
 }
 
-function GameRosterList({ gameId }: { gameId: string }) {
+function GameRosterList({ 
+  gameId, 
+  onStatusChange 
+}: { 
+  gameId: string;
+  onStatusChange: (gameId: string, status: AttendanceStatus, targetPlayerId?: string) => void;
+}) {
   const firestore = useFirestore();
+  const { user } = useUser();
+  const playerRef = useMemoFirebase(() => user ? doc(firestore, "players", user.uid) : null, [firestore, user]);
+  const { data: currentPlayer } = useDoc<Player>(playerRef);
+
   const playersQuery = useMemoFirebase(() => collection(firestore, "players"), [firestore]);
   const { data: players } = useCollection<Player>(playersQuery);
   
@@ -227,16 +240,42 @@ function GameRosterList({ gameId }: { gameId: string }) {
                     <p className="text-xs text-muted-foreground">Team {player.team} • {player.preferredPositions?.join(', ') || 'Any'}</p>
                   </div>
                 </div>
-                <Badge 
-                  variant={status === 'Confirmed' ? 'default' : status === 'Declined' ? 'destructive' : 'outline'}
-                  className={cn(
-                    "min-w-[90px] justify-center",
-                    status === 'Confirmed' && "bg-accent hover:bg-accent",
-                    status === 'Pending' && "border-amber-500 text-amber-600"
+                
+                <div className="flex items-center gap-2">
+                  <Badge 
+                    variant={status === 'Confirmed' ? 'default' : status === 'Declined' ? 'destructive' : 'outline'}
+                    className={cn(
+                      "min-w-[90px] justify-center",
+                      status === 'Confirmed' && "bg-accent hover:bg-accent",
+                      status === 'Pending' && "border-amber-500 text-amber-600"
+                    )}
+                  >
+                    {status}
+                  </Badge>
+
+                  {currentPlayer?.isAdmin && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Manual Override</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Confirmed', player.id)} className="text-accent">
+                          <Check className="mr-2 h-4 w-4" /> Confirm
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Declined', player.id)} className="text-destructive">
+                          <X className="mr-2 h-4 w-4" /> Decline
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Pending', player.id)}>
+                          <Clock className="mr-2 h-4 w-4" /> Pending
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   )}
-                >
-                  {status}
-                </Badge>
+                </div>
               </div>
             );
           })}
