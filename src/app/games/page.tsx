@@ -39,7 +39,8 @@ import {
   MoreVertical,
   ChevronRight,
   Pencil,
-  Trash2
+  Trash2,
+  Shirt
 } from "lucide-react";
 import { Game, GameType } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,7 @@ export default function GamesPage() {
     endTime: string;
     location: string;
     opponent: string;
+    kitColors: string;
   }>({
     type: "Training",
     date: "",
@@ -68,6 +70,7 @@ export default function GamesPage() {
     endTime: "",
     location: "",
     opponent: "",
+    kitColors: "",
   });
 
   useEffect(() => {
@@ -82,7 +85,7 @@ export default function GamesPage() {
   }, [games, isLoaded]);
 
   const resetForm = () => {
-    setFormData({ type: "Training", date: "", startTime: "", endTime: "", location: "", opponent: "" });
+    setFormData({ type: "Training", date: "", startTime: "", endTime: "", location: "", opponent: "", kitColors: "" });
   };
 
   const isOpponentNotRequired = (type: GameType) => {
@@ -107,6 +110,7 @@ export default function GamesPage() {
       endTime: formData.endTime,
       location: formData.location,
       opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || undefined),
+      kitColors: formData.kitColors || "TBD",
     };
 
     setGames([...games, newGame].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
@@ -127,6 +131,7 @@ export default function GamesPage() {
       endTime: game.endTime,
       location: game.location,
       opponent: (game.opponent === "N/A" || !game.opponent) ? "" : game.opponent,
+      kitColors: game.kitColors || "",
     });
     
     setTimeout(() => {
@@ -153,7 +158,8 @@ export default function GamesPage() {
             startTime: formData.startTime,
             endTime: formData.endTime,
             location: formData.location, 
-            opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || undefined)
+            opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || undefined),
+            kitColors: formData.kitColors || "TBD",
           }
         : g
     ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -246,6 +252,10 @@ export default function GamesPage() {
                     disabled={isOpponentNotRequired(formData.type)}
                   />
                 </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="kitColors">Kit Colors</Label>
+                  <Input id="kitColors" placeholder="e.g. Home: Blue/White" value={formData.kitColors} onChange={(e) => setFormData({ ...formData, kitColors: e.target.value })} />
+                </div>
               </div>
               <DialogFooter>
                 <Button onClick={handleAddGame} className="bg-accent w-full">Create Event</Button>
@@ -302,6 +312,12 @@ export default function GamesPage() {
                           <MapPin className="h-4 w-4 text-primary" />
                           {game.location}
                         </div>
+                        {game.kitColors && (
+                          <div className="flex items-center gap-1.5 text-accent font-medium">
+                            <Shirt className="h-4 w-4" />
+                            Kit: {game.kitColors}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -388,6 +404,10 @@ export default function GamesPage() {
                   onChange={(e) => setFormData({ ...formData, opponent: e.target.value })}
                   disabled={isOpponentNotRequired(formData.type)}
                 />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-kitColors">Kit Colors</Label>
+                <Input id="edit-kitColors" placeholder="e.g. Home: Blue/White" value={formData.kitColors} onChange={(e) => setFormData({ ...formData, kitColors: e.target.value })} />
               </div>
             </div>
             <DialogFooter>

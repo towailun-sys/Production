@@ -12,7 +12,8 @@ import {
   Clock, 
   MapPin, 
   Calendar,
-  AlertCircle
+  AlertCircle,
+  Shirt
 } from "lucide-react";
 import { Game, AttendanceStatus, Attendance } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -142,9 +143,20 @@ export default function AttendancePage() {
                           <p className="font-medium text-foreground">{game.location}</p>
                         </div>
                       </div>
+                      {game.kitColors && (
+                        <div className="flex items-center gap-3 text-muted-foreground">
+                          <div className="bg-accent/10 p-2 rounded-full">
+                            <Shirt className="h-5 w-5 text-accent" />
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Kit Colors</p>
+                            <p className="font-bold text-accent">{game.kitColors}</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
-                    <div className="flex flex-col justify-center items-center gap-4 bg-muted/20 p-6 rounded-xl border border-dashed">
+                    <div className="flex flex-col justify-center items-center gap-4 bg-muted/20 p-6 rounded-xl border border-dashed text-foreground">
                       <p className="font-bold text-center">Are you attending?</p>
                       <div className="flex w-full gap-3">
                         <Button 

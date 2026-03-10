@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -14,7 +13,8 @@ import {
   Clock,
   ArrowRight,
   Trophy,
-  Info
+  Info,
+  Shirt
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, Attendance } from "@/lib/types";
@@ -116,6 +116,12 @@ export default function DashboardPage() {
                                   <MapPin className="h-4 w-4 text-primary" />
                                   {game.location}
                                 </div>
+                                {game.kitColors && (
+                                  <div className="flex items-center gap-2 font-medium text-accent">
+                                    <Shirt className="h-4 w-4" />
+                                    Kit: {game.kitColors}
+                                  </div>
+                                )}
                               </div>
                             </div>
 
@@ -215,9 +221,9 @@ export default function DashboardPage() {
               <CardContent className="text-sm text-muted-foreground space-y-4">
                 <p>Ensure you update your status at least 48 hours before kickoff to help the Gaffer plan the lineup.</p>
                 <div className="p-3 bg-muted/40 rounded-lg">
-                  <p className="font-bold text-foreground mb-1">Kit Colors</p>
-                  <p>Home: Blue/White</p>
-                  <p>Away: Total Black</p>
+                  <p className="font-bold text-foreground mb-1">Standard Kit Rules</p>
+                  <p>Home Games: Blue/White</p>
+                  <p>Away Games: Total Black</p>
                 </div>
               </CardContent>
             </Card>

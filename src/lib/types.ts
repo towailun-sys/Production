@@ -21,6 +21,7 @@ export interface Game {
   location: string;
   type: GameType;
   opponent?: string;
+  kitColors?: string;
 }
 
 export type AttendanceStatus = 'Confirmed' | 'Declined' | 'Pending';
