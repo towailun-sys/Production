@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -26,12 +25,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { 
   Clock, 
   MapPin, 
   Plus, 
   MoreVertical,
-  ChevronRight
+  ChevronRight,
+  Pencil,
+  Trash2
 } from "lucide-react";
 import { Game, GameType } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -42,6 +49,8 @@ export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingGame, setEditingGame] = useState<Game | null>(null);
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<{
@@ -69,6 +78,10 @@ export default function GamesPage() {
     }
   }, [games, isLoaded]);
 
+  const resetForm = () => {
+    setFormData({ type: "Training", date: "", time: "", location: "", opponent: "" });
+  };
+
   const handleAddGame = () => {
     if (!formData.date || !formData.time || !formData.location) {
       toast({
@@ -90,10 +103,63 @@ export default function GamesPage() {
 
     setGames([...games, newGame].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
     setIsAddOpen(false);
-    setFormData({ type: "Training", date: "", time: "", location: "", opponent: "" });
+    resetForm();
     toast({
       title: "Event Scheduled",
       description: "The new event has been added to the calendar.",
+    });
+  };
+
+  const handleEditClick = (game: Game) => {
+    setEditingGame(game);
+    setFormData({
+      type: game.type,
+      date: game.date,
+      time: game.time,
+      location: game.location,
+      opponent: game.opponent || "",
+    });
+    setIsEditOpen(true);
+  };
+
+  const handleUpdateGame = () => {
+    if (!editingGame || !formData.date || !formData.time || !formData.location) {
+      toast({
+        variant: "destructive",
+        title: "Missing Information",
+        description: "Please fill in date, time, and location.",
+      });
+      return;
+    }
+
+    const updatedGames = games.map(g => 
+      g.id === editingGame.id 
+        ? { 
+            ...g, 
+            type: formData.type, 
+            date: formData.date, 
+            time: formData.time, 
+            location: formData.location, 
+            opponent: formData.opponent || undefined 
+          }
+        : g
+    ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    setGames(updatedGames);
+    setIsEditOpen(false);
+    setEditingGame(null);
+    resetForm();
+    toast({
+      title: "Event Updated",
+      description: "Changes to the event have been saved.",
+    });
+  };
+
+  const handleDeleteGame = (id: string) => {
+    setGames(games.filter(g => g.id !== id));
+    toast({
+      title: "Event Deleted",
+      description: "The event has been removed from the schedule.",
     });
   };
 
@@ -108,7 +174,7 @@ export default function GamesPage() {
             <h1 className="text-3xl font-headline">Game Schedule</h1>
             <p className="text-muted-foreground">Plan and manage upcoming fixtures.</p>
           </div>
-          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+          <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if(!open) resetForm(); }}>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-primary/90 gap-2">
                 <Plus className="h-4 w-4" />
@@ -163,62 +229,134 @@ export default function GamesPage() {
           </Dialog>
         </div>
 
-        <div className="grid gap-6">
-          {games.map((game) => (
-            <Card key={game.id} className="border-none shadow-md hover:shadow-lg transition-all border-l-4 border-primary">
-              <CardContent className="p-6">
-                <div className="flex flex-col md:flex-row md:items-center gap-6">
-                  <div className="flex flex-col items-center justify-center bg-muted/30 p-4 rounded-lg min-w-[100px] border">
-                    <span className="text-sm font-bold uppercase text-muted-foreground">
-                      {new Date(game.date).toLocaleString('default', { month: 'short' })}
-                    </span>
-                    <span className="text-3xl font-bold font-headline text-primary">
-                      {new Date(game.date).getDate()}
-                    </span>
-                  </div>
-
-                  <div className="flex-1 space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline" className={cn(
-                        "font-bold px-2 py-0.5 border-none",
-                        game.type === 'League' ? "bg-primary text-white" : 
-                        game.type === 'Training' ? "bg-accent text-white" :
-                        "bg-muted text-foreground"
-                      )}>
-                        {game.type}
-                      </Badge>
-                      {game.opponent && (
-                        <span className="text-sm font-medium text-muted-foreground">Fixture</span>
-                      )}
-                    </div>
-                    <h3 className="text-xl font-headline font-bold">
-                      {game.type === 'Training' ? 'Team Training Session' : `vs ${game.opponent}`}
-                    </h3>
-                    <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="h-4 w-4 text-primary" />
-                        {game.time}
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <MapPin className="h-4 w-4 text-primary" />
-                        {game.location}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex md:flex-col items-center gap-2 justify-end">
-                    <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 font-bold gap-1">
-                      View Attendance
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground">
-                      <MoreVertical className="h-5 w-5" />
-                    </Button>
-                  </div>
+        {/* Edit Dialog */}
+        <Dialog open={isEditOpen} onOpenChange={(open) => { setIsEditOpen(open); if(!open) { setEditingGame(null); resetForm(); } }}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="font-headline">Edit Event</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-type">Event Type</Label>
+                <Select 
+                  value={formData.type}
+                  onValueChange={(val: GameType) => setFormData({ ...formData, type: val })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Training">Training Session</SelectItem>
+                    <SelectItem value="League">League Match</SelectItem>
+                    <SelectItem value="Friendly">Friendly Match</SelectItem>
+                    <SelectItem value="Internal">Internal Game</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-date">Date</Label>
+                  <Input id="edit-date" type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
                 </div>
-              </CardContent>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-time">Time</Label>
+                  <Input id="edit-time" type="time" value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })} />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-location">Location</Label>
+                <Input id="edit-location" placeholder="Stadium or Pitch name" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-opponent">Opponent (Optional)</Label>
+                <Input id="edit-opponent" placeholder="Away Team Name" value={formData.opponent} onChange={(e) => setFormData({ ...formData, opponent: e.target.value })} />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleUpdateGame} className="bg-primary w-full">Save Changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <div className="grid gap-6">
+          {games.length === 0 ? (
+            <Card className="p-12 text-center border-dashed border-2">
+              <p className="text-muted-foreground">No events scheduled. Use the button above to add one.</p>
             </Card>
-          ))}
+          ) : (
+            games.map((game) => (
+              <Card key={game.id} className="border-none shadow-md hover:shadow-lg transition-all border-l-4 border-primary">
+                <CardContent className="p-6">
+                  <div className="flex flex-col md:flex-row md:items-center gap-6">
+                    <div className="flex flex-col items-center justify-center bg-muted/30 p-4 rounded-lg min-w-[100px] border">
+                      <span className="text-sm font-bold uppercase text-muted-foreground">
+                        {new Date(game.date).toLocaleString('default', { month: 'short' })}
+                      </span>
+                      <span className="text-3xl font-bold font-headline text-primary">
+                        {new Date(game.date).getDate()}
+                      </span>
+                    </div>
+
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={cn(
+                          "font-bold px-2 py-0.5 border-none",
+                          game.type === 'League' ? "bg-primary text-white" : 
+                          game.type === 'Training' ? "bg-accent text-white" :
+                          "bg-muted text-foreground"
+                        )}>
+                          {game.type}
+                        </Badge>
+                        {game.opponent && (
+                          <span className="text-sm font-medium text-muted-foreground">Fixture</span>
+                        )}
+                      </div>
+                      <h3 className="text-xl font-headline font-bold">
+                        {game.type === 'Training' ? 'Team Training Session' : `vs ${game.opponent || 'TBD'}`}
+                      </h3>
+                      <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="h-4 w-4 text-primary" />
+                          {game.time}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <MapPin className="h-4 w-4 text-primary" />
+                          {game.location}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex md:flex-col items-center gap-2 justify-end">
+                      <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 font-bold gap-1" asChild>
+                        <a href={`/attendance`}>
+                          View Attendance
+                          <ChevronRight className="h-4 w-4" />
+                        </a>
+                      </Button>
+                      
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground">
+                            <MoreVertical className="h-5 w-5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEditClick(game)} className="gap-2">
+                            <Pencil className="h-4 w-4" />
+                            Edit Event
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDeleteGame(game.id)} className="gap-2 text-destructive focus:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                            Delete Event
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
         </div>
       </main>
     </div>
