@@ -23,10 +23,11 @@ import {
   Fingerprint,
   Copy,
   Sparkles,
-  Check
+  Check,
+  X
 } from "lucide-react";
 import Link from "next/link";
-import { Game, Player, Attendance } from "@/lib/types";
+import { Game, Player, Attendance, AttendanceStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, query, orderBy, limit, where, doc, setDoc, deleteDoc } from "firebase/firestore";
@@ -45,6 +46,70 @@ const KIT_MAP: Record<string, string> = {
 const getKitColorClass = (kitLabel: string) => {
   return KIT_MAP[kitLabel] || "text-muted-foreground";
 };
+
+function UserAttendanceToggle({ gameId, userId }: { gameId: string, userId: string }) {
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  
+  const attendanceRef = useMemoFirebase(() => 
+    doc(firestore, "games", gameId, "attendanceRecords", userId), 
+    [firestore, gameId, userId]
+  );
+  const { data: attendance } = useDoc<Attendance>(attendanceRef);
+  
+  const currentStatus = attendance?.status || 'Pending';
+
+  const updateStatus = (status: AttendanceStatus) => {
+    const attendanceData = {
+      id: userId,
+      playerId: userId,
+      gameId: gameId,
+      status: status,
+      lastUpdated: new Date().toISOString()
+    };
+
+    setDoc(attendanceRef, attendanceData, { merge: true })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: attendanceRef.path,
+          operation: 'write',
+          requestResourceData: attendanceData
+        } satisfies SecurityRuleContext));
+      });
+
+    toast({
+      title: status === 'Confirmed' ? "You're in!" : "Status updated",
+      description: `Your attendance is now ${status}.`,
+    });
+  };
+
+  return (
+    <div className="flex gap-2 w-full mt-4">
+      <Button 
+        size="sm" 
+        variant={currentStatus === 'Confirmed' ? "default" : "outline"}
+        className={cn(
+          "flex-1 h-9 text-xs font-bold transition-all", 
+          currentStatus === 'Confirmed' ? "bg-accent hover:bg-accent/90 border-accent" : "hover:border-accent hover:text-accent"
+        )}
+        onClick={() => updateStatus('Confirmed')}
+      >
+        <Check className="h-3.5 w-3.5 mr-1.5" /> Join
+      </Button>
+      <Button 
+        size="sm" 
+        variant={currentStatus === 'Declined' ? "default" : "outline"}
+        className={cn(
+          "flex-1 h-9 text-xs font-bold transition-all",
+          currentStatus === 'Declined' ? "bg-destructive hover:bg-destructive/90 border-destructive" : "hover:border-destructive hover:text-destructive"
+        )}
+        onClick={() => updateStatus('Declined')}
+      >
+        <X className="h-3.5 w-3.5 mr-1.5" /> Decline
+      </Button>
+    </div>
+  );
+}
 
 function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string, allPlayers: Player[], userId: string | undefined }) {
   const firestore = useFirestore();
@@ -100,14 +165,12 @@ export default function DashboardPage() {
   const [isClaimingAdmin, setIsClaimingAdmin] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
 
-  // Get current player profile by UID
   const playerRef = useMemoFirebase(() => {
     if (isUserLoading || !user) return null;
     return doc(firestore, "players", user.uid);
   }, [firestore, user, isUserLoading]);
   const { data: currentPlayer, isLoading: isProfileLoading } = useDoc<Player>(playerRef);
 
-  // Search for matching pre-entered profile by Email
   const emailMatchQuery = useMemoFirebase(() => {
     if (isUserLoading || !user || currentPlayer) return null;
     return query(collection(firestore, "players"), where("email", "==", user.email), limit(1));
@@ -115,7 +178,6 @@ export default function DashboardPage() {
   const { data: matchedProfiles } = useCollection<Player>(emailMatchQuery);
   const preEnteredProfile = matchedProfiles?.[0];
 
-  // Query games
   const gamesQuery = useMemoFirebase(() => {
     if (isUserLoading || !user) return null;
     const now = new Date().toISOString().split('T')[0];
@@ -251,6 +313,8 @@ export default function DashboardPage() {
     );
   }
 
+  const welcomeName = currentPlayer?.nickname || currentPlayer?.name || user?.displayName || "Player";
+
   return (
     <div className="min-h-screen bg-background pb-12">
       <MainNav />
@@ -258,7 +322,7 @@ export default function DashboardPage() {
         <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl md:text-4xl font-headline mb-2">
-              {user ? `Welcome back, ${currentPlayer?.nickname || currentPlayer?.name || user.displayName}!` : "Team Dashboard"}
+              {user ? `Welcome back, ${welcomeName}!` : "Team Dashboard"}
             </h1>
             <p className="text-muted-foreground font-medium">
               {user ? "Your personalized squad overview and upcoming fixtures." : "Squad Status & Upcoming Schedule"}
@@ -438,27 +502,27 @@ export default function DashboardPage() {
                             <div className="bg-muted/30 p-6 md:w-80 border-t md:border-t-0 md:border-l flex flex-col justify-between">
                               <div>
                                 <div className="flex items-center justify-between mb-4">
-                                  <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Squad Management</p>
-                                  <Badge variant="outline" className="text-accent border-accent/20 bg-accent/5">
-                                    Active
-                                  </Badge>
+                                  <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Availability</p>
+                                  {currentPlayer && (
+                                    <Badge variant="outline" className="text-accent border-accent/20 bg-accent/5">
+                                      {currentPlayer.team === game.team || game.team === 'All' ? 'My Game' : 'Other Team'}
+                                    </Badge>
+                                  )}
                                 </div>
-                                <p className="text-xs italic text-muted-foreground mb-4">
-                                  {currentPlayer?.isAdmin ? "Manage full squad attendance and roster." : "Register and check who else is going."}
-                                </p>
+                                {currentPlayer ? (
+                                  <UserAttendanceToggle gameId={game.id} userId={user.uid} />
+                                ) : (
+                                  <p className="text-xs italic text-muted-foreground mb-4">
+                                    Sign in and link profile to register.
+                                  </p>
+                                )}
                               </div>
 
-                              <div className="flex flex-col gap-2">
+                              <div className="flex flex-col gap-2 mt-4">
                                 <Link href={`/attendance?gameId=${game.id}`} className="w-full">
                                   <Button variant="outline" size="sm" className="w-full text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white gap-2">
                                     <Users className="h-3 w-3" />
-                                    {currentPlayer?.isAdmin ? "Manage Roster" : "Squad Roster"}
-                                  </Button>
-                                </Link>
-                                <Link href="/attendance" className="w-full">
-                                  <Button variant="ghost" size="sm" className="w-full text-xs font-bold gap-2 text-muted-foreground">
-                                    <UserCheck className="h-3 w-3" />
-                                    Register
+                                    {currentPlayer?.isAdmin ? "Manage Full Roster" : "View Squad Roster"}
                                   </Button>
                                 </Link>
                               </div>
