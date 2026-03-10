@@ -538,11 +538,11 @@ export default function GamesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="edit-startTime">{dict.games.dialog.start}</Label>
-                  <Input id="edit-startTime" type="time" value={formData.startTime} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
+                  <Input id="edit-startTime" type="time" value={formData.startTime} onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-endTime">{dict.games.dialog.end}</Label>
-                  <Input id="edit-endTime" type="time" value={formData.endTime} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
+                  <Input id="edit-endTime" type="time" value={formData.endTime} onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} />
                 </div>
               </div>
               <div className="grid gap-2">
