@@ -188,7 +188,7 @@ export default function DashboardPage() {
       collection(firestore, "games"),
       where("date", ">=", now),
       orderBy("date", "asc"),
-      limit(10)
+      limit(15)
     );
   }, [firestore, user, isUserLoading]);
 
@@ -253,7 +253,8 @@ export default function DashboardPage() {
       isAdmin: true,
       status: "Active",
       team: "A",
-      preferredPositions: []
+      preferredPositions: ["MF", "FW"],
+      number: 10
     };
 
     setDoc(adminRef, adminData, { merge: true })
@@ -337,6 +338,17 @@ export default function DashboardPage() {
   }
 
   const welcomeName = currentPlayer?.nickname || currentPlayer?.name || user?.displayName || "Player";
+
+  // Filter games based on user's team
+  const filteredGames = upcomingGames?.filter(game => {
+    // Admins see everything
+    if (currentPlayer?.isAdmin) return true;
+    
+    // Non-admins see games for their team or "All"
+    if (!currentPlayer) return false;
+    
+    return game.team === 'All' || game.team === currentPlayer.team;
+  }) || [];
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -482,14 +494,12 @@ export default function DashboardPage() {
                     Array.from({ length: 3 }).map((_, i) => (
                       <Card key={i} className="h-40 animate-pulse bg-muted/50" />
                     ))
-                  ) : !upcomingGames || upcomingGames.length === 0 ? (
+                  ) : filteredGames.length === 0 ? (
                     <Card className="p-12 text-center border-dashed border-2">
-                      <p className="text-muted-foreground">No upcoming games scheduled.</p>
+                      <p className="text-muted-foreground">No upcoming games scheduled for your team.</p>
                     </Card>
                   ) : (
-                    upcomingGames
-                      .filter(g => !currentPlayer || currentPlayer.isAdmin || g.team === 'All' || g.team === currentPlayer.team)
-                      .map((game) => (
+                    filteredGames.map((game) => (
                       <Card key={game.id} className="border-none shadow-md hover:shadow-lg transition-all overflow-hidden border-l-4 border-primary">
                         <CardContent className="p-0">
                           <div className="flex flex-col md:flex-row">
