@@ -29,7 +29,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Search, UserPlus, Filter, Pencil, Trash2 } from "lucide-react";
+import { Search, UserPlus, Filter, Pencil, Trash2, Mail } from "lucide-react";
 import { Player, PlayerPosition, TeamType } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -54,11 +54,13 @@ export default function PlayersPage() {
   const [formData, setFormData] = useState<{
     name: string;
     nickname: string;
+    email: string;
     preferredPositions: PlayerPosition[];
     team: TeamType;
   }>({
     name: "",
     nickname: "",
+    email: "",
     preferredPositions: [],
     team: "A",
   });
@@ -78,7 +80,8 @@ export default function PlayersPage() {
 
   const filteredPlayers = players.filter(p => 
     p.name.toLowerCase().includes(search.toLowerCase()) || 
-    p.nickname?.toLowerCase().includes(search.toLowerCase())
+    p.nickname?.toLowerCase().includes(search.toLowerCase()) ||
+    p.email?.toLowerCase().includes(search.toLowerCase())
   );
 
   const handlePositionToggle = (pos: PlayerPosition) => {
@@ -106,6 +109,7 @@ export default function PlayersPage() {
       id: Math.random().toString(36).substring(2, 11),
       name: formData.name,
       nickname: formData.nickname || undefined,
+      email: formData.email || undefined,
       preferredPositions: formData.preferredPositions,
       team: formData.team,
     };
@@ -124,6 +128,7 @@ export default function PlayersPage() {
     setFormData({
       name: player.name,
       nickname: player.nickname || "",
+      email: player.email || "",
       preferredPositions: player.preferredPositions,
       team: player.team || "A",
     });
@@ -138,7 +143,13 @@ export default function PlayersPage() {
 
     const updatedPlayers = players.map(p => 
       p.id === editingPlayer.id 
-        ? { ...p, name: formData.name, nickname: formData.nickname || undefined, preferredPositions: formData.preferredPositions, team: formData.team }
+        ? { ...p, 
+            name: formData.name, 
+            nickname: formData.nickname || undefined, 
+            email: formData.email || undefined,
+            preferredPositions: formData.preferredPositions, 
+            team: formData.team 
+          }
         : p
     );
 
@@ -164,6 +175,7 @@ export default function PlayersPage() {
     setFormData({
       name: "",
       nickname: "",
+      email: "",
       preferredPositions: [],
       team: "A",
     });
@@ -229,6 +241,16 @@ export default function PlayersPage() {
                     placeholder="The Rock" 
                     value={formData.nickname}
                     onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="email">Email (Optional)</Label>
+                  <Input 
+                    id="email" 
+                    type="email"
+                    placeholder="john@example.com" 
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                 </div>
                 <div className="grid gap-2">
@@ -299,6 +321,15 @@ export default function PlayersPage() {
                 />
               </div>
               <div className="grid gap-2">
+                <Label htmlFor="edit-email">Email (Optional)</Label>
+                <Input 
+                  id="edit-email" 
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
                 <Label>Assigned Team</Label>
                 <RadioGroup 
                   value={formData.team} 
@@ -347,7 +378,7 @@ export default function PlayersPage() {
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Search players..." 
+                placeholder="Search players by name, nickname or email..." 
                 className="pl-9 bg-muted/30 border-none focus-visible:ring-1 focus-visible:ring-primary" 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -361,7 +392,7 @@ export default function PlayersPage() {
             <Table>
               <TableHeader className="bg-muted/30">
                 <TableRow>
-                  <TableHead className="w-[200px] font-bold">Player</TableHead>
+                  <TableHead className="w-[250px] font-bold">Player</TableHead>
                   <TableHead className="font-bold">Team</TableHead>
                   <TableHead className="font-bold">Positions</TableHead>
                   <TableHead className="text-right font-bold">Actions</TableHead>
@@ -382,9 +413,17 @@ export default function PlayersPage() {
                           <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
                             {player.name.split(' ').map(n => n[0]).join('')}
                           </div>
-                          <div>
-                            <p className="font-bold">{player.name}</p>
-                            {player.nickname && <p className="text-xs text-muted-foreground">"{player.nickname}"</p>}
+                          <div className="flex flex-col">
+                            <p className="font-bold leading-none">{player.name}</p>
+                            <div className="flex items-center gap-2 mt-1">
+                              {player.nickname && <span className="text-xs text-muted-foreground font-medium italic">"{player.nickname}"</span>}
+                              {player.email && (
+                                <span className="flex items-center text-[10px] text-muted-foreground gap-1">
+                                  <Mail className="h-3 w-3" />
+                                  {player.email}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </TableCell>

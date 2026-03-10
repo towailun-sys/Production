@@ -6,6 +6,7 @@ export interface Player {
   id: string;
   name: string;
   nickname?: string;
+  email?: string;
   preferredPositions: PlayerPosition[];
   team?: TeamType;
 }
