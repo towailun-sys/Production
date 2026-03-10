@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -28,6 +29,7 @@ export interface BadgeProps
     VariantProps<typeof badgeVariants> {}
 
 function Badge({ className, variant, ...props }: BadgeProps) {
+  // Use span instead of div to avoid nesting issues (e.g. inside <p> or <a>)
   return (
     <span className={cn(badgeVariants({ variant }), className)} {...props} />
   )

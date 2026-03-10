@@ -16,6 +16,7 @@ export interface Player {
   status: PlayerStatus;
   isAdmin?: boolean;
   isCaptain?: boolean;
+  isLinked?: boolean; // New field to track if profile is claimed by an Auth user
 }
 
 export type GameType = 'Training' | 'League' | 'Friendly' | 'Internal';

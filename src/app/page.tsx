@@ -26,7 +26,8 @@ import {
   Check,
   X,
   UserRound,
-  Crown
+  Crown,
+  Link as LinkIcon
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, Attendance, AttendanceStatus } from "@/lib/types";
@@ -130,7 +131,7 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
     .filter(Boolean) as Player[] || [];
 
   if (confirmedPlayers.length === 0) {
-    return <p className="text-[10px] text-muted-foreground italic mt-2">No confirmations yet.</p>;
+    return <div className="text-[10px] text-muted-foreground italic mt-2">No confirmations yet.</div>;
   }
 
   return (
@@ -212,13 +213,17 @@ export default function DashboardPage() {
     const claimData = {
       ...preEnteredProfile,
       id: user.uid,
-      email: user.email 
+      email: user.email,
+      isLinked: true 
     };
 
     setDoc(newDocRef, claimData)
       .then(() => {
-        const oldDocRef = doc(firestore, "players", preEnteredProfile.id);
-        deleteDoc(oldDocRef);
+        // Only delete if it's not the same document (it shouldn't be if we reached here)
+        if (preEnteredProfile.id !== user.uid) {
+          const oldDocRef = doc(firestore, "players", preEnteredProfile.id);
+          deleteDoc(oldDocRef);
+        }
         toast({
           title: "Profile Claimed!",
           description: `Welcome to the squad, ${preEnteredProfile.nickname || preEnteredProfile.name}.`,
@@ -250,18 +255,23 @@ export default function DashboardPage() {
     
     const adminRef = doc(firestore, "players", user.uid);
     
-    const adminData: any = {
+    // Use partial data for merging to avoid overwriting existing profile data
+    const adminData: Partial<Player> = {
       id: user.uid,
       isAdmin: true,
+      isLinked: true
     };
 
+    // Only set defaults if no profile exists at all
     if (!currentPlayer) {
-      adminData.name = user.displayName || "Admin User";
-      adminData.email = user.email || "";
-      adminData.status = "Active";
-      adminData.team = "A";
-      adminData.preferredPositions = ["MF", "FW"];
-      adminData.number = 10;
+      Object.assign(adminData, {
+        name: user.displayName || "Admin User",
+        email: user.email || "",
+        status: "Active",
+        team: "A",
+        preferredPositions: ["MF", "FW"],
+        number: 10
+      });
     }
 
     setDoc(adminRef, adminData, { merge: true })
@@ -339,7 +349,7 @@ export default function DashboardPage() {
         <MainNav />
         <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground font-medium">Loading squad data...</p>
+          <div className="text-muted-foreground font-medium">Loading squad data...</div>
         </main>
       </div>
     );
@@ -362,9 +372,9 @@ export default function DashboardPage() {
             <h1 className="text-3xl md:text-4xl font-headline mb-2">
               {user ? `Welcome back, ${welcomeName}!` : "Team Dashboard"}
             </h1>
-            <p className="text-muted-foreground font-medium">
+            <div className="text-muted-foreground font-medium">
               {user ? "Your personalized squad overview and upcoming fixtures." : "Squad Status & Upcoming Schedule"}
-            </p>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             {currentPlayer?.isAdmin && (
@@ -411,9 +421,9 @@ export default function DashboardPage() {
               <Lock className="h-8 w-8 text-primary" />
             </div>
             <h2 className="text-2xl font-headline mb-2">Private Squad Access</h2>
-            <p className="text-muted-foreground max-w-sm mb-6">
+            <div className="text-muted-foreground max-w-sm mb-6">
               Please sign in with your Google account to view the team schedule and register for games.
-            </p>
+            </div>
           </div>
         ) : (
           <div className="grid gap-8 lg:grid-cols-4">
@@ -427,16 +437,16 @@ export default function DashboardPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <p className="text-foreground font-medium">
+                    <div className="text-foreground font-medium">
                       Hello {user.displayName}! An administrator has already created a squad profile for <strong>{preEnteredProfile.name}</strong> ({preEnteredProfile.email}). 
-                    </p>
+                    </div>
                     <div className="p-4 bg-white rounded-lg border flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-bold flex items-center gap-2">
+                        <div className="text-sm font-bold flex items-center gap-2">
                           {preEnteredProfile.isCaptain && <Crown className="h-4 w-4 text-accent" />}
                           {preEnteredProfile.name} {preEnteredProfile.nickname && `"${preEnteredProfile.nickname}"`} {preEnteredProfile.number && <Badge variant="outline" className="ml-1">#{preEnteredProfile.number}</Badge>}
-                        </p>
-                        <p className="text-xs text-muted-foreground">Team {preEnteredProfile.team} • {preEnteredProfile.status}</p>
+                        </div>
+                        <div className="text-xs text-muted-foreground">Team {preEnteredProfile.team} • {preEnteredProfile.status}</div>
                       </div>
                       <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-primary hover:bg-primary/90 gap-2 font-bold">
                         {isLinking ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />}
@@ -454,10 +464,10 @@ export default function DashboardPage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <p className="text-amber-700">
+                    <div className="text-amber-700">
                       Hello, {user.displayName}! Your account is not yet assigned to a squad. 
                       Please provide your User ID to the Team Administrator so they can link your account to a squad profile.
-                    </p>
+                    </div>
                     <div className="flex items-center justify-between p-3 bg-white/50 border border-amber-200 rounded-lg">
                       <div className="flex items-center gap-2 overflow-hidden">
                         <Fingerprint className="h-4 w-4 text-amber-600 shrink-0" />
@@ -502,7 +512,7 @@ export default function DashboardPage() {
                     ))
                   ) : filteredGames.length === 0 ? (
                     <Card className="p-12 text-center border-dashed border-2">
-                      <p className="text-muted-foreground">No upcoming games scheduled for your team.</p>
+                      <div className="text-muted-foreground">No upcoming games scheduled for your team.</div>
                     </Card>
                   ) : (
                     filteredGames.map((game) => (
@@ -560,7 +570,7 @@ export default function DashboardPage() {
                             <div className="bg-muted/30 p-6 md:w-80 border-t md:border-t-0 md:border-l flex flex-col justify-between">
                               <div>
                                 <div className="flex items-center justify-between mb-4">
-                                  <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Availability</p>
+                                  <div className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Availability</div>
                                   {currentPlayer && (
                                     <Badge 
                                       variant="outline" 
@@ -577,9 +587,9 @@ export default function DashboardPage() {
                                 {currentPlayer ? (
                                   <UserAttendanceToggle gameId={game.id} userId={user.uid} />
                                 ) : (
-                                  <p className="text-xs italic text-muted-foreground mb-4">
+                                  <div className="text-xs italic text-muted-foreground mb-4">
                                     Sign in and link profile to register.
-                                  </p>
+                                  </div>
                                 )}
                               </div>
 
@@ -630,6 +640,7 @@ export default function DashboardPage() {
                           <span className="text-xs font-bold truncate flex items-center gap-1">
                             {p.nickname || p.name}
                             {p.isAdmin && <ShieldCheck className="h-2.5 w-2.5 text-primary" />}
+                            {p.isLinked && <LinkIcon className="h-2.5 w-2.5 text-emerald-500" title="Account Linked" />}
                           </span>
                           <span className="text-[10px] text-muted-foreground truncate">{p.status}</span>
                         </div>
@@ -647,7 +658,7 @@ export default function DashboardPage() {
                       </div>
                     ))}
                     {(!players || players.length === 0) && (
-                      <p className="text-xs text-muted-foreground italic py-4">No teammates assigned yet.</p>
+                      <div className="text-xs text-muted-foreground italic py-4">No teammates assigned yet.</div>
                     )}
                   </div>
                   <div className="pt-4 border-t">
@@ -668,16 +679,20 @@ export default function DashboardPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground space-y-4">
-                  <p>Check the squad roster for each game to see who is confirmed. Aim for 11+ players for match days!</p>
+                  <div>Check the squad roster for each game to see who is confirmed. Aim for 11+ players for match days!</div>
                   <div className="p-3 bg-muted/40 rounded-lg">
-                    <p className="font-bold text-foreground mb-2 text-xs">TEAM ROLES</p>
+                    <div className="font-bold text-foreground mb-2 text-xs">TEAM ROLES</div>
                     <div className="flex items-center gap-2 mb-1">
                       <Crown className="h-3 w-3 text-accent" />
                       <span className="text-accent font-bold text-[10px]">Team Captain</span>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 mb-1">
                       <ShieldCheck className="h-3 w-3 text-primary" />
                       <span className="text-primary font-bold text-[10px]">Administrator</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <LinkIcon className="h-3 w-3 text-emerald-500" />
+                      <span className="text-emerald-600 font-bold text-[10px]">Account Linked</span>
                     </div>
                   </div>
                 </CardContent>

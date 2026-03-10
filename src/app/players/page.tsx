@@ -53,7 +53,8 @@ import {
   Phone,
   Crown,
   UserCog,
-  ShieldAlert
+  ShieldAlert,
+  Link as LinkIcon
 } from "lucide-react";
 import { Player, PlayerPosition, TeamType, PlayerStatus } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -114,6 +115,7 @@ export default function PlayersPage() {
     status: PlayerStatus;
     isAdmin: boolean;
     isCaptain: boolean;
+    isLinked: boolean;
   }>({
     id: "",
     name: "",
@@ -126,6 +128,7 @@ export default function PlayersPage() {
     status: "Active",
     isAdmin: false,
     isCaptain: false,
+    isLinked: false,
   });
 
   const playersQuery = useMemoFirebase(() => {
@@ -178,7 +181,8 @@ export default function PlayersPage() {
       team: formData.team,
       status: formData.status,
       isAdmin: formData.isAdmin,
-      isCaptain: formData.isCaptain
+      isCaptain: formData.isCaptain,
+      isLinked: !!formData.id // Assume if admin manually added a UID, it's linked
     };
 
     setDoc(playerRef, finalData)
@@ -212,6 +216,7 @@ export default function PlayersPage() {
       status: player.status || "Active",
       isAdmin: player.isAdmin || false,
       isCaptain: player.isCaptain || false,
+      isLinked: player.isLinked || false,
     });
     
     setTimeout(() => {
@@ -234,7 +239,8 @@ export default function PlayersPage() {
       team: formData.team,
       status: formData.status,
       isAdmin: formData.isAdmin,
-      isCaptain: formData.isCaptain
+      isCaptain: formData.isCaptain,
+      isLinked: formData.isLinked
     };
 
     setDoc(playerRef, updateData, { merge: true })
@@ -307,6 +313,7 @@ export default function PlayersPage() {
       status: "Active",
       isAdmin: false,
       isCaptain: false,
+      isLinked: false,
     });
   };
 
@@ -352,7 +359,7 @@ export default function PlayersPage() {
         <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center text-center">
           <Lock className="h-12 w-12 text-muted-foreground mb-4" />
           <h1 className="text-2xl font-headline mb-2">Access Restricted</h1>
-          <p className="text-muted-foreground">Sign in to manage the squad list.</p>
+          <div className="text-muted-foreground">Sign in to manage the squad list.</div>
         </main>
       </div>
     );
@@ -365,7 +372,7 @@ export default function PlayersPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-headline">Player Management</h1>
-            <p className="text-muted-foreground">Manage your squad and link Google accounts.</p>
+            <div className="text-muted-foreground">Manage your squad and link Google accounts.</div>
           </div>
           
           {currentPlayer?.isAdmin && (
@@ -698,7 +705,7 @@ export default function PlayersPage() {
             {isPlayersLoading ? (
               <div className="p-20 text-center">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-2" />
-                <p className="text-muted-foreground">Loading squad list...</p>
+                <div className="text-muted-foreground">Loading squad list...</div>
               </div>
             ) : (
               <Table>
@@ -743,7 +750,7 @@ export default function PlayersPage() {
                               </div>
                               <div className="flex flex-col">
                                 <div className="flex items-center gap-2">
-                                  <p className="font-bold leading-none">{player.name}</p>
+                                  <div className="font-bold leading-none">{player.name}</div>
                                   {player.isCaptain && (
                                     <Badge variant="secondary" className="bg-accent/20 text-accent text-[10px] font-bold h-4 px-1 leading-none">
                                       Capt.
@@ -752,15 +759,18 @@ export default function PlayersPage() {
                                   {player.isAdmin && (
                                     <ShieldCheck className="h-3 w-3 text-primary" />
                                   )}
+                                  {player.isLinked && (
+                                    <LinkIcon className="h-3 w-3 text-emerald-500" title="Account Linked" />
+                                  )}
                                 </div>
                                 <div className="flex flex-col gap-0.5 mt-1">
-                                  {player.nickname && <span className="text-xs text-primary font-bold">"{player.nickname}"</span>}
-                                  {player.email && <span className="text-[10px] text-muted-foreground">{player.email}</span>}
+                                  {player.nickname && <div className="text-xs text-primary font-bold">"{player.nickname}"</div>}
+                                  {player.email && <div className="text-[10px] text-muted-foreground">{player.email}</div>}
                                   {player.mobileNumber && (
-                                    <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                                       <Phone className="h-2.5 w-2.5" />
                                       {player.mobileNumber}
-                                    </span>
+                                    </div>
                                   )}
                                 </div>
                               </div>
