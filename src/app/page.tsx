@@ -90,7 +90,7 @@ function UserAttendanceToggle({ gameId, userId }: { gameId: string, userId: stri
         variant={currentStatus === 'Confirmed' ? "default" : "outline"}
         className={cn(
           "flex-1 h-9 text-xs font-bold transition-all", 
-          currentStatus === 'Confirmed' ? "bg-primary hover:bg-primary/90 border-primary" : "hover:border-primary hover:text-primary"
+          currentStatus === 'Confirmed' ? "bg-primary hover:bg-primary/90 border-primary text-white" : "hover:border-primary hover:text-primary"
         )}
         onClick={() => updateStatus('Confirmed')}
       >
@@ -149,6 +149,9 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
           >
             {p.number && <span className="mr-1 opacity-60">#{p.number}</span>}
             {p.nickname || p.name}
+            {p.preferredPositions && p.preferredPositions.length > 0 && (
+              <span className="ml-1.5 opacity-60 font-normal">({p.preferredPositions.join('/')})</span>
+            )}
           </Badge>
         ))}
       </div>
@@ -623,7 +626,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="pt-4 border-t">
                     <Link href="/players">
-                      <Button className="w-full bg-primary hover:bg-primary/90 shadow-md">
+                      <Button className="w-full bg-primary hover:bg-primary/90 shadow-md text-white">
                         {currentPlayer?.isAdmin ? "Manage All Players" : "View Full Squad"}
                       </Button>
                     </Link>
@@ -641,7 +644,7 @@ export default function DashboardPage() {
                 <CardContent className="text-sm text-muted-foreground space-y-4">
                   <p>Check the squad roster for each game to see who is confirmed. Aim for 11+ players for match days!</p>
                   <div className="p-3 bg-muted/40 rounded-lg">
-                    <p className="font-bold text-foreground mb-2 text-xs">TEAM CODING</p>
+                    <p className="font-bold text-foreground mb-2 text-xs">TEAM COLORS</p>
                     <div className="flex items-center gap-2 mb-1">
                       <div className="h-2 w-2 rounded-full bg-primary" />
                       <span className="text-primary font-bold text-[10px]">Team A (Green)</span>
