@@ -538,9 +538,6 @@ export default function DashboardPage() {
                           <div className="flex flex-col md:flex-row">
                             <div className="p-6 flex-1">
                               <div className="flex items-center gap-3 mb-4">
-                                <Badge variant={game.type === 'League' ? 'default' : 'secondary'} className="rounded-md font-bold">
-                                  {dict.common.gameTypes[game.type] || game.type}
-                                </Badge>
                                 <Badge 
                                   variant="outline" 
                                   className={cn(

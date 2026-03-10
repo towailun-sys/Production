@@ -176,7 +176,6 @@ export default function AttendancePage() {
           
           <header className="mb-8">
             <div className="flex items-center gap-3 mb-2">
-              <Badge className="bg-primary font-bold">{dict.common.gameTypes[specificGame.type] || specificGame.type}</Badge>
               <Badge 
                 variant="outline"
                 className={cn(
@@ -455,9 +454,6 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
       <CardHeader className="border-b bg-white/50 pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="border-primary/20 text-primary font-bold">
-              {dict.common.gameTypes[game.type] || game.type}
-            </Badge>
             <Badge 
               variant="outline"
               className={cn(
