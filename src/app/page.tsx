@@ -1,5 +1,7 @@
+
 "use client";
 
+import { useState } from "react";
 import { MainNav } from "@/components/layout/main-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,13 +15,16 @@ import {
   Info,
   Shirt,
   Lock,
-  Loader2
+  Loader2,
+  UserPlus,
+  CheckCircle2
 } from "lucide-react";
 import Link from "next/link";
-import { Game, Player } from "@/lib/types";
+import { Game, Player, TeamType } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, query, orderBy, limit, where } from "firebase/firestore";
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
+import { collection, query, orderBy, limit, where, doc, setDoc } from "firebase/firestore";
+import { useToast } from "@/hooks/use-toast";
 
 const KIT_MAP: Record<string, string> = {
   "Home 1: Pink/Grey": "text-pink-500",
@@ -36,13 +41,26 @@ const getKitColorClass = (kitLabel: string) => {
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
+  const [isJoining, setIsJoining] = useState(false);
 
+  // Get current player profile
+  const playerRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(firestore, "players", user.uid);
+  }, [firestore, user]);
+  const { data: currentPlayer, isLoading: isProfileLoading } = useDoc<Player>(playerRef);
+
+  // Query games for the user's team or all teams
   const gamesQuery = useMemoFirebase(() => {
     if (!user) return null;
-    const now = new Date().toISOString();
+    const now = new Date().toISOString().split('T')[0];
+    
+    // If user has no profile yet, just show upcoming games for All teams
+    // Once they join, we could filter by their team
     return query(
       collection(firestore, "games"),
-      where("date", ">=", now.split('T')[0]),
+      where("date", ">=", now),
       orderBy("date", "asc"),
       limit(5)
     );
@@ -57,13 +75,41 @@ export default function DashboardPage() {
   
   const { data: players } = useCollection<Player>(playersQuery);
 
-  if (isUserLoading) {
+  const handleJoinSquad = async (team: TeamType) => {
+    if (!user) return;
+    setIsJoining(true);
+    try {
+      const newPlayer: Player = {
+        id: user.uid,
+        name: user.displayName || "Unknown Player",
+        email: user.email || "",
+        preferredPositions: [],
+        team: team,
+        status: "Active",
+      };
+      await setDoc(doc(firestore, "players", user.uid), newPlayer);
+      toast({
+        title: "Welcome to the Squad!",
+        description: `You have successfully joined Team ${team}.`,
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Failed to join",
+        description: "Could not create your player profile.",
+      });
+    } finally {
+      setIsJoining(false);
+    }
+  };
+
+  if (isUserLoading || (user && isProfileLoading)) {
     return (
       <div className="min-h-screen bg-background pb-12">
         <MainNav />
         <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground font-medium">Checking squad credentials...</p>
+          <p className="text-muted-foreground font-medium">Loading squad data...</p>
         </main>
       </div>
     );
@@ -93,11 +139,50 @@ export default function DashboardPage() {
         ) : (
           <div className="grid gap-8 lg:grid-cols-4">
             <div className="lg:col-span-3 space-y-8">
+              {/* Join Squad Prompt for new users */}
+              {!currentPlayer && (
+                <Card className="border-primary bg-primary/5 shadow-lg">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <UserPlus className="h-6 w-6 text-primary" />
+                      Welcome, {user.displayName}!
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-muted-foreground mb-6">
+                      You haven't joined a team yet. Please select your squad to start registering for games and viewing your personalized schedule.
+                    </p>
+                    <div className="flex flex-wrap gap-4">
+                      <Button 
+                        disabled={isJoining}
+                        onClick={() => handleJoinSquad('A')}
+                        className="bg-primary hover:bg-primary/90 min-w-[140px]"
+                      >
+                        Join Team A
+                      </Button>
+                      <Button 
+                        disabled={isJoining}
+                        onClick={() => handleJoinSquad('B')}
+                        variant="outline"
+                        className="border-primary text-primary hover:bg-primary/10 min-w-[140px]"
+                      >
+                        Join Team B
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
               <section>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-headline flex items-center gap-2">
                     <Calendar className="h-6 w-6 text-primary" />
                     Upcoming Fixtures
+                    {currentPlayer && (
+                      <Badge variant="outline" className="ml-2 bg-primary/10 text-primary border-primary/20">
+                        Team {currentPlayer.team}
+                      </Badge>
+                    )}
                   </h2>
                   <Link href="/games">
                     <Button variant="ghost" size="sm" className="text-primary gap-1">
@@ -116,7 +201,9 @@ export default function DashboardPage() {
                       <p className="text-muted-foreground">No upcoming games scheduled.</p>
                     </Card>
                   ) : (
-                    upcomingGames.map((game) => (
+                    upcomingGames
+                      .filter(g => !currentPlayer || g.team === 'All' || g.team === currentPlayer.team)
+                      .map((game) => (
                       <Card key={game.id} className="border-none shadow-md hover:shadow-lg transition-all overflow-hidden border-l-4 border-primary">
                         <CardContent className="p-0">
                           <div className="flex flex-col md:flex-row">
@@ -124,6 +211,9 @@ export default function DashboardPage() {
                               <div className="flex items-center gap-3 mb-4">
                                 <Badge variant={game.type === 'League' ? 'default' : 'secondary'} className="rounded-md">
                                   {game.type}
+                                </Badge>
+                                <Badge variant="outline" className="text-xs font-bold uppercase">
+                                  Team {game.team}
                                 </Badge>
                                 <span className="text-sm font-bold text-muted-foreground flex items-center gap-1">
                                   <Clock className="h-3.5 w-3.5" />
@@ -159,15 +249,16 @@ export default function DashboardPage() {
                               <div>
                                 <div className="flex items-center justify-between mb-4">
                                   <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Availability</p>
-                                  <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50">
-                                    Player Mode
+                                  <Badge variant="outline" className="text-accent border-accent/20 bg-accent/5">
+                                    Active
                                   </Badge>
                                 </div>
-                                <p className="text-xs italic text-muted-foreground mb-4">Set your availability for this game.</p>
+                                <p className="text-xs italic text-muted-foreground mb-4">Register your status for this fixture.</p>
                               </div>
 
                               <Link href="/attendance" className="w-full">
-                                <Button variant="outline" size="sm" className="w-full text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white">
+                                <Button variant="outline" size="sm" className="w-full text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white gap-2">
+                                  <CheckCircle2 className="h-3 w-3" />
                                   Register
                                 </Button>
                               </Link>
@@ -218,10 +309,10 @@ export default function DashboardPage() {
                 <CardContent className="text-sm text-muted-foreground space-y-4">
                   <p>Ensure you register your status at least 48 hours before kickoff to help the Gaffer plan the lineup.</p>
                   <div className="p-3 bg-muted/40 rounded-lg">
-                    <p className="font-bold text-foreground mb-1">Standard Kit Rules</p>
-                    <p>Home 1: Pink shirt with grey short</p>
-                    <p>Home 2: New White / New White</p>
-                    <p>Away 1: Black shirt with Black short</p>
+                    <p className="font-bold text-foreground mb-1 text-xs">STANDARD KITS</p>
+                    <p className="text-pink-500 font-medium">Home 1: Pink/Grey</p>
+                    <p className="text-slate-400 font-medium">Home 2: New White</p>
+                    <p className="text-slate-900 font-medium">Away 1: Black/Black</p>
                   </div>
                 </CardContent>
               </Card>

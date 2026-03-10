@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -68,6 +69,7 @@ export default function PlayersPage() {
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
   
   const [formData, setFormData] = useState<{
+    id: string;
     name: string;
     nickname: string;
     email: string;
@@ -75,6 +77,7 @@ export default function PlayersPage() {
     team: TeamType;
     status: PlayerStatus;
   }>({
+    id: "",
     name: "",
     nickname: "",
     email: "",
@@ -108,20 +111,19 @@ export default function PlayersPage() {
   };
 
   const handleAddPlayer = async () => {
-    if (!formData.name) {
+    if (!formData.name || !formData.id) {
       toast({
         variant: "destructive",
         title: "Missing Information",
-        description: "Please enter at least the player's full name.",
+        description: "Please enter the player's full name and User ID.",
       });
       return;
     }
 
-    const id = Math.random().toString(36).substring(2, 11);
-    const playerRef = doc(firestore, "players", id);
+    const playerRef = doc(firestore, "players", formData.id);
 
     await setDoc(playerRef, {
-      id,
+      id: formData.id,
       name: formData.name,
       nickname: formData.nickname || "",
       email: formData.email || "",
@@ -141,10 +143,11 @@ export default function PlayersPage() {
   const handleEditClick = (player: Player) => {
     setEditingPlayer(player);
     setFormData({
+      id: player.id,
       name: player.name,
       nickname: player.nickname || "",
       email: player.email || "",
-      preferredPositions: player.preferredPositions,
+      preferredPositions: player.preferredPositions || [],
       team: player.team || "A",
       status: player.status || "Active",
     });
@@ -188,6 +191,7 @@ export default function PlayersPage() {
 
   const resetForm = () => {
     setFormData({
+      id: "",
       name: "",
       nickname: "",
       email: "",
@@ -268,6 +272,15 @@ export default function PlayersPage() {
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
+                  <Label htmlFor="id">User ID (Firebase UID)</Label>
+                  <Input 
+                    id="id" 
+                    placeholder="Enter player's UID" 
+                    value={formData.id}
+                    onChange={(e) => setFormData({ ...formData, id: e.target.value })}
+                  />
+                </div>
+                <div className="grid gap-2">
                   <Label htmlFor="name">Full Name</Label>
                   <Input 
                     id="name" 
@@ -283,16 +296,6 @@ export default function PlayersPage() {
                     placeholder="The Rock" 
                     value={formData.nickname}
                     onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email (Optional)</Label>
-                  <Input 
-                    id="email" 
-                    type="email"
-                    placeholder="john@example.com" 
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -380,15 +383,6 @@ export default function PlayersPage() {
                   id="edit-nickname" 
                   value={formData.nickname}
                   onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-email">Email (Optional)</Label>
-                <Input 
-                  id="edit-email" 
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">

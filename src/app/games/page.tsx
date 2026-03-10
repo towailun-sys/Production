@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -41,9 +42,10 @@ import {
   Trash2,
   Shirt,
   Lock,
-  Loader2
+  Loader2,
+  Users
 } from "lucide-react";
-import { Game, GameType } from "@/lib/types";
+import { Game, GameType, GameTeamScope } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
@@ -72,6 +74,7 @@ export default function GamesPage() {
 
   const [formData, setFormData] = useState<{
     type: GameType;
+    team: GameTeamScope;
     date: string;
     startTime: string;
     endTime: string;
@@ -80,6 +83,7 @@ export default function GamesPage() {
     kitColors: string;
   }>({
     type: "Training",
+    team: "All",
     date: "",
     startTime: "",
     endTime: "",
@@ -96,7 +100,16 @@ export default function GamesPage() {
   const { data: games, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
 
   const resetForm = () => {
-    setFormData({ type: "Training", date: "", startTime: "", endTime: "", location: "", opponent: "", kitColors: "TBD" });
+    setFormData({ 
+      type: "Training", 
+      team: "All",
+      date: "", 
+      startTime: "", 
+      endTime: "", 
+      location: "", 
+      opponent: "", 
+      kitColors: "TBD" 
+    });
   };
 
   const isOpponentNotRequired = (type: GameType) => {
@@ -119,6 +132,7 @@ export default function GamesPage() {
     await setDoc(gameRef, {
       id,
       type: formData.type,
+      team: formData.team,
       date: formData.date,
       startTime: formData.startTime,
       endTime: formData.endTime,
@@ -139,6 +153,7 @@ export default function GamesPage() {
     setEditingGame(game);
     setFormData({
       type: game.type,
+      team: game.team || "All",
       date: game.date,
       startTime: game.startTime,
       endTime: game.endTime,
@@ -166,6 +181,7 @@ export default function GamesPage() {
 
     await setDoc(gameRef, {
       type: formData.type, 
+      team: formData.team,
       date: formData.date, 
       startTime: formData.startTime,
       endTime: formData.endTime,
@@ -236,24 +252,42 @@ export default function GamesPage() {
                 <DialogTitle className="font-headline">Schedule New Event</DialogTitle>
               </DialogHeader>
               <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="type">Event Type</Label>
-                  <Select 
-                    value={formData.type}
-                    onValueChange={(val: GameType) => {
-                      setFormData({ ...formData, type: val, opponent: isOpponentNotRequired(val) ? "" : formData.opponent });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Training">Training Session</SelectItem>
-                      <SelectItem value="League">League Match</SelectItem>
-                      <SelectItem value="Friendly">Friendly Match</SelectItem>
-                      <SelectItem value="Internal">Internal Game</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="type">Event Type</Label>
+                    <Select 
+                      value={formData.type}
+                      onValueChange={(val: GameType) => {
+                        setFormData({ ...formData, type: val, opponent: isOpponentNotRequired(val) ? "" : formData.opponent });
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Training">Training</SelectItem>
+                        <SelectItem value="League">League Match</SelectItem>
+                        <SelectItem value="Friendly">Friendly</SelectItem>
+                        <SelectItem value="Internal">Internal</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="team">Assign Team</Label>
+                    <Select 
+                      value={formData.team}
+                      onValueChange={(val: GameTeamScope) => setFormData({ ...formData, team: val })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select team" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="A">Team A</SelectItem>
+                        <SelectItem value="B">Team B</SelectItem>
+                        <SelectItem value="All">All Squads</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="date">Date</Label>
@@ -306,7 +340,7 @@ export default function GamesPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button onClick={handleAddGame} className="bg-accent w-full">Create Event</Button>
+                <Button onClick={handleAddGame} className="bg-primary w-full">Create Event</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
@@ -346,9 +380,10 @@ export default function GamesPage() {
                         )}>
                           {game.type}
                         </Badge>
-                        {(game.opponent && game.opponent !== 'N/A') && (
-                          <span className="text-sm font-medium text-muted-foreground">Fixture</span>
-                        )}
+                        <Badge variant="secondary" className="bg-muted text-muted-foreground border-none flex gap-1 items-center">
+                          <Users className="h-3 w-3" />
+                          Team {game.team}
+                        </Badge>
                       </div>
                       <h3 className="text-xl font-headline font-bold">
                         {game.type === 'Training' ? 'Team Training Session' : 
@@ -412,22 +447,40 @@ export default function GamesPage() {
               <DialogTitle className="font-headline">Edit Event</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-type">Event Type</Label>
-                <Select 
-                  value={formData.type}
-                  onValueChange={(val: GameType) => setFormData({ ...formData, type: val, opponent: isOpponentNotRequired(val) ? "" : formData.opponent })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Training">Training Session</SelectItem>
-                    <SelectItem value="League">League Match</SelectItem>
-                    <SelectItem value="Friendly">Friendly Match</SelectItem>
-                    <SelectItem value="Internal">Internal Game</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-type">Event Type</Label>
+                  <Select 
+                    value={formData.type}
+                    onValueChange={(val: GameType) => setFormData({ ...formData, type: val, opponent: isOpponentNotRequired(val) ? "" : formData.opponent })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Training">Training</SelectItem>
+                      <SelectItem value="League">League Match</SelectItem>
+                      <SelectItem value="Friendly">Friendly</SelectItem>
+                      <SelectItem value="Internal">Internal</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-team">Assign Team</Label>
+                  <Select 
+                    value={formData.team}
+                    onValueChange={(val: GameTeamScope) => setFormData({ ...formData, team: val })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select team" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="A">Team A</SelectItem>
+                      <SelectItem value="B">Team B</SelectItem>
+                      <SelectItem value="All">All Squads</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-date">Date</Label>
