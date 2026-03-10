@@ -82,6 +82,10 @@ export default function GamesPage() {
     setFormData({ type: "Training", date: "", time: "", location: "", opponent: "" });
   };
 
+  const isOpponentNotRequired = (type: GameType) => {
+    return type === 'Internal' || type === 'Training';
+  };
+
   const handleAddGame = () => {
     if (!formData.date || !formData.time || !formData.location) {
       toast({
@@ -98,7 +102,7 @@ export default function GamesPage() {
       date: formData.date,
       time: formData.time,
       location: formData.location,
-      opponent: formData.type === 'Internal' ? "N/A" : (formData.opponent || undefined),
+      opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || undefined),
     };
 
     setGames([...games, newGame].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
@@ -117,7 +121,7 @@ export default function GamesPage() {
       date: game.date,
       time: game.time,
       location: game.location,
-      opponent: game.opponent === "N/A" ? "" : (game.opponent || ""),
+      opponent: (game.opponent === "N/A" || !game.opponent) ? "" : game.opponent,
     });
     setIsEditOpen(true);
   };
@@ -140,7 +144,7 @@ export default function GamesPage() {
             date: formData.date, 
             time: formData.time, 
             location: formData.location, 
-            opponent: formData.type === 'Internal' ? "N/A" : (formData.opponent || undefined)
+            opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || undefined)
           }
         : g
     ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -191,7 +195,7 @@ export default function GamesPage() {
                   <Select 
                     value={formData.type}
                     onValueChange={(val: GameType) => {
-                      setFormData({ ...formData, type: val, opponent: val === 'Internal' ? "" : formData.opponent });
+                      setFormData({ ...formData, type: val, opponent: isOpponentNotRequired(val) ? "" : formData.opponent });
                     }}
                   >
                     <SelectTrigger>
@@ -220,13 +224,13 @@ export default function GamesPage() {
                   <Input id="location" placeholder="Stadium or Pitch name" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="opponent">Opponent {formData.type === 'Internal' ? '(Auto: N/A)' : '(Optional)'}</Label>
+                  <Label htmlFor="opponent">Opponent {isOpponentNotRequired(formData.type) ? '(Auto: N/A)' : '(Optional)'}</Label>
                   <Input 
                     id="opponent" 
-                    placeholder={formData.type === 'Internal' ? 'N/A' : 'Away Team Name'} 
-                    value={formData.type === 'Internal' ? '' : formData.opponent} 
+                    placeholder={isOpponentNotRequired(formData.type) ? 'N/A' : 'Away Team Name'} 
+                    value={isOpponentNotRequired(formData.type) ? '' : formData.opponent} 
                     onChange={(e) => setFormData({ ...formData, opponent: e.target.value })}
-                    disabled={formData.type === 'Internal'}
+                    disabled={isOpponentNotRequired(formData.type)}
                   />
                 </div>
               </div>
@@ -248,7 +252,7 @@ export default function GamesPage() {
                 <Label htmlFor="edit-type">Event Type</Label>
                 <Select 
                   value={formData.type}
-                  onValueChange={(val: GameType) => setFormData({ ...formData, type: val, opponent: val === 'Internal' ? "" : formData.opponent })}
+                  onValueChange={(val: GameType) => setFormData({ ...formData, type: val, opponent: isOpponentNotRequired(val) ? "" : formData.opponent })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select type" />
@@ -276,13 +280,13 @@ export default function GamesPage() {
                 <Input id="edit-location" placeholder="Stadium or Pitch name" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-opponent">Opponent {formData.type === 'Internal' ? '(Auto: N/A)' : '(Optional)'}</Label>
+                <Label htmlFor="edit-opponent">Opponent {isOpponentNotRequired(formData.type) ? '(Auto: N/A)' : '(Optional)'}</Label>
                 <Input 
                   id="edit-opponent" 
-                  placeholder={formData.type === 'Internal' ? 'N/A' : 'Away Team Name'} 
-                  value={formData.type === 'Internal' ? '' : formData.opponent} 
+                  placeholder={isOpponentNotRequired(formData.type) ? 'N/A' : 'Away Team Name'} 
+                  value={isOpponentNotRequired(formData.type) ? '' : formData.opponent} 
                   onChange={(e) => setFormData({ ...formData, opponent: e.target.value })}
-                  disabled={formData.type === 'Internal'}
+                  disabled={isOpponentNotRequired(formData.type)}
                 />
               </div>
             </div>
