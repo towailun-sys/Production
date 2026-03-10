@@ -92,10 +92,10 @@ export default function PlayersPage() {
   ];
 
   const STATUS_OPTIONS: { value: PlayerStatus; label: string; icon: any; color: string }[] = [
-    { value: "Active", label: dict.common.status.active, icon: Activity, color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-    { value: "Injured", label: dict.common.status.injured, icon: HeartPulse, color: "text-rose-600 bg-rose-50 border-rose-200" },
-    { value: "Not Available", label: dict.common.status.notAvailable, icon: Ban, color: "text-slate-600 bg-slate-50 border-slate-200" },
-    { value: "Pending for Club Fee", label: dict.common.status.feePending, icon: CreditCard, color: "text-amber-600 bg-amber-50 border-amber-200" },
+    { value: "Active", label: dict.common.statusTypes.active, icon: Activity, color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
+    { value: "Injured", label: dict.common.statusTypes.injured, icon: HeartPulse, color: "text-rose-600 bg-rose-50 border-rose-200" },
+    { value: "Not Available", label: dict.common.statusTypes.notAvailable, icon: Ban, color: "text-slate-600 bg-slate-50 border-slate-200" },
+    { value: "Pending for Club Fee", label: dict.common.statusTypes.feePending, icon: CreditCard, color: "text-amber-600 bg-amber-50 border-amber-200" },
   ];
 
   const playerRef = useMemoFirebase(() => {
