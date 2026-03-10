@@ -23,8 +23,10 @@ import { cn } from "@/lib/utils";
 import { getStoredPlayers, getStoredGames, getStoredAttendance } from "@/lib/local-store";
 
 const KIT_MAP: Record<string, string> = {
-  "Home: Blue/White": "text-blue-600",
-  "Away: Total Black": "text-slate-900",
+  "Home 1: Pink/Grey": "text-pink-500",
+  "Home 2: White/White": "text-slate-400",
+  "Away 1: Black/Black": "text-slate-900",
+  "Away 2: White/White": "text-slate-400",
   "Training: Yellow Bibs": "text-yellow-400",
   "Training: Orange Bibs": "text-orange-500",
   "Internal: Whites vs Blues": "text-indigo-600",
@@ -236,8 +238,8 @@ export default function DashboardPage() {
                 <p>Ensure you update your status at least 48 hours before kickoff to help the Gaffer plan the lineup.</p>
                 <div className="p-3 bg-muted/40 rounded-lg">
                   <p className="font-bold text-foreground mb-1">Standard Kit Rules</p>
-                  <p>Home Games: Blue/White</p>
-                  <p>Away Games: Total Black</p>
+                  <p>Home 1: Pink shirt with grey short</p>
+                  <p>Away 1: Black shirt with Black short</p>
                 </div>
               </CardContent>
             </Card>

@@ -21,8 +21,10 @@ import { getStoredGames, getStoredAttendance, saveStoredAttendance } from "@/lib
 import { useToast } from "@/hooks/use-toast";
 
 const KIT_MAP: Record<string, string> = {
-  "Home: Blue/White": "text-blue-600",
-  "Away: Total Black": "text-slate-900",
+  "Home 1: Pink/Grey": "text-pink-500",
+  "Home 2: White/White": "text-slate-400",
+  "Away 1: Black/Black": "text-slate-900",
+  "Away 2: White/White": "text-slate-400",
   "Training: Yellow Bibs": "text-yellow-400",
   "Training: Orange Bibs": "text-orange-500",
   "Internal: Whites vs Blues": "text-indigo-600",
@@ -162,7 +164,7 @@ export default function AttendancePage() {
                             <Shirt className={cn("h-5 w-5", getKitColorClass(game.kitColors))} />
                           </div>
                           <div>
-                            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Kit Colors</p>
+                            <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Kit Selection</p>
                             <p className={cn("font-bold", getKitColorClass(game.kitColors))}>{game.kitColors}</p>
                           </div>
                         </div>
