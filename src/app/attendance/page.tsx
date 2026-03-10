@@ -98,7 +98,7 @@ export default function AttendancePage() {
 
     toast({
       title: "Status Updated",
-      description: `Attendance set to ${status === 'Confirmed' ? dict.common.join : dict.common.decline}.`,
+      description: `Attendance set to ${status === 'Confirmed' ? dict.common.join : status === 'Declined' ? dict.common.decline : dict.common.pending}.`,
     });
   };
 
@@ -187,7 +187,7 @@ export default function AttendancePage() {
                   "bg-muted text-muted-foreground"
                 )}
               >
-                {dict.common.teams[specificGame.team]}
+                {dict.common.teams[specificGame.team as keyof typeof dict.common.teams]}
               </Badge>
             </div>
             <h1 className="text-3xl font-headline">
@@ -378,6 +378,9 @@ function GameRosterList({
                         <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Declined', player.id)} className="text-destructive font-bold">
                           <X className="mr-2 h-4 w-4" /> {dict.common.decline}
                         </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Pending', player.id)} className="text-amber-600 font-bold">
+                          <Clock className="mr-2 h-4 w-4" /> {dict.common.pending}
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
@@ -476,7 +479,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
                 "bg-muted text-muted-foreground"
               )}
             >
-              {dict.common.teams[game.team]}
+              {dict.common.teams[game.team as keyof typeof dict.common.teams]}
             </Badge>
           </div>
           <div className="flex items-center gap-1.5 text-sm font-bold">
