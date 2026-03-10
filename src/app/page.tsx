@@ -248,8 +248,6 @@ export default function DashboardPage() {
     
     const adminRef = doc(firestore, "players", user.uid);
     
-    // SAFE UPDATE: Only set isAdmin and mandatory ID. 
-    // Do NOT overwrite existing team, number, or positions.
     const adminData: any = {
       id: user.uid,
       isAdmin: true,
