@@ -183,7 +183,7 @@ export default function DashboardPage() {
 
                               <Link href="/attendance" className="w-full">
                                 <Button variant="outline" size="sm" className="w-full text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white">
-                                  Update My Status
+                                  Register
                                 </Button>
                               </Link>
                             </div>
@@ -232,10 +232,11 @@ export default function DashboardPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-sm text-muted-foreground space-y-4">
-                <p>Ensure you update your status at least 48 hours before kickoff to help the Gaffer plan the lineup.</p>
+                <p>Ensure you register your status at least 48 hours before kickoff to help the Gaffer plan the lineup.</p>
                 <div className="p-3 bg-muted/40 rounded-lg">
                   <p className="font-bold text-foreground mb-1">Standard Kit Rules</p>
                   <p>Home 1: Pink shirt with grey short</p>
+                  <p>Home 2: New White / New White</p>
                   <p>Away 1: Black shirt with Black short</p>
                 </div>
               </CardContent>
