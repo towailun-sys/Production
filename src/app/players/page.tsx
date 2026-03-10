@@ -26,20 +26,21 @@ import {
   DialogTrigger,
   DialogFooter
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Search, UserPlus, Filter, Pencil, Trash2 } from "lucide-react";
 import { Player, PlayerPosition } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { getStoredPlayers, saveStoredPlayers } from "@/lib/local-store";
+
+const POSITIONS: { value: PlayerPosition; label: string }[] = [
+  { value: "GK", label: "Goalkeeper" },
+  { value: "DF", label: "Defender" },
+  { value: "MF", label: "Midfielder" },
+  { value: "FW", label: "Forward" },
+];
 
 export default function PlayersPage() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -52,11 +53,11 @@ export default function PlayersPage() {
   const [formData, setFormData] = useState<{
     name: string;
     nickname: string;
-    preferredPosition: PlayerPosition;
+    preferredPositions: PlayerPosition[];
   }>({
     name: "",
     nickname: "",
-    preferredPosition: "MF",
+    preferredPositions: [],
   });
 
   const { toast } = useToast();
@@ -77,6 +78,17 @@ export default function PlayersPage() {
     p.nickname?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const handlePositionToggle = (pos: PlayerPosition) => {
+    setFormData(prev => {
+      const exists = prev.preferredPositions.includes(pos);
+      if (exists) {
+        return { ...prev, preferredPositions: prev.preferredPositions.filter(p => p !== pos) };
+      } else {
+        return { ...prev, preferredPositions: [...prev.preferredPositions, pos] };
+      }
+    });
+  };
+
   const handleAddPlayer = () => {
     if (!formData.name) {
       toast({
@@ -91,7 +103,7 @@ export default function PlayersPage() {
       id: Math.random().toString(36).substring(2, 11),
       name: formData.name,
       nickname: formData.nickname || undefined,
-      preferredPosition: formData.preferredPosition,
+      preferredPositions: formData.preferredPositions,
     };
 
     setPlayers([...players, newPlayer]);
@@ -108,7 +120,7 @@ export default function PlayersPage() {
     setFormData({
       name: player.name,
       nickname: player.nickname || "",
-      preferredPosition: player.preferredPosition,
+      preferredPositions: player.preferredPositions,
     });
     setIsEditOpen(true);
   };
@@ -118,7 +130,7 @@ export default function PlayersPage() {
 
     const updatedPlayers = players.map(p => 
       p.id === editingPlayer.id 
-        ? { ...p, name: formData.name, nickname: formData.nickname || undefined, preferredPosition: formData.preferredPosition }
+        ? { ...p, name: formData.name, nickname: formData.nickname || undefined, preferredPositions: formData.preferredPositions }
         : p
     );
 
@@ -144,8 +156,28 @@ export default function PlayersPage() {
     setFormData({
       name: "",
       nickname: "",
-      preferredPosition: "MF",
+      preferredPositions: [],
     });
+  };
+
+  const renderPositionBadges = (positions: PlayerPosition[]) => {
+    if (positions.length === 0) return <span className="text-muted-foreground italic text-xs">No position set</span>;
+    
+    return (
+      <div className="flex flex-wrap gap-1">
+        {positions.map(pos => (
+          <Badge key={pos} variant="outline" className={cn(
+            "font-bold px-2",
+            pos === 'GK' && "border-yellow-500 text-yellow-600 bg-yellow-50",
+            pos === 'DF' && "border-blue-500 text-blue-600 bg-blue-50",
+            pos === 'MF' && "border-green-500 text-green-600 bg-green-50",
+            pos === 'FW' && "border-red-500 text-red-600 bg-red-50",
+          )}>
+            {pos}
+          </Badge>
+        ))}
+      </div>
+    );
   };
 
   if (!isLoaded) return null;
@@ -191,21 +223,24 @@ export default function PlayersPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="position">Preferred Position</Label>
-                  <Select 
-                    value={formData.preferredPosition}
-                    onValueChange={(val: PlayerPosition) => setFormData({ ...formData, preferredPosition: val })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select position" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="GK">Goalkeeper (GK)</SelectItem>
-                      <SelectItem value="DF">Defender (DF)</SelectItem>
-                      <SelectItem value="MF">Midfielder (MF)</SelectItem>
-                      <SelectItem value="FW">Forward (FW)</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Preferred Positions (Multi-select)</Label>
+                  <div className="grid grid-cols-2 gap-3 p-3 border rounded-md bg-muted/20">
+                    {POSITIONS.map((pos) => (
+                      <div key={pos.value} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`pos-${pos.value}`} 
+                          checked={formData.preferredPositions.includes(pos.value)}
+                          onCheckedChange={() => handlePositionToggle(pos.value)}
+                        />
+                        <label
+                          htmlFor={`pos-${pos.value}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        >
+                          {pos.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
               <DialogFooter>
@@ -238,21 +273,24 @@ export default function PlayersPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-position">Preferred Position</Label>
-                <Select 
-                  value={formData.preferredPosition}
-                  onValueChange={(val: PlayerPosition) => setFormData({ ...formData, preferredPosition: val })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select position" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="GK">Goalkeeper (GK)</SelectItem>
-                    <SelectItem value="DF">Defender (DF)</SelectItem>
-                    <SelectItem value="MF">Midfielder (MF)</SelectItem>
-                    <SelectItem value="FW">Forward (FW)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Preferred Positions (Multi-select)</Label>
+                <div className="grid grid-cols-2 gap-3 p-3 border rounded-md bg-muted/20">
+                  {POSITIONS.map((pos) => (
+                    <div key={pos.value} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`edit-pos-${pos.value}`} 
+                        checked={formData.preferredPositions.includes(pos.value)}
+                        onCheckedChange={() => handlePositionToggle(pos.value)}
+                      />
+                      <label
+                        htmlFor={`edit-pos-${pos.value}`}
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                      >
+                        {pos.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
             <DialogFooter>
@@ -282,7 +320,7 @@ export default function PlayersPage() {
                 <TableRow>
                   <TableHead className="w-[200px] font-bold">Player</TableHead>
                   <TableHead className="font-bold">Nickname</TableHead>
-                  <TableHead className="font-bold">Position</TableHead>
+                  <TableHead className="font-bold">Positions</TableHead>
                   <TableHead className="text-right font-bold">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -306,15 +344,7 @@ export default function PlayersPage() {
                         {player.nickname || "—"}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={cn(
-                          "font-bold px-2",
-                          player.preferredPosition === 'GK' && "border-yellow-500 text-yellow-600 bg-yellow-50",
-                          player.preferredPosition === 'DF' && "border-blue-500 text-blue-600 bg-blue-50",
-                          player.preferredPosition === 'MF' && "border-green-500 text-green-600 bg-green-50",
-                          player.preferredPosition === 'FW' && "border-red-500 text-red-600 bg-red-50",
-                        )}>
-                          {player.preferredPosition}
-                        </Badge>
+                        {renderPositionBadges(player.preferredPositions)}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">

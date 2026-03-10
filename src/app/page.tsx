@@ -3,15 +3,14 @@
 
 import { useState, useEffect } from "react";
 import { MainNav } from "@/components/layout/main-nav";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { 
   Calendar, 
   MapPin, 
-  Users, 
   Clock,
   ArrowRight,
   Trophy,
@@ -140,7 +139,10 @@ export default function DashboardPage() {
                                           </Avatar>
                                         </TooltipTrigger>
                                         <TooltipContent>
-                                          <p>{player.name} ({player.preferredPosition})</p>
+                                          <div className="text-xs">
+                                            <p className="font-bold">{player.name}</p>
+                                            <p className="text-muted-foreground">{player.preferredPositions.join(', ')}</p>
+                                          </div>
                                         </TooltipContent>
                                       </Tooltip>
                                     ))}

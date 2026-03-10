@@ -1,16 +1,16 @@
 
-import { Player, Game, Attendance, AttendanceStatus } from './types';
+import { Player, Game, Attendance } from './types';
 
 const PLAYERS_KEY = 'squadflow_players';
 const GAMES_KEY = 'squadflow_games';
 const ATTENDANCE_KEY = 'squadflow_attendance';
 
 const defaultPlayers: Player[] = [
-  { id: "1", name: "David Miller", nickname: "Miller", preferredPosition: "GK" },
-  { id: "2", name: "Samuel Jackson", preferredPosition: "DF" },
-  { id: "3", name: "Marcus Rashford", nickname: "Rashy", preferredPosition: "FW" },
-  { id: "4", name: "Kevin De Bruyne", nickname: "KDB", preferredPosition: "MF" },
-  { id: "5", name: "Virgil Van Dijk", nickname: "VVD", preferredPosition: "DF" },
+  { id: "1", name: "David Miller", nickname: "Miller", preferredPositions: ["GK"] },
+  { id: "2", name: "Samuel Jackson", preferredPositions: ["DF", "MF"] },
+  { id: "3", name: "Marcus Rashford", nickname: "Rashy", preferredPositions: ["FW"] },
+  { id: "4", name: "Kevin De Bruyne", nickname: "KDB", preferredPositions: ["MF"] },
+  { id: "5", name: "Virgil Van Dijk", nickname: "VVD", preferredPositions: ["DF"] },
 ];
 
 const defaultGames: Game[] = [
@@ -22,7 +22,18 @@ const defaultGames: Game[] = [
 export const getStoredPlayers = (): Player[] => {
   if (typeof window === 'undefined') return defaultPlayers;
   const stored = localStorage.getItem(PLAYERS_KEY);
-  return stored ? JSON.parse(stored) : defaultPlayers;
+  if (!stored) return defaultPlayers;
+  
+  try {
+    const players = JSON.parse(stored) as any[];
+    // Migration for existing single position data if any
+    return players.map(p => ({
+      ...p,
+      preferredPositions: p.preferredPositions || (p.preferredPosition ? [p.preferredPosition] : [])
+    }));
+  } catch (e) {
+    return defaultPlayers;
+  }
 };
 
 export const saveStoredPlayers = (players: Player[]) => {

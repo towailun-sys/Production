@@ -5,7 +5,7 @@ export interface Player {
   id: string;
   name: string;
   nickname?: string;
-  preferredPosition: PlayerPosition;
+  preferredPositions: PlayerPosition[];
 }
 
 export type GameType = 'Training' | 'League' | 'Friendly' | 'Internal';
