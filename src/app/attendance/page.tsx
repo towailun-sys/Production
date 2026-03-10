@@ -1,5 +1,7 @@
+
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { MainNav } from "@/components/layout/main-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,13 +14,16 @@ import {
   Calendar,
   AlertCircle,
   Shirt,
-  Lock
+  Lock,
+  Users,
+  ChevronLeft
 } from "lucide-react";
-import { Game, AttendanceStatus } from "@/lib/types";
+import { Game, AttendanceStatus, Player, Attendance } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, query, orderBy, doc, setDoc } from "firebase/firestore";
+import Link from "next/link";
 
 const KIT_MAP: Record<string, string> = {
   "Home 1: Pink/Grey": "text-pink-500",
@@ -33,14 +38,20 @@ const getKitColorClass = (kitLabel: string) => {
 };
 
 export default function AttendancePage() {
+  const searchParams = useSearchParams();
+  const gameId = searchParams.get("gameId");
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
 
+  // If gameId is present, we are viewing a specific game's roster
+  const gameRef = useMemoFirebase(() => gameId ? doc(firestore, "games", gameId) : null, [firestore, gameId]);
+  const { data: specificGame, isLoading: isGameLoading } = useDoc<Game>(gameRef);
+
   const gamesQuery = useMemoFirebase(() => {
-    if (!user) return null;
+    if (!user || gameId) return null;
     return query(collection(firestore, "games"), orderBy("date", "asc"));
-  }, [firestore, user]);
+  }, [firestore, user, gameId]);
 
   const { data: games, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
 
@@ -98,13 +109,55 @@ export default function AttendancePage() {
     );
   }
 
+  // View Specific Game Roster
+  if (gameId && specificGame) {
+    return (
+      <div className="min-h-screen bg-background pb-12">
+        <MainNav />
+        <main className="container mx-auto px-4 py-8">
+          <Link href="/games" className="inline-flex items-center text-sm font-medium text-primary hover:underline mb-6">
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Back to Schedule
+          </Link>
+          
+          <header className="mb-8">
+            <div className="flex items-center gap-3 mb-2">
+              <Badge className="bg-primary">{specificGame.type}</Badge>
+              <Badge variant="outline">Team {specificGame.team}</Badge>
+            </div>
+            <h1 className="text-3xl font-headline">
+              {specificGame.type === 'Training' ? 'Team Training Session' : 
+               specificGame.type === 'Internal' ? 'Internal Squad Game' : 
+               `Match vs ${specificGame.opponent || 'TBD'}`}
+            </h1>
+            <div className="flex flex-wrap gap-4 mt-4 text-muted-foreground text-sm">
+              <span className="flex items-center gap-1.5"><Calendar className="h-4 w-4" /> {new Date(specificGame.date).toLocaleDateString()}</span>
+              <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> {specificGame.startTime} - {specificGame.endTime}</span>
+              <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {specificGame.location}</span>
+            </div>
+          </header>
+
+          <div className="grid lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2">
+              <GameRosterList gameId={gameId} />
+            </div>
+            <div className="space-y-6">
+              <AttendanceCard game={specificGame} userId={user.uid} onStatusChange={handleStatusChange} isCondensed />
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // View "My Attendance" (General List)
   return (
     <div className="min-h-screen bg-background pb-12">
       <MainNav />
       <main className="container mx-auto px-4 py-8">
         <header className="mb-10 max-w-2xl">
           <h1 className="text-3xl font-headline mb-2">My Attendance</h1>
-          <p className="text-muted-foreground">Confirm your availability for {user.displayName}'s upcoming games.</p>
+          <p className="text-muted-foreground">Confirm your availability for upcoming games and training.</p>
         </header>
 
         <div className="space-y-8 max-w-4xl">
@@ -132,12 +185,119 @@ export default function AttendancePage() {
   );
 }
 
-function AttendanceCard({ game, userId, onStatusChange }: { game: Game, userId: string, onStatusChange: (id: string, s: AttendanceStatus) => void }) {
+function GameRosterList({ gameId }: { gameId: string }) {
+  const firestore = useFirestore();
+  const playersQuery = useMemoFirebase(() => collection(firestore, "players"), [firestore]);
+  const { data: players } = useCollection<Player>(playersQuery);
+  
+  const attendanceQuery = useMemoFirebase(() => collection(firestore, "games", gameId, "attendanceRecords"), [firestore, gameId]);
+  const { data: attendanceDocs } = useCollection<Attendance>(attendanceQuery);
+
+  const getStatus = (playerId: string) => {
+    return attendanceDocs?.find(a => a.playerId === playerId)?.status || "Pending";
+  };
+
+  const confirmedCount = attendanceDocs?.filter(a => a.status === 'Confirmed').length || 0;
+  const declinedCount = attendanceDocs?.filter(a => a.status === 'Declined').length || 0;
+
+  return (
+    <Card className="border-none shadow-lg">
+      <CardHeader className="bg-primary/5 flex flex-row items-center justify-between">
+        <CardTitle className="text-xl flex items-center gap-2">
+          <Users className="h-5 w-5" />
+          Squad Roster
+        </CardTitle>
+        <div className="flex gap-4 text-sm font-bold">
+          <span className="text-accent flex items-center gap-1"><Check className="h-4 w-4" /> {confirmedCount}</span>
+          <span className="text-destructive flex items-center gap-1"><X className="h-4 w-4" /> {declinedCount}</span>
+        </div>
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="divide-y">
+          {players?.map((player) => {
+            const status = getStatus(player.id);
+            return (
+              <div key={player.id} className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center font-bold text-primary">
+                    {player.name[0]}
+                  </div>
+                  <div>
+                    <p className="font-bold">{player.name} {player.nickname && <span className="text-muted-foreground text-xs italic font-normal">"{player.nickname}"</span>}</p>
+                    <p className="text-xs text-muted-foreground">Team {player.team} • {player.preferredPositions?.join(', ') || 'Any'}</p>
+                  </div>
+                </div>
+                <Badge 
+                  variant={status === 'Confirmed' ? 'default' : status === 'Declined' ? 'destructive' : 'outline'}
+                  className={cn(
+                    "min-w-[90px] justify-center",
+                    status === 'Confirmed' && "bg-accent hover:bg-accent",
+                    status === 'Pending' && "border-amber-500 text-amber-600"
+                  )}
+                >
+                  {status}
+                </Badge>
+              </div>
+            );
+          })}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: { game: Game, userId: string, onStatusChange: (id: string, s: AttendanceStatus) => void, isCondensed?: boolean }) {
   const firestore = useFirestore();
   const attendanceRef = useMemoFirebase(() => doc(firestore, "games", game.id, "attendanceRecords", userId), [firestore, game.id, userId]);
   const { data: attendance } = useDoc<any>(attendanceRef);
   
   const currentStatus: AttendanceStatus = attendance?.status || 'Pending';
+
+  if (isCondensed) {
+    return (
+      <Card className="border-none shadow-lg overflow-hidden bg-white">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg">My Status</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-medium">Currently:</span>
+            <Badge className={cn(
+              currentStatus === 'Confirmed' ? "bg-accent" : 
+              currentStatus === 'Declined' ? "bg-destructive" : "bg-amber-500"
+            )}>
+              {currentStatus}
+            </Badge>
+          </div>
+          <div className="grid gap-2">
+            <Button 
+              size="sm"
+              onClick={() => onStatusChange(game.id, 'Confirmed')}
+              className={cn(
+                "w-full gap-2 transition-all",
+                currentStatus === 'Confirmed' ? "bg-accent" : "bg-white text-foreground border hover:bg-accent/10"
+              )}
+            >
+              <Check className="h-4 w-4" />
+              I'm Going
+            </Button>
+            <Button 
+              size="sm"
+              onClick={() => onStatusChange(game.id, 'Declined')}
+              variant="outline"
+              className={cn(
+                "w-full gap-2 transition-all",
+                currentStatus === 'Declined' ? "bg-destructive text-white" : "hover:bg-destructive/10"
+              )}
+            >
+              <X className="h-4 w-4" />
+              Can't Make It
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card className={cn(
@@ -242,6 +402,9 @@ function AttendanceCard({ game, userId, onStatusChange }: { game: Game, userId: 
               Can't Make It
             </Button>
           </div>
+          <Link href={`/attendance?gameId=${game.id}`} className="text-xs text-primary font-bold hover:underline">
+            View Full Squad Roster
+          </Link>
         </div>
       </CardContent>
     </Card>

@@ -18,7 +18,8 @@ import {
   Loader2,
   UserPlus,
   CheckCircle2,
-  ShieldCheck
+  ShieldCheck,
+  Users
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, TeamType } from "@/lib/types";
@@ -279,20 +280,28 @@ export default function DashboardPage() {
                             <div className="bg-muted/30 p-6 md:w-80 border-t md:border-t-0 md:border-l flex flex-col justify-between">
                               <div>
                                 <div className="flex items-center justify-between mb-4">
-                                  <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Availability</p>
+                                  <p className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Quick Action</p>
                                   <Badge variant="outline" className="text-accent border-accent/20 bg-accent/5">
                                     Active
                                   </Badge>
                                 </div>
-                                <p className="text-xs italic text-muted-foreground mb-4">Register your status for this fixture.</p>
+                                <p className="text-xs italic text-muted-foreground mb-4">View squad roster or update your status.</p>
                               </div>
 
-                              <Link href="/attendance" className="w-full">
-                                <Button variant="outline" size="sm" className="w-full text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white gap-2">
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  Register
-                                </Button>
-                              </Link>
+                              <div className="flex flex-col gap-2">
+                                <Link href={`/attendance?gameId=${game.id}`} className="w-full">
+                                  <Button variant="outline" size="sm" className="w-full text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white gap-2">
+                                    <Users className="h-3 w-3" />
+                                    Squad Roster
+                                  </Button>
+                                </Link>
+                                <Link href="/attendance" className="w-full">
+                                  <Button variant="ghost" size="sm" className="w-full text-xs font-bold gap-2 text-muted-foreground">
+                                    <CheckCircle2 className="h-3 w-3" />
+                                    My Status
+                                  </Button>
+                                </Link>
+                              </div>
                             </div>
                           </div>
                         </CardContent>
@@ -308,22 +317,28 @@ export default function DashboardPage() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Trophy className="h-5 w-5 text-accent" />
-                    Squad Health
+                    Squad Teammates
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Active Players</span>
-                    <span className="font-bold">{players?.length || 0}</span>
+                  <div className="divide-y max-h-[300px] overflow-auto pr-2">
+                    {players?.slice(0, 10).map((p) => (
+                      <div key={p.id} className="py-2 flex items-center gap-2">
+                        <div className="h-6 w-6 rounded-full bg-primary/20 text-[10px] flex items-center justify-center font-bold text-primary">
+                          {p.name[0]}
+                        </div>
+                        <span className="text-xs font-medium truncate">{p.name}</span>
+                        {p.team && <Badge variant="outline" className="ml-auto text-[8px] h-4 px-1">T{p.team}</Badge>}
+                      </div>
+                    ))}
+                    {!players || players.length === 0 && (
+                      <p className="text-xs text-muted-foreground italic py-4">No teammates yet.</p>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-muted-foreground">Target Min.</span>
-                    <span className="font-bold text-accent">11 Players</span>
-                  </div>
-                  <div className="pt-4">
+                  <div className="pt-4 border-t">
                     <Link href="/players">
                       <Button className="w-full bg-accent hover:bg-accent/90 shadow-md">
-                        {currentPlayer?.isAdmin ? "Manage Squad" : "View Squad"}
+                        {currentPlayer?.isAdmin ? "Manage Squad" : "View Full Squad"}
                       </Button>
                     </Link>
                   </div>
@@ -338,12 +353,12 @@ export default function DashboardPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground space-y-4">
-                  <p>Ensure you register your status at least 48 hours before kickoff to help the Gaffer plan the lineup.</p>
+                  <p>Check the squad roster for each game to see who is confirmed. Aim for 11+ players for match days!</p>
                   <div className="p-3 bg-muted/40 rounded-lg">
                     <p className="font-bold text-foreground mb-1 text-xs">STANDARD KITS</p>
-                    <p className="text-pink-500 font-medium">Home 1: Pink/Grey</p>
-                    <p className="text-slate-400 font-medium">Home 2: New White</p>
-                    <p className="text-slate-900 font-medium">Away 1: Black/Black</p>
+                    <p className="text-pink-500 font-medium text-[10px]">Home 1: Pink/Grey</p>
+                    <p className="text-slate-400 font-medium text-[10px]">Home 2: New White</p>
+                    <p className="text-slate-900 font-medium text-[10px]">Away 1: Black/Black</p>
                   </div>
                 </CardContent>
               </Card>

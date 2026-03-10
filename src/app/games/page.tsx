@@ -50,6 +50,7 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, doc, setDoc, deleteDoc, query, orderBy } from "firebase/firestore";
+import Link from "next/link";
 
 const KIT_OPTIONS = [
   { label: "Home 1: Pink/Grey", color: "text-pink-500" },
@@ -418,10 +419,10 @@ export default function GamesPage() {
 
                     <div className="flex md:flex-col items-center gap-2 justify-end">
                       <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 font-bold gap-1" asChild>
-                        <a href={`/attendance`}>
+                        <Link href={`/attendance?gameId=${game.id}`}>
                           View Attendance
                           <ChevronRight className="h-4 w-4" />
-                        </a>
+                        </Link>
                       </Button>
                       
                       {currentPlayer?.isAdmin && (
