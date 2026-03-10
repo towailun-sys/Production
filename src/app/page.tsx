@@ -157,7 +157,9 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
             {p.number && <span className="mr-0.5 opacity-60">#{p.number}</span>}
             {p.nickname || p.name}
             {p.preferredPositions && p.preferredPositions.length > 0 && (
-              <span className="ml-1 opacity-60 font-normal">({p.preferredPositions.join('/')})</span>
+              <span className="ml-1 opacity-60 font-normal">
+                ({p.preferredPositions.map(pos => dict.common.positions[pos.toLowerCase() as keyof typeof dict.common.positions] || pos).join('/')})
+              </span>
             )}
           </Badge>
         ))}

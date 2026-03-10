@@ -331,7 +331,7 @@ export default function PlayersPage() {
             pos === 'MF' && "border-green-500 text-green-600 bg-green-50",
             pos === 'FW' && "border-red-500 text-red-600 bg-red-50",
           )}>
-            {pos}
+            {dict.common.positions[pos.toLowerCase() as keyof typeof dict.common.positions] || pos}
           </Badge>
         ))}
       </div>
@@ -497,7 +497,7 @@ export default function PlayersPage() {
                       </RadioGroup>
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="status">{dict.common.status}</Label>
+                      <Label htmlFor="status">{dict.common.statusLabel}</Label>
                       <Select 
                         value={formData.status} 
                         onValueChange={(val: PlayerStatus) => setFormData({ ...formData, status: val })}
@@ -644,7 +644,7 @@ export default function PlayersPage() {
                   </RadioGroup>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-status">{dict.common.status}</Label>
+                  <Label htmlFor="edit-status">{dict.common.statusLabel}</Label>
                   <Select 
                     value={formData.status} 
                     onValueChange={(val: PlayerStatus) => setFormData({ ...formData, status: val })}
