@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -246,16 +247,23 @@ export default function DashboardPage() {
     setIsClaimingAdmin(true);
     
     const adminRef = doc(firestore, "players", user.uid);
-    const adminData = {
+    
+    // SAFE UPDATE: Only set isAdmin and mandatory ID. 
+    // Do NOT overwrite existing team, number, or positions.
+    const adminData: any = {
       id: user.uid,
-      name: user.displayName || "Admin User",
-      email: user.email || "",
       isAdmin: true,
-      status: "Active",
-      team: "A",
-      preferredPositions: ["MF", "FW"],
-      number: 10
     };
+
+    // Only provide defaults if the profile literally doesn't exist yet
+    if (!currentPlayer) {
+      adminData.name = user.displayName || "Admin User";
+      adminData.email = user.email || "";
+      adminData.status = "Active";
+      adminData.team = "A";
+      adminData.preferredPositions = ["MF", "FW"];
+      adminData.number = 10;
+    }
 
     setDoc(adminRef, adminData, { merge: true })
       .then(() => {
@@ -280,6 +288,8 @@ export default function DashboardPage() {
     if (!user || !currentPlayer) return;
     const newAdminStatus = !currentPlayer.isAdmin;
     const playerRef = doc(firestore, "players", user.uid);
+    
+    // SAFE UPDATE: Only toggle the boolean.
     const updateData = { id: user.uid, isAdmin: newAdminStatus };
 
     setDoc(playerRef, updateData, { merge: true })
