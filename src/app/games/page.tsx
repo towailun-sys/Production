@@ -47,6 +47,15 @@ import { cn } from "@/lib/utils";
 import { getStoredGames, saveStoredGames } from "@/lib/local-store";
 import { useToast } from "@/hooks/use-toast";
 
+const KIT_OPTIONS = [
+  "Home: Blue/White",
+  "Away: Total Black",
+  "Training: Yellow Bibs",
+  "Training: Orange Bibs",
+  "Internal: Whites vs Blues",
+  "TBD"
+];
+
 export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -70,7 +79,7 @@ export default function GamesPage() {
     endTime: "",
     location: "",
     opponent: "",
-    kitColors: "",
+    kitColors: "TBD",
   });
 
   useEffect(() => {
@@ -85,7 +94,7 @@ export default function GamesPage() {
   }, [games, isLoaded]);
 
   const resetForm = () => {
-    setFormData({ type: "Training", date: "", startTime: "", endTime: "", location: "", opponent: "", kitColors: "" });
+    setFormData({ type: "Training", date: "", startTime: "", endTime: "", location: "", opponent: "", kitColors: "TBD" });
   };
 
   const isOpponentNotRequired = (type: GameType) => {
@@ -131,7 +140,7 @@ export default function GamesPage() {
       endTime: game.endTime,
       location: game.location,
       opponent: (game.opponent === "N/A" || !game.opponent) ? "" : game.opponent,
-      kitColors: game.kitColors || "",
+      kitColors: game.kitColors || "TBD",
     });
     
     setTimeout(() => {
@@ -253,8 +262,22 @@ export default function GamesPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="kitColors">Kit Colors</Label>
-                  <Input id="kitColors" placeholder="e.g. Home: Blue/White" value={formData.kitColors} onChange={(e) => setFormData({ ...formData, kitColors: e.target.value })} />
+                  <Label htmlFor="kitColors">Kit Selection</Label>
+                  <Select 
+                    value={formData.kitColors}
+                    onValueChange={(val) => setFormData({ ...formData, kitColors: val })}
+                  >
+                    <SelectTrigger id="kitColors">
+                      <SelectValue placeholder="Select kit colors" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {KIT_OPTIONS.map((option) => (
+                        <SelectItem key={option} value={option}>
+                          {option}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               <DialogFooter>
@@ -406,8 +429,22 @@ export default function GamesPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-kitColors">Kit Colors</Label>
-                <Input id="edit-kitColors" placeholder="e.g. Home: Blue/White" value={formData.kitColors} onChange={(e) => setFormData({ ...formData, kitColors: e.target.value })} />
+                <Label htmlFor="edit-kitColors">Kit Selection</Label>
+                <Select 
+                  value={formData.kitColors}
+                  onValueChange={(val) => setFormData({ ...formData, kitColors: val })}
+                >
+                  <SelectTrigger id="edit-kitColors">
+                    <SelectValue placeholder="Select kit colors" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {KIT_OPTIONS.map((option) => (
+                      <SelectItem key={option} value={option}>
+                        {option}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <DialogFooter>
