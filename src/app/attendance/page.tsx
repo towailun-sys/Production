@@ -346,7 +346,7 @@ function GameRosterList({
                       status === 'Pending' && "border-amber-500 text-amber-600"
                     )}
                   >
-                    {status === 'Confirmed' ? dict.common.confirm : status === 'Declined' ? dict.common.decline : 'Pending'}
+                    {status === 'Confirmed' ? dict.common.confirm : status === 'Declined' ? dict.common.decline : dict.common.pending}
                   </Badge>
 
                   {currentPlayer?.isAdmin && (
@@ -412,7 +412,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               currentStatus === 'Confirmed' ? "bg-accent" : 
               currentStatus === 'Declined' ? "bg-destructive" : "bg-amber-500"
             )}>
-              {currentStatus === 'Confirmed' ? dict.common.confirm : currentStatus === 'Declined' ? dict.common.decline : 'Pending'}
+              {currentStatus === 'Confirmed' ? dict.common.confirm : currentStatus === 'Declined' ? dict.common.decline : dict.common.pending}
             </Badge>
           </div>
           <div className="grid gap-2">
@@ -478,7 +478,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
                 currentStatus === 'Confirmed' ? "text-accent" : "text-destructive"
               )}>
                 {currentStatus === 'Confirmed' ? <Check className="h-4 w-4 mr-1" /> : <X className="h-4 w-4 mr-1" />}
-                {currentStatus === 'Confirmed' ? dict.common.confirm : dict.common.decline}
+                {currentStatus === 'Confirmed' ? dict.common.confirm : currentStatus === 'Declined' ? dict.common.decline : dict.common.pending}
               </span>
             )}
           </div>
