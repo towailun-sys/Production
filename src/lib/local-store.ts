@@ -11,12 +11,18 @@ const defaultPlayers: Player[] = [
   { id: "3", name: "Marcus Rashford", nickname: "Rashy", preferredPositions: ["FW"] },
   { id: "4", name: "Kevin De Bruyne", nickname: "KDB", preferredPositions: ["MF"] },
   { id: "5", name: "Virgil Van Dijk", nickname: "VVD", preferredPositions: ["DF"] },
+  { id: "6", name: "Erling Haaland", nickname: "Terminator", preferredPositions: ["FW"] },
+  { id: "7", name: "Bukayo Saka", nickname: "Starboy", preferredPositions: ["FW", "MF"] },
+  { id: "8", name: "Rodri", preferredPositions: ["MF"] },
 ];
 
+// Using February 2025 dates for testing the "Current Month" dashboard view
 const defaultGames: Game[] = [
-  { id: "1", date: "2024-06-15", time: "19:00", location: "Central Sports Complex", type: "League", opponent: "Blue Arrows FC" },
-  { id: "2", date: "2024-06-20", time: "18:30", location: "Community Field A", type: "Training" },
-  { id: "3", date: "2024-06-27", time: "20:00", location: "Stadium Main Pitch", type: "Friendly", opponent: "Legends United" },
+  { id: "1", date: "2025-02-10", time: "19:00", location: "Central Sports Complex", type: "League", opponent: "Blue Arrows FC" },
+  { id: "2", date: "2025-02-15", time: "18:30", location: "Community Field A", type: "Training" },
+  { id: "3", date: "2025-02-22", time: "20:00", location: "Stadium Main Pitch", type: "League", opponent: "Legends United" },
+  { id: "4", date: "2025-02-28", time: "19:30", location: "Power League North", type: "Internal" },
+  { id: "5", date: "2025-03-05", time: "19:00", location: "Away Grounds", type: "Friendly", opponent: "Old Boys FC" },
 ];
 
 export const getStoredPlayers = (): Player[] => {
@@ -26,7 +32,6 @@ export const getStoredPlayers = (): Player[] => {
   
   try {
     const players = JSON.parse(stored) as any[];
-    // Migration for existing single position data if any
     return players.map(p => ({
       ...p,
       preferredPositions: p.preferredPositions || (p.preferredPosition ? [p.preferredPosition] : [])
