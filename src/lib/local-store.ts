@@ -6,21 +6,21 @@ const GAMES_KEY = 'squadflow_games';
 const ATTENDANCE_KEY = 'squadflow_attendance';
 
 const defaultPlayers: Player[] = [
-  { id: "1", name: "David Miller", nickname: "Miller", email: "david.m@squadflow.com", preferredPositions: ["GK"], team: "A" },
-  { id: "2", name: "Samuel Jackson", email: "sam.j@squadflow.com", preferredPositions: ["DF", "MF"], team: "A" },
-  { id: "3", name: "Marcus Rashford", nickname: "Rashy", email: "rashy@squadflow.com", preferredPositions: ["FW"], team: "B" },
-  { id: "4", name: "Kevin De Bruyne", nickname: "KDB", email: "kdb@squadflow.com", preferredPositions: ["MF"], team: "A" },
-  { id: "5", name: "Virgil Van Dijk", nickname: "VVD", email: "vvd@squadflow.com", preferredPositions: ["DF"], team: "B" },
-  { id: "6", name: "Erling Haaland", nickname: "Terminator", email: "erling@squadflow.com", preferredPositions: ["FW"], team: "A" },
-  { id: "7", name: "Bukayo Saka", nickname: "Starboy", email: "saka@squadflow.com", preferredPositions: ["FW", "MF"], team: "B" },
-  { id: "8", name: "Rodri", email: "rodri@squadflow.com", preferredPositions: ["MF"], team: "A" },
+  { id: "1", name: "David Miller", nickname: "Miller", email: "david.m@squadflow.com", preferredPositions: ["GK"], team: "A", status: "Active" },
+  { id: "2", name: "Samuel Jackson", email: "sam.j@squadflow.com", preferredPositions: ["DF", "MF"], team: "A", status: "Active" },
+  { id: "3", name: "Marcus Rashford", nickname: "Rashy", email: "rashy@squadflow.com", preferredPositions: ["FW"], team: "B", status: "Active" },
+  { id: "4", name: "Kevin De Bruyne", nickname: "KDB", email: "kdb@squadflow.com", preferredPositions: ["MF"], team: "A", status: "Injured" },
+  { id: "5", name: "Virgil Van Dijk", nickname: "VVD", email: "vvd@squadflow.com", preferredPositions: ["DF"], team: "B", status: "Active" },
+  { id: "6", name: "Erling Haaland", nickname: "Terminator", email: "erling@squadflow.com", preferredPositions: ["FW"], team: "A", status: "Active" },
+  { id: "7", name: "Bukayo Saka", nickname: "Starboy", email: "saka@squadflow.com", preferredPositions: ["FW", "MF"], team: "B", status: "Pending for Club Fee" },
+  { id: "8", name: "Rodri", email: "rodri@squadflow.com", preferredPositions: ["MF"], team: "A", status: "Not Available" },
 ];
 
 const defaultGames: Game[] = [
   { id: "1", date: "2025-02-10", startTime: "19:00", endTime: "21:00", location: "Central Sports Complex", type: "League", opponent: "Blue Arrows FC", kitColors: "Home: Blue/White" },
-  { id: "2", date: "2025-02-15", startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", kitColors: "Training Bibs Provided" },
+  { id: "2", date: "2025-02-15", startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", kitColors: "Training: Yellow Bibs" },
   { id: "3", date: "2025-02-22", startTime: "20:00", endTime: "22:00", location: "Stadium Main Pitch", type: "League", opponent: "Legends United", kitColors: "Away: Total Black" },
-  { id: "4", date: "2025-02-28", startTime: "19:30", endTime: "21:30", location: "Power League North", type: "Internal", opponent: "N/A", kitColors: "Whites vs Blues" },
+  { id: "4", date: "2025-02-28", startTime: "19:30", endTime: "21:30", location: "Power League North", type: "Internal", opponent: "N/A", kitColors: "Internal: Whites vs Blues" },
   { id: "5", date: "2025-03-05", startTime: "19:00", endTime: "20:30", location: "Away Grounds", type: "Friendly", opponent: "Old Boys FC", kitColors: "Home: Blue/White" },
 ];
 
@@ -33,7 +33,8 @@ export const getStoredPlayers = (): Player[] => {
     const players = JSON.parse(stored) as any[];
     return players.map(p => ({
       ...p,
-      preferredPositions: p.preferredPositions || (p.preferredPosition ? [p.preferredPosition] : [])
+      preferredPositions: p.preferredPositions || (p.preferredPosition ? [p.preferredPosition] : []),
+      status: p.status || "Active"
     }));
   } catch (e) {
     return defaultPlayers;

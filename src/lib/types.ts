@@ -1,6 +1,7 @@
 
 export type PlayerPosition = 'GK' | 'DF' | 'MF' | 'FW';
 export type TeamType = 'A' | 'B';
+export type PlayerStatus = 'Active' | 'Injured' | 'Not Available' | 'Pending for Club Fee';
 
 export interface Player {
   id: string;
@@ -9,6 +10,7 @@ export interface Player {
   email?: string;
   preferredPositions: PlayerPosition[];
   team?: TeamType;
+  status: PlayerStatus;
 }
 
 export type GameType = 'Training' | 'League' | 'Friendly' | 'Internal';
