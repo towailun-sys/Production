@@ -305,7 +305,7 @@ function GameRosterList({
                       {player.name} 
                       {player.nickname && <span className="text-muted-foreground text-xs italic font-normal">"{player.nickname}"</span>}
                       {player.isCaptain && (
-                        <Badge variant="secondary" className="bg-accent/20 text-accent text-[9px] font-bold h-4 px-1 leading-none uppercase tracking-wider">
+                        <Badge variant="secondary" className="bg-accent/20 text-accent text-[10px] font-bold h-4 px-1 leading-none uppercase tracking-wider">
                           Capt.
                         </Badge>
                       )}
@@ -400,7 +400,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               )}
             >
               <Check className="h-4 w-4" />
-              I'm Going
+              Join
             </Button>
             <Button 
               size="sm"
@@ -412,7 +412,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               )}
             >
               <X className="h-4 w-4" />
-              Can't Make It
+              Decline
             </Button>
           </div>
         </CardContent>
@@ -520,7 +520,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               )}
             >
               <Check className="h-4 w-4" />
-              I'm Going
+              Join
             </Button>
             <Button 
               onClick={() => onStatusChange(game.id, 'Declined')}
@@ -531,7 +531,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               )}
             >
               <X className="h-4 w-4" />
-              Can't Make It
+              Decline
             </Button>
           </div>
           <Link href={`/attendance?gameId=${game.id}`} className="text-xs text-primary font-bold hover:underline">
