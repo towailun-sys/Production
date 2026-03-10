@@ -52,9 +52,6 @@ const KIT_OPTIONS = [
   { label: "Home 2: White/White", color: "text-slate-400" },
   { label: "Away 1: Black/Black", color: "text-slate-900" },
   { label: "Away 2: White/White", color: "text-slate-400" },
-  { label: "Training: Yellow Bibs", color: "text-yellow-400" },
-  { label: "Training: Orange Bibs", color: "text-orange-500" },
-  { label: "Internal: Whites vs Blues", color: "text-indigo-600" },
   { label: "TBD", color: "text-muted-foreground" }
 ];
 

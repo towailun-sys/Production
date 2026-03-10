@@ -25,9 +25,6 @@ const KIT_MAP: Record<string, string> = {
   "Home 2: White/White": "text-slate-400",
   "Away 1: Black/Black": "text-slate-900",
   "Away 2: White/White": "text-slate-400",
-  "Training: Yellow Bibs": "text-yellow-400",
-  "Training: Orange Bibs": "text-orange-500",
-  "Internal: Whites vs Blues": "text-indigo-600",
   "TBD": "text-muted-foreground"
 };
 
