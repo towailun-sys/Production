@@ -587,7 +587,7 @@ export default function PlayersPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-mobileNumber">{dict.players.dialog.mobile}</Label bronze-200">
+                <Label htmlFor="edit-mobileNumber">{dict.players.dialog.mobile}</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
