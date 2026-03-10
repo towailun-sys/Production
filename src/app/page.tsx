@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -141,7 +142,7 @@ export default function DashboardPage() {
                                         </TooltipTrigger>
                                         <TooltipContent>
                                           <div className="text-xs">
-                                            <p className="font-bold">{player.name}</p>
+                                            <p className="font-bold">{player.name} <span className="opacity-70">(Team {player.team})</span></p>
                                             <p className="text-muted-foreground">{player.preferredPositions.join(', ')}</p>
                                           </div>
                                         </TooltipContent>

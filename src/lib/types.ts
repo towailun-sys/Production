@@ -1,11 +1,13 @@
 
 export type PlayerPosition = 'GK' | 'DF' | 'MF' | 'FW';
+export type TeamType = 'A' | 'B';
 
 export interface Player {
   id: string;
   name: string;
   nickname?: string;
   preferredPositions: PlayerPosition[];
+  team?: TeamType;
 }
 
 export type GameType = 'Training' | 'League' | 'Friendly' | 'Internal';

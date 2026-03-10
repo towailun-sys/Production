@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -27,8 +28,9 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Search, UserPlus, Filter, Pencil, Trash2 } from "lucide-react";
-import { Player, PlayerPosition } from "@/lib/types";
+import { Player, PlayerPosition, TeamType } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -53,10 +55,12 @@ export default function PlayersPage() {
     name: string;
     nickname: string;
     preferredPositions: PlayerPosition[];
+    team: TeamType;
   }>({
     name: "",
     nickname: "",
     preferredPositions: [],
+    team: "A",
   });
 
   const { toast } = useToast();
@@ -103,6 +107,7 @@ export default function PlayersPage() {
       name: formData.name,
       nickname: formData.nickname || undefined,
       preferredPositions: formData.preferredPositions,
+      team: formData.team,
     };
 
     setPlayers([...players, newPlayer]);
@@ -120,9 +125,9 @@ export default function PlayersPage() {
       name: player.name,
       nickname: player.nickname || "",
       preferredPositions: player.preferredPositions,
+      team: player.team || "A",
     });
     
-    // Crucial: Use a small delay to ensure any active DropdownMenu closes
     setTimeout(() => {
       setIsEditOpen(true);
     }, 50);
@@ -133,7 +138,7 @@ export default function PlayersPage() {
 
     const updatedPlayers = players.map(p => 
       p.id === editingPlayer.id 
-        ? { ...p, name: formData.name, nickname: formData.nickname || undefined, preferredPositions: formData.preferredPositions }
+        ? { ...p, name: formData.name, nickname: formData.nickname || undefined, preferredPositions: formData.preferredPositions, team: formData.team }
         : p
     );
 
@@ -160,6 +165,7 @@ export default function PlayersPage() {
       name: "",
       nickname: "",
       preferredPositions: [],
+      team: "A",
     });
   };
 
@@ -226,6 +232,23 @@ export default function PlayersPage() {
                   />
                 </div>
                 <div className="grid gap-2">
+                  <Label>Assigned Team</Label>
+                  <RadioGroup 
+                    value={formData.team} 
+                    onValueChange={(val: TeamType) => setFormData({ ...formData, team: val })}
+                    className="flex gap-4 p-2"
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="A" id="team-a" />
+                      <Label htmlFor="team-a">Team A</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="B" id="team-b" />
+                      <Label htmlFor="team-b">Team B</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+                <div className="grid gap-2">
                   <Label>Preferred Positions (Multi-select)</Label>
                   <div className="grid grid-cols-2 gap-3 p-3 border rounded-md bg-muted/20">
                     {POSITIONS.map((pos) => (
@@ -276,6 +299,23 @@ export default function PlayersPage() {
                 />
               </div>
               <div className="grid gap-2">
+                <Label>Assigned Team</Label>
+                <RadioGroup 
+                  value={formData.team} 
+                  onValueChange={(val: TeamType) => setFormData({ ...formData, team: val })}
+                  className="flex gap-4 p-2"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="A" id="edit-team-a" />
+                    <Label htmlFor="edit-team-a">Team A</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="B" id="edit-team-b" />
+                    <Label htmlFor="edit-team-b">Team B</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+              <div className="grid gap-2">
                 <Label>Preferred Positions (Multi-select)</Label>
                 <div className="grid grid-cols-2 gap-3 p-3 border rounded-md bg-muted/20">
                   {POSITIONS.map((pos) => (
@@ -322,7 +362,7 @@ export default function PlayersPage() {
               <TableHeader className="bg-muted/30">
                 <TableRow>
                   <TableHead className="w-[200px] font-bold">Player</TableHead>
-                  <TableHead className="font-bold">Nickname</TableHead>
+                  <TableHead className="font-bold">Team</TableHead>
                   <TableHead className="font-bold">Positions</TableHead>
                   <TableHead className="text-right font-bold">Actions</TableHead>
                 </TableRow>
@@ -337,14 +377,24 @@ export default function PlayersPage() {
                 ) : (
                   filteredPlayers.map((player) => (
                     <TableRow key={player.id} className="hover:bg-accent/5">
-                      <TableCell className="font-medium flex items-center gap-3">
-                        <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
-                          {player.name.split(' ').map(n => n[0]).join('')}
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                            {player.name.split(' ').map(n => n[0]).join('')}
+                          </div>
+                          <div>
+                            <p className="font-bold">{player.name}</p>
+                            {player.nickname && <p className="text-xs text-muted-foreground">"{player.nickname}"</p>}
+                          </div>
                         </div>
-                        {player.name}
                       </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {player.nickname || "—"}
+                      <TableCell>
+                        <Badge className={cn(
+                          "font-bold",
+                          player.team === 'A' ? "bg-primary" : "bg-indigo-600"
+                        )}>
+                          Team {player.team || 'A'}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         {renderPositionBadges(player.preferredPositions)}

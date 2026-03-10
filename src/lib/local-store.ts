@@ -6,14 +6,14 @@ const GAMES_KEY = 'squadflow_games';
 const ATTENDANCE_KEY = 'squadflow_attendance';
 
 const defaultPlayers: Player[] = [
-  { id: "1", name: "David Miller", nickname: "Miller", preferredPositions: ["GK"] },
-  { id: "2", name: "Samuel Jackson", preferredPositions: ["DF", "MF"] },
-  { id: "3", name: "Marcus Rashford", nickname: "Rashy", preferredPositions: ["FW"] },
-  { id: "4", name: "Kevin De Bruyne", nickname: "KDB", preferredPositions: ["MF"] },
-  { id: "5", name: "Virgil Van Dijk", nickname: "VVD", preferredPositions: ["DF"] },
-  { id: "6", name: "Erling Haaland", nickname: "Terminator", preferredPositions: ["FW"] },
-  { id: "7", name: "Bukayo Saka", nickname: "Starboy", preferredPositions: ["FW", "MF"] },
-  { id: "8", name: "Rodri", preferredPositions: ["MF"] },
+  { id: "1", name: "David Miller", nickname: "Miller", preferredPositions: ["GK"], team: "A" },
+  { id: "2", name: "Samuel Jackson", preferredPositions: ["DF", "MF"], team: "A" },
+  { id: "3", name: "Marcus Rashford", nickname: "Rashy", preferredPositions: ["FW"], team: "B" },
+  { id: "4", name: "Kevin De Bruyne", nickname: "KDB", preferredPositions: ["MF"], team: "A" },
+  { id: "5", name: "Virgil Van Dijk", nickname: "VVD", preferredPositions: ["DF"], team: "B" },
+  { id: "6", name: "Erling Haaland", nickname: "Terminator", preferredPositions: ["FW"], team: "A" },
+  { id: "7", name: "Bukayo Saka", nickname: "Starboy", preferredPositions: ["FW", "MF"], team: "B" },
+  { id: "8", name: "Rodri", preferredPositions: ["MF"], team: "A" },
 ];
 
 // Using February 2025 dates for testing the "Current Month" dashboard view
