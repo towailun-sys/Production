@@ -564,7 +564,7 @@ export default function DashboardPage() {
                                 {game.kitColors && (
                                   <div className={cn("flex items-center gap-2 font-bold", getKitColorClass(game.kitColors))}>
                                     <Shirt className="h-4 w-4" />
-                                    {dict.games.dialog.kit}: {game.kitColors}
+                                    {dict.games.dialog.kit}: {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
                                   </div>
                                 )}
                               </div>

@@ -505,7 +505,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               </div>
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{dict.games.dialog.kit}</p>
-                <p className={cn("font-bold", getKitColorClass(game.kitColors))}>{game.kitColors}</p>
+                <p className={cn("font-bold", getKitColorClass(game.kitColors))}>{dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}</p>
               </div>
             </div>
           )}

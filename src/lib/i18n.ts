@@ -45,6 +45,13 @@ const baseDict = {
       df: "DF",
       mf: "MF",
       fw: "FW"
+    },
+    kits: {
+      "Home 1: Pink/Grey": "Home 1: Pink/Grey",
+      "Home 2: New White / New White": "Home 2: New White / New White",
+      "Away 1: Black/Black": "Away 1: Black/Black",
+      "Away 2: White/White": "Away 2: White/White",
+      "TBD": "TBD"
     }
   },
   nav: {
@@ -191,6 +198,13 @@ const zhDict: typeof baseDict = {
       df: "後衛",
       mf: "中場",
       fw: "前鋒"
+    },
+    kits: {
+      "Home 1: Pink/Grey": "主場 1: 粉紅/灰",
+      "Home 2: New White / New White": "主場 2: 新白 / 新白",
+      "Away 1: Black/Black": "客場 1: 黑/黑",
+      "Away 2: White/White": "客場 2: 白/白",
+      "TBD": "有待決定"
     }
   },
   nav: {

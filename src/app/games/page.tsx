@@ -55,15 +55,15 @@ import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/e
 import { useTranslation } from "@/components/language-provider";
 
 const KIT_OPTIONS = [
-  { label: "Home 1: Pink/Grey", color: "text-pink-500" },
-  { label: "Home 2: New White / New White", color: "text-slate-300" },
-  { label: "Away 1: Black/Black", color: "text-slate-950" },
-  { label: "Away 2: White/White", color: "text-slate-300" },
-  { label: "TBD", color: "text-muted-foreground" }
+  { value: "Home 1: Pink/Grey", color: "text-pink-500" },
+  { value: "Home 2: New White / New White", color: "text-slate-300" },
+  { value: "Away 1: Black/Black", color: "text-slate-950" },
+  { value: "Away 2: White/White", color: "text-slate-300" },
+  { value: "TBD", color: "text-muted-foreground" }
 ];
 
 const getKitColorClass = (kitLabel: string) => {
-  return KIT_OPTIONS.find(opt => opt.label === kitLabel)?.color || "text-muted-foreground";
+  return KIT_OPTIONS.find(opt => opt.value === kitLabel)?.color || "text-muted-foreground";
 };
 
 export default function GamesPage() {
@@ -366,10 +366,10 @@ export default function GamesPage() {
                       </SelectTrigger>
                       <SelectContent>
                         {KIT_OPTIONS.map((option) => (
-                          <SelectItem key={option.label} value={option.label}>
+                          <SelectItem key={option.value} value={option.value}>
                             <div className="flex items-center gap-2">
                               <Shirt className={cn("h-4 w-4", option.color)} />
-                              {option.label}
+                              {dict.common.kits[option.value as keyof typeof dict.common.kits] || option.value}
                             </div>
                           </SelectItem>
                         ))}
@@ -449,7 +449,7 @@ export default function GamesPage() {
                         {game.kitColors && (
                           <div className={cn("flex items-center gap-1.5 font-bold", getKitColorClass(game.kitColors))}>
                             <Shirt className="h-4 w-4" />
-                            {dict.games.dialog.kit}: {game.kitColors}
+                            {dict.games.dialog.kit}: {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
                           </div>
                         )}
                       </div>
@@ -570,10 +570,10 @@ export default function GamesPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {KIT_OPTIONS.map((option) => (
-                      <SelectItem key={option.label} value={option.label}>
+                      <SelectItem key={option.value} value={option.value}>
                         <div className="flex items-center gap-2">
                           <Shirt className={cn("h-4 w-4", option.color)} />
-                          {option.label}
+                          {dict.common.kits[option.value as keyof typeof dict.common.kits] || option.value}
                         </div>
                       </SelectItem>
                     ))}
