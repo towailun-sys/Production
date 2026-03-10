@@ -27,25 +27,45 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
 
 export function MainNav() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const { toast } = useToast();
 
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
+    // Hint: GoogleAuthProvider needs to be enabled in Firebase Console
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
+    
     try {
       await signInWithPopup(auth, provider);
-    } catch (error) {
+      toast({
+        title: "Signed in successfully",
+        description: "Welcome back to SquadFlow.",
+      });
+    } catch (error: any) {
       console.error("Login failed:", error);
+      toast({
+        variant: "destructive",
+        title: "Sign in failed",
+        description: error.message || "Could not complete Google authentication.",
+      });
     }
   };
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      toast({
+        title: "Signed out",
+        description: "You have been logged out safely.",
+      });
     } catch (error) {
       console.error("Logout failed:", error);
     }

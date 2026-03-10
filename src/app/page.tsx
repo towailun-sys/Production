@@ -12,7 +12,8 @@ import {
   Trophy,
   Info,
   Shirt,
-  Lock
+  Lock,
+  Loader2
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player } from "@/lib/types";
@@ -56,6 +57,18 @@ export default function DashboardPage() {
   
   const { data: players } = useCollection<Player>(playersQuery);
 
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen bg-background pb-12">
+        <MainNav />
+        <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground font-medium">Checking squad credentials...</p>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pb-12">
       <MainNav />
@@ -67,14 +80,14 @@ export default function DashboardPage() {
           </p>
         </header>
 
-        {!user && !isUserLoading ? (
+        {!user ? (
           <div className="flex flex-col items-center justify-center py-20 text-center bg-muted/20 rounded-3xl border border-dashed border-primary/20">
             <div className="bg-primary/10 p-4 rounded-full mb-4">
               <Lock className="h-8 w-8 text-primary" />
             </div>
             <h2 className="text-2xl font-headline mb-2">Private Squad Access</h2>
             <p className="text-muted-foreground max-w-sm mb-6">
-              Please sign in to view the team schedule, check player availability, and register for upcoming fixtures.
+              Please sign in with your Google account to view the team schedule, check player availability, and register for upcoming fixtures.
             </p>
           </div>
         ) : (

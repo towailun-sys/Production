@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MainNav } from "@/components/layout/main-nav";
 import { Button } from "@/components/ui/button";
 import { 
@@ -40,12 +39,15 @@ import {
   ChevronRight,
   Pencil,
   Trash2,
-  Shirt
+  Shirt,
+  Lock,
+  Loader2
 } from "lucide-react";
 import { Game, GameType } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { getStoredGames, saveStoredGames } from "@/lib/local-store";
 import { useToast } from "@/hooks/use-toast";
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
+import { collection, doc, setDoc, deleteDoc, query, orderBy } from "firebase/firestore";
 
 const KIT_OPTIONS = [
   { label: "Home 1: Pink/Grey", color: "text-pink-500" },
@@ -60,12 +62,13 @@ const getKitColorClass = (kitLabel: string) => {
 };
 
 export default function GamesPage() {
-  const [games, setGames] = useState<Game[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
-  const { toast } = useToast();
 
   const [formData, setFormData] = useState<{
     type: GameType;
@@ -85,16 +88,12 @@ export default function GamesPage() {
     kitColors: "TBD",
   });
 
-  useEffect(() => {
-    setGames(getStoredGames());
-    setIsLoaded(true);
-  }, []);
+  const gamesQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(collection(firestore, "games"), orderBy("date", "asc"));
+  }, [firestore, user]);
 
-  useEffect(() => {
-    if (isLoaded) {
-      saveStoredGames(games);
-    }
-  }, [games, isLoaded]);
+  const { data: games, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
 
   const resetForm = () => {
     setFormData({ type: "Training", date: "", startTime: "", endTime: "", location: "", opponent: "", kitColors: "TBD" });
@@ -104,7 +103,7 @@ export default function GamesPage() {
     return type === 'Internal' || type === 'Training';
   };
 
-  const handleAddGame = () => {
+  const handleAddGame = async () => {
     if (!formData.date || !formData.startTime || !formData.endTime || !formData.location) {
       toast({
         variant: "destructive",
@@ -114,18 +113,20 @@ export default function GamesPage() {
       return;
     }
 
-    const newGame: Game = {
-      id: Math.random().toString(36).substring(2, 11),
+    const id = Math.random().toString(36).substring(2, 11);
+    const gameRef = doc(firestore, "games", id);
+
+    await setDoc(gameRef, {
+      id,
       type: formData.type,
       date: formData.date,
       startTime: formData.startTime,
       endTime: formData.endTime,
       location: formData.location,
-      opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || undefined),
+      opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || "TBD"),
       kitColors: formData.kitColors || "TBD",
-    };
+    });
 
-    setGames([...games, newGame].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
     setIsAddOpen(false);
     resetForm();
     toast({
@@ -151,7 +152,7 @@ export default function GamesPage() {
     }, 150);
   };
 
-  const handleUpdateGame = () => {
+  const handleUpdateGame = async () => {
     if (!editingGame || !formData.date || !formData.startTime || !formData.endTime || !formData.location) {
       toast({
         variant: "destructive",
@@ -161,22 +162,18 @@ export default function GamesPage() {
       return;
     }
 
-    const updatedGames = games.map(g => 
-      g.id === editingGame.id 
-        ? { 
-            ...g, 
-            type: formData.type, 
-            date: formData.date, 
-            startTime: formData.startTime,
-            endTime: formData.endTime,
-            location: formData.location, 
-            opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || undefined),
-            kitColors: formData.kitColors || "TBD",
-          }
-        : g
-    ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const gameRef = doc(firestore, "games", editingGame.id);
 
-    setGames(updatedGames);
+    await setDoc(gameRef, {
+      type: formData.type, 
+      date: formData.date, 
+      startTime: formData.startTime,
+      endTime: formData.endTime,
+      location: formData.location, 
+      opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || "TBD"),
+      kitColors: formData.kitColors || "TBD",
+    }, { merge: true });
+
     setIsEditOpen(false);
     setEditingGame(null);
     resetForm();
@@ -186,15 +183,37 @@ export default function GamesPage() {
     });
   };
 
-  const handleDeleteGame = (id: string) => {
-    setGames(games.filter(g => g.id !== id));
+  const handleDeleteGame = async (id: string) => {
+    await deleteDoc(doc(firestore, "games", id));
     toast({
       title: "Event Deleted",
       description: "The event has been removed from the schedule.",
     });
   };
 
-  if (!isLoaded) return null;
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen bg-background pb-12">
+        <MainNav />
+        <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </main>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <MainNav />
+        <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center text-center">
+          <Lock className="h-12 w-12 text-muted-foreground mb-4" />
+          <h1 className="text-2xl font-headline mb-2">Access Restricted</h1>
+          <p className="text-muted-foreground">Sign in to manage the game schedule.</p>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -294,7 +313,11 @@ export default function GamesPage() {
         </div>
 
         <div className="grid gap-6">
-          {games.length === 0 ? (
+          {isGamesLoading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i} className="h-32 animate-pulse bg-muted/50" />
+            ))
+          ) : !games || games.length === 0 ? (
             <Card className="p-12 text-center border-dashed border-2">
               <p className="text-muted-foreground">No events scheduled. Use the button above to add one.</p>
             </Card>

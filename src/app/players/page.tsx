@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { MainNav } from "@/components/layout/main-nav";
 import { Button } from "@/components/ui/button";
 import { 
@@ -36,12 +35,13 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Search, UserPlus, Filter, Pencil, Trash2, Mail, Activity, HeartPulse, Ban, CreditCard } from "lucide-react";
+import { Search, UserPlus, Filter, Pencil, Trash2, Mail, Activity, HeartPulse, Ban, CreditCard, Lock, Loader2 } from "lucide-react";
 import { Player, PlayerPosition, TeamType, PlayerStatus } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { getStoredPlayers, saveStoredPlayers } from "@/lib/local-store";
+import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
+import { collection, doc, deleteDoc, setDoc } from "firebase/firestore";
 
 const POSITIONS: { value: PlayerPosition; label: string }[] = [
   { value: "GK", label: "Goalkeeper" },
@@ -58,12 +58,14 @@ const STATUS_OPTIONS: { value: PlayerStatus; label: string; icon: any; color: st
 ];
 
 export default function PlayersPage() {
-  const [players, setPlayers] = useState<Player[]>([]);
+  const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+
   const [search, setSearch] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
-  const [isLoaded, setIsLoaded] = useState(false);
   
   const [formData, setFormData] = useState<{
     name: string;
@@ -81,20 +83,14 @@ export default function PlayersPage() {
     status: "Active",
   });
 
-  const { toast } = useToast();
+  const playersQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return collection(firestore, "players");
+  }, [firestore, user]);
 
-  useEffect(() => {
-    setPlayers(getStoredPlayers());
-    setIsLoaded(true);
-  }, []);
+  const { data: players, isLoading: isPlayersLoading } = useCollection<Player>(playersQuery);
 
-  useEffect(() => {
-    if (isLoaded) {
-      saveStoredPlayers(players);
-    }
-  }, [players, isLoaded]);
-
-  const filteredPlayers = players.filter(p => 
+  const filteredPlayers = (players || []).filter(p => 
     p.name.toLowerCase().includes(search.toLowerCase()) || 
     p.nickname?.toLowerCase().includes(search.toLowerCase()) ||
     p.email?.toLowerCase().includes(search.toLowerCase())
@@ -111,7 +107,7 @@ export default function PlayersPage() {
     });
   };
 
-  const handleAddPlayer = () => {
+  const handleAddPlayer = async () => {
     if (!formData.name) {
       toast({
         variant: "destructive",
@@ -121,22 +117,24 @@ export default function PlayersPage() {
       return;
     }
 
-    const newPlayer: Player = {
-      id: Math.random().toString(36).substring(2, 11),
+    const id = Math.random().toString(36).substring(2, 11);
+    const playerRef = doc(firestore, "players", id);
+
+    await setDoc(playerRef, {
+      id,
       name: formData.name,
-      nickname: formData.nickname || undefined,
-      email: formData.email || undefined,
+      nickname: formData.nickname || "",
+      email: formData.email || "",
       preferredPositions: formData.preferredPositions,
       team: formData.team,
       status: formData.status,
-    };
+    });
 
-    setPlayers([...players, newPlayer]);
     resetForm();
     setIsAddOpen(false);
     toast({
       title: "Player Added",
-      description: `${newPlayer.name} has been added to the squad.`,
+      description: `${formData.name} has been added to the squad.`,
     });
   };
 
@@ -156,23 +154,21 @@ export default function PlayersPage() {
     }, 50);
   };
 
-  const handleUpdatePlayer = () => {
+  const handleUpdatePlayer = async () => {
     if (!editingPlayer || !formData.name) return;
 
-    const updatedPlayers = players.map(p => 
-      p.id === editingPlayer.id 
-        ? { ...p, 
-            name: formData.name, 
-            nickname: formData.nickname || undefined, 
-            email: formData.email || undefined,
-            preferredPositions: formData.preferredPositions, 
-            team: formData.team,
-            status: formData.status 
-          }
-        : p
-    );
+    const playerRef = doc(firestore, "players", editingPlayer.id);
 
-    setPlayers(updatedPlayers);
+    await setDoc(playerRef, {
+      id: editingPlayer.id,
+      name: formData.name,
+      nickname: formData.nickname || "",
+      email: formData.email || "",
+      preferredPositions: formData.preferredPositions,
+      team: formData.team,
+      status: formData.status 
+    }, { merge: true });
+
     resetForm();
     setIsEditOpen(false);
     setEditingPlayer(null);
@@ -182,8 +178,8 @@ export default function PlayersPage() {
     });
   };
 
-  const handleDeletePlayer = (id: string) => {
-    setPlayers(players.filter(p => p.id !== id));
+  const handleDeletePlayer = async (id: string) => {
+    await deleteDoc(doc(firestore, "players", id));
     toast({
       title: "Player Removed",
       description: "The player has been removed from the squad list.",
@@ -202,7 +198,7 @@ export default function PlayersPage() {
   };
 
   const renderPositionBadges = (positions: PlayerPosition[]) => {
-    if (positions.length === 0) return <span className="text-muted-foreground italic text-xs">No position set</span>;
+    if (!positions || positions.length === 0) return <span className="text-muted-foreground italic text-xs">No position set</span>;
     
     return (
       <div className="flex flex-wrap gap-1">
@@ -225,7 +221,29 @@ export default function PlayersPage() {
     return STATUS_OPTIONS.find(s => s.value === status) || STATUS_OPTIONS[0];
   };
 
-  if (!isLoaded) return null;
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen bg-background pb-12">
+        <MainNav />
+        <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </main>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <MainNav />
+        <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center text-center">
+          <Lock className="h-12 w-12 text-muted-foreground mb-4" />
+          <h1 className="text-2xl font-headline mb-2">Access Restricted</h1>
+          <p className="text-muted-foreground">Sign in to manage the squad list.</p>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -442,7 +460,7 @@ export default function PlayersPage() {
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Search players by name, nickname or email..." 
+                placeholder="Search players..." 
                 className="pl-9 bg-muted/30 border-none focus-visible:ring-1 focus-visible:ring-primary" 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -453,92 +471,99 @@ export default function PlayersPage() {
             </Button>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader className="bg-muted/30">
-                <TableRow>
-                  <TableHead className="w-[250px] font-bold">Player</TableHead>
-                  <TableHead className="font-bold text-center">Team</TableHead>
-                  <TableHead className="font-bold">Status</TableHead>
-                  <TableHead className="font-bold">Positions</TableHead>
-                  <TableHead className="text-right font-bold">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPlayers.length === 0 ? (
+            {isPlayersLoading ? (
+              <div className="p-20 text-center">
+                <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-2" />
+                <p className="text-muted-foreground">Loading squad list...</p>
+              </div>
+            ) : (
+              <Table>
+                <TableHeader className="bg-muted/30">
                   <TableRow>
-                    <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
-                      No players found.
-                    </TableCell>
+                    <TableHead className="w-[250px] font-bold">Player</TableHead>
+                    <TableHead className="font-bold text-center">Team</TableHead>
+                    <TableHead className="font-bold">Status</TableHead>
+                    <TableHead className="font-bold">Positions</TableHead>
+                    <TableHead className="text-right font-bold">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  filteredPlayers.map((player) => {
-                    const statusCfg = getStatusConfig(player.status);
-                    const StatusIcon = statusCfg.icon;
-                    
-                    return (
-                      <TableRow key={player.id} className="hover:bg-accent/5">
-                        <TableCell className="font-medium">
-                          <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
-                              {player.name.split(' ').map(n => n[0]).join('')}
-                            </div>
-                            <div className="flex flex-col">
-                              <p className="font-bold leading-none">{player.name}</p>
-                              <div className="flex items-center gap-2 mt-1">
-                                {player.nickname && <span className="text-xs text-muted-foreground font-medium italic">"{player.nickname}"</span>}
-                                {player.email && (
-                                  <span className="flex items-center text-[10px] text-muted-foreground gap-1">
-                                    <Mail className="h-3 w-3" />
-                                    {player.email}
-                                  </span>
-                                )}
+                </TableHeader>
+                <TableBody>
+                  {filteredPlayers.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-32 text-center text-muted-foreground">
+                        No players found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredPlayers.map((player) => {
+                      const statusCfg = getStatusConfig(player.status);
+                      const StatusIcon = statusCfg.icon;
+                      
+                      return (
+                        <TableRow key={player.id} className="hover:bg-accent/5">
+                          <TableCell className="font-medium">
+                            <div className="flex items-center gap-3">
+                              <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                                {player.name.split(' ').map(n => n[0]).join('')}
+                              </div>
+                              <div className="flex flex-col">
+                                <p className="font-bold leading-none">{player.name}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  {player.nickname && <span className="text-xs text-muted-foreground font-medium italic">"{player.nickname}"</span>}
+                                  {player.email && (
+                                    <span className="flex items-center text-[10px] text-muted-foreground gap-1">
+                                      <Mail className="h-3 w-3" />
+                                      {player.email}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-center">
-                          <Badge className={cn(
-                            "font-bold",
-                            player.team === 'A' ? "bg-primary" : "bg-indigo-600"
-                          )}>
-                            {player.team || 'A'}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className={cn("gap-1 font-bold", statusCfg.color)}>
-                            <StatusIcon className="h-3 w-3" />
-                            {statusCfg.label}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          {renderPositionBadges(player.preferredPositions)}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8"
-                              onClick={() => handleEditClick(player)}
-                            >
-                              <Pencil className="h-4 w-4 text-primary" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-8 w-8"
-                              onClick={() => handleDeletePlayer(player.id)}
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
-                )}
-              </TableBody>
-            </Table>
+                          </TableCell>
+                          <TableCell className="text-center">
+                            <Badge className={cn(
+                              "font-bold",
+                              player.team === 'A' ? "bg-primary" : "bg-indigo-600"
+                            )}>
+                              {player.team || 'A'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={cn("gap-1 font-bold", statusCfg.color)}>
+                              <StatusIcon className="h-3 w-3" />
+                              {statusCfg.label}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {renderPositionBadges(player.preferredPositions)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8"
+                                onClick={() => handleEditClick(player)}
+                              >
+                                <Pencil className="h-4 w-4 text-primary" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-8 w-8"
+                                onClick={() => handleDeletePlayer(player.id)}
+                              >
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </main>
