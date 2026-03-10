@@ -24,8 +24,6 @@ const baseDict = {
     any: "Any",
     tbd: "TBD",
     matchVs: "Match vs",
-    training: "Team Training Session",
-    internal: "Internal Squad Game",
     status: "Status",
     statusLabel: "Status",
     statusTypes: {
@@ -183,8 +181,6 @@ const zhDict: typeof baseDict = {
     any: "不限",
     tbd: "有待決定",
     matchVs: "比賽對手",
-    training: "球隊訓練",
-    internal: "內部比賽",
     status: "狀態",
     statusLabel: "狀態",
     statusTypes: {

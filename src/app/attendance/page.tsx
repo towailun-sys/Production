@@ -190,9 +190,9 @@ export default function AttendancePage() {
               </Badge>
             </div>
             <h1 className="text-3xl font-headline">
-              {specificGame.type === 'Training' ? dict.common.training : 
-               specificGame.type === 'Internal' ? dict.common.internal : 
-               `${dict.common.matchVs} ${specificGame.opponent || dict.common.tbd}`}
+              {specificGame.type === 'Training' || specificGame.type === 'Internal' 
+                ? dict.common.gameTypes[specificGame.type] 
+                : `${dict.common.matchVs} ${specificGame.opponent || dict.common.tbd}`}
             </h1>
             <div className="flex flex-wrap gap-4 mt-4 text-muted-foreground text-sm">
               <span className="flex items-center gap-1.5 font-medium"><Calendar className="h-4 w-4" /> {formatGameDate(specificGame.date)}</span>
@@ -488,9 +488,9 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
           </div>
         </div>
         <CardTitle className="text-2xl mt-4 font-headline">
-          {game.type === 'Training' ? dict.common.training : 
-           game.type === 'Internal' ? dict.common.internal : 
-           `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
+          {game.type === 'Training' || game.type === 'Internal' 
+            ? dict.common.gameTypes[game.type] 
+            : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-6 grid gap-6 md:grid-cols-2">

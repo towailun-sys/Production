@@ -352,7 +352,6 @@ export default function DashboardPage() {
   const formatGameDate = (dateStr: string) => {
     const date = new Date(dateStr);
     if (language === 'zh') {
-      // Format: 3月12日 星期四
       const month = date.getMonth() + 1;
       const day = date.getDate();
       const weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
@@ -560,9 +559,9 @@ export default function DashboardPage() {
                               </div>
                               
                               <h3 className="text-xl font-headline mb-4">
-                                {game.type === 'Training' ? dict.common.training : 
-                                 game.type === 'Internal' ? dict.common.internal : 
-                                 `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
+                                {game.type === 'Training' || game.type === 'Internal' 
+                                  ? dict.common.gameTypes[game.type] 
+                                  : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
                               </h3>
 
                               <div className="grid gap-2 text-sm text-muted-foreground">

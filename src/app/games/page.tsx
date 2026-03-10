@@ -433,9 +433,9 @@ export default function GamesPage() {
                         </Badge>
                       </div>
                       <h3 className="text-xl font-headline font-bold">
-                        {game.type === 'Training' ? dict.common.training : 
-                         game.type === 'Internal' ? dict.common.internal : 
-                         `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
+                        {game.type === 'Training' || game.type === 'Internal' 
+                          ? dict.common.gameTypes[game.type] 
+                          : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
                       </h3>
                       <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1.5">
