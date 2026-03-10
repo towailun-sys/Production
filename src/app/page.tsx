@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -100,7 +99,9 @@ export default function DashboardPage() {
                               </div>
                               
                               <h3 className="text-xl font-headline mb-4">
-                                {game.type === 'Training' ? 'Team Training Session' : `vs ${game.opponent || 'TBD'}`}
+                                {game.type === 'Training' ? 'Team Training Session' : 
+                                 game.type === 'Internal' ? 'Internal Squad Game' : 
+                                 `vs ${game.opponent || 'TBD'}`}
                               </h3>
 
                               <div className="grid gap-2 text-sm text-muted-foreground">

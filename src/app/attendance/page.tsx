@@ -108,7 +108,9 @@ export default function AttendancePage() {
                       </div>
                     </div>
                     <CardTitle className="text-2xl mt-4 font-headline">
-                      {game.type === 'Training' ? 'Team Training Session' : `Match vs ${game.opponent || 'TBD'}`}
+                      {game.type === 'Training' ? 'Team Training Session' : 
+                       game.type === 'Internal' ? 'Internal Squad Game' : 
+                       `Match vs ${game.opponent || 'TBD'}`}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pt-6 grid gap-6 md:grid-cols-2">
