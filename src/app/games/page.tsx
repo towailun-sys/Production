@@ -48,13 +48,17 @@ import { getStoredGames, saveStoredGames } from "@/lib/local-store";
 import { useToast } from "@/hooks/use-toast";
 
 const KIT_OPTIONS = [
-  "Home: Blue/White",
-  "Away: Total Black",
-  "Training: Yellow Bibs",
-  "Training: Orange Bibs",
-  "Internal: Whites vs Blues",
-  "TBD"
+  { label: "Home: Blue/White", color: "text-blue-600" },
+  { label: "Away: Total Black", color: "text-slate-900" },
+  { label: "Training: Yellow Bibs", color: "text-yellow-400" },
+  { label: "Training: Orange Bibs", color: "text-orange-500" },
+  { label: "Internal: Whites vs Blues", color: "text-indigo-600" },
+  { label: "TBD", color: "text-muted-foreground" }
 ];
+
+const getKitColorClass = (kitLabel: string) => {
+  return KIT_OPTIONS.find(opt => opt.label === kitLabel)?.color || "text-muted-foreground";
+};
 
 export default function GamesPage() {
   const [games, setGames] = useState<Game[]>([]);
@@ -145,7 +149,7 @@ export default function GamesPage() {
     
     setTimeout(() => {
       setIsEditOpen(true);
-    }, 50);
+    }, 100);
   };
 
   const handleUpdateGame = () => {
@@ -272,8 +276,11 @@ export default function GamesPage() {
                     </SelectTrigger>
                     <SelectContent>
                       {KIT_OPTIONS.map((option) => (
-                        <SelectItem key={option} value={option}>
-                          {option}
+                        <SelectItem key={option.label} value={option.label}>
+                          <div className="flex items-center gap-2">
+                            <Shirt className={cn("h-4 w-4", option.color)} />
+                            {option.label}
+                          </div>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -336,7 +343,7 @@ export default function GamesPage() {
                           {game.location}
                         </div>
                         {game.kitColors && (
-                          <div className="flex items-center gap-1.5 text-accent font-medium">
+                          <div className={cn("flex items-center gap-1.5 font-bold", getKitColorClass(game.kitColors))}>
                             <Shirt className="h-4 w-4" />
                             Kit: {game.kitColors}
                           </div>
@@ -439,8 +446,11 @@ export default function GamesPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {KIT_OPTIONS.map((option) => (
-                      <SelectItem key={option} value={option}>
-                        {option}
+                      <SelectItem key={option.label} value={option.label}>
+                        <div className="flex items-center gap-2">
+                          <Shirt className={cn("h-4 w-4", option.color)} />
+                          {option.label}
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>

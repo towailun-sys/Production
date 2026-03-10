@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -20,6 +21,19 @@ import Link from "next/link";
 import { Game, Player, Attendance } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { getStoredPlayers, getStoredGames, getStoredAttendance } from "@/lib/local-store";
+
+const KIT_MAP: Record<string, string> = {
+  "Home: Blue/White": "text-blue-600",
+  "Away: Total Black": "text-slate-900",
+  "Training: Yellow Bibs": "text-yellow-400",
+  "Training: Orange Bibs": "text-orange-500",
+  "Internal: Whites vs Blues": "text-indigo-600",
+  "TBD": "text-muted-foreground"
+};
+
+const getKitColorClass = (kitLabel: string) => {
+  return KIT_MAP[kitLabel] || "text-muted-foreground";
+};
 
 export default function DashboardPage() {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -117,7 +131,7 @@ export default function DashboardPage() {
                                   {game.location}
                                 </div>
                                 {game.kitColors && (
-                                  <div className="flex items-center gap-2 font-medium text-accent">
+                                  <div className={cn("flex items-center gap-2 font-bold", getKitColorClass(game.kitColors))}>
                                     <Shirt className="h-4 w-4" />
                                     Kit: {game.kitColors}
                                   </div>

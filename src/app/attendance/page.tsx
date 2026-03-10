@@ -20,6 +20,19 @@ import { cn } from "@/lib/utils";
 import { getStoredGames, getStoredAttendance, saveStoredAttendance } from "@/lib/local-store";
 import { useToast } from "@/hooks/use-toast";
 
+const KIT_MAP: Record<string, string> = {
+  "Home: Blue/White": "text-blue-600",
+  "Away: Total Black": "text-slate-900",
+  "Training: Yellow Bibs": "text-yellow-400",
+  "Training: Orange Bibs": "text-orange-500",
+  "Internal: Whites vs Blues": "text-indigo-600",
+  "TBD": "text-muted-foreground"
+};
+
+const getKitColorClass = (kitLabel: string) => {
+  return KIT_MAP[kitLabel] || "text-muted-foreground";
+};
+
 export default function AttendancePage() {
   const [games, setGames] = useState<Game[]>([]);
   const [attendance, setAttendance] = useState<Attendance[]>([]);
@@ -146,11 +159,11 @@ export default function AttendancePage() {
                       {game.kitColors && (
                         <div className="flex items-center gap-3 text-muted-foreground">
                           <div className="bg-accent/10 p-2 rounded-full">
-                            <Shirt className="h-5 w-5 text-accent" />
+                            <Shirt className={cn("h-5 w-5", getKitColorClass(game.kitColors))} />
                           </div>
                           <div>
                             <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Kit Colors</p>
-                            <p className="font-bold text-accent">{game.kitColors}</p>
+                            <p className={cn("font-bold", getKitColorClass(game.kitColors))}>{game.kitColors}</p>
                           </div>
                         </div>
                       )}
