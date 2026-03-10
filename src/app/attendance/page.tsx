@@ -17,7 +17,8 @@ import {
   Users,
   ChevronLeft,
   MoreVertical,
-  Loader2
+  Loader2,
+  Crown
 } from "lucide-react";
 import { Game, AttendanceStatus, Player, Attendance } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -145,7 +146,7 @@ export default function AttendancePage() {
           <MainNav />
           <main className="container mx-auto px-4 py-20 text-center">
             <h1 className="text-2xl font-headline">Game not found</h1>
-            <Link href="/games" className="text-primary hover:underline mt-4 inline-block">Return to Schedule</Link>
+            <Link href="/games" className="text-primary hover:underline mt-4 inline-block font-bold">Return to Schedule</Link>
           </main>
         </div>
       );
@@ -155,7 +156,7 @@ export default function AttendancePage() {
       <div className="min-h-screen bg-background pb-12">
         <MainNav />
         <main className="container mx-auto px-4 py-8">
-          <Link href="/games" className="inline-flex items-center text-sm font-medium text-primary hover:underline mb-6">
+          <Link href="/games" className="inline-flex items-center text-sm font-bold text-primary hover:underline mb-6">
             <ChevronLeft className="h-4 w-4 mr-1" />
             Back to Schedule
           </Link>
@@ -181,9 +182,9 @@ export default function AttendancePage() {
                `Match vs ${specificGame.opponent || 'TBD'}`}
             </h1>
             <div className="flex flex-wrap gap-4 mt-4 text-muted-foreground text-sm">
-              <span className="flex items-center gap-1.5"><Calendar className="h-4 w-4" /> {new Date(specificGame.date).toLocaleDateString()}</span>
-              <span className="flex items-center gap-1.5"><Clock className="h-4 w-4" /> {specificGame.startTime} - {specificGame.endTime}</span>
-              <span className="flex items-center gap-1.5"><MapPin className="h-4 w-4" /> {specificGame.location}</span>
+              <span className="flex items-center gap-1.5 font-medium"><Calendar className="h-4 w-4" /> {new Date(specificGame.date).toLocaleDateString()}</span>
+              <span className="flex items-center gap-1.5 font-medium"><Clock className="h-4 w-4" /> {specificGame.startTime} - {specificGame.endTime}</span>
+              <span className="flex items-center gap-1.5 font-medium"><MapPin className="h-4 w-4" /> {specificGame.location}</span>
             </div>
           </header>
 
@@ -287,15 +288,28 @@ function GameRosterList({
             return (
               <div key={player.id} className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "h-10 w-10 rounded-full flex items-center justify-center font-bold",
-                    player.team === 'A' ? "bg-primary/10 text-primary" : "bg-indigo-100 text-indigo-700"
-                  )}>
-                    {player.number || player.name[0]}
+                  <div className="relative shrink-0">
+                    <div className={cn(
+                      "h-10 w-10 rounded-full flex items-center justify-center font-bold",
+                      player.team === 'A' ? "bg-primary/10 text-primary" : "bg-indigo-100 text-indigo-700"
+                    )}>
+                      {player.number || player.name[0]}
+                    </div>
+                    {player.isCaptain && (
+                      <div className="absolute -top-1 -right-1 bg-accent text-accent-foreground rounded-full p-0.5 shadow-xs">
+                        <Crown className="h-2.5 w-2.5" />
+                      </div>
+                    )}
                   </div>
                   <div>
-                    <p className="font-bold">
-                      {player.name} {player.nickname && <span className="text-muted-foreground text-xs italic font-normal">"{player.nickname}"</span>}
+                    <p className="font-bold flex items-center gap-2">
+                      {player.name} 
+                      {player.nickname && <span className="text-muted-foreground text-xs italic font-normal">"{player.nickname}"</span>}
+                      {player.isCaptain && (
+                        <Badge variant="secondary" className="bg-accent/20 text-accent text-[9px] font-bold h-4 px-1 leading-none uppercase tracking-wider">
+                          Capt.
+                        </Badge>
+                      )}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       <span className={cn(
@@ -313,7 +327,7 @@ function GameRosterList({
                   <Badge 
                     variant={status === 'Confirmed' ? 'default' : status === 'Declined' ? 'destructive' : 'outline'}
                     className={cn(
-                      "min-w-[90px] justify-center",
+                      "min-w-[90px] justify-center font-bold",
                       status === 'Confirmed' && "bg-accent hover:bg-accent",
                       status === 'Pending' && "border-amber-500 text-amber-600"
                     )}
@@ -331,13 +345,13 @@ function GameRosterList({
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Manual Override</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Confirmed', player.id)} className="text-accent">
+                        <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Confirmed', player.id)} className="text-accent font-bold">
                           <Check className="mr-2 h-4 w-4" /> Confirm
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Declined', player.id)} className="text-destructive">
+                        <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Declined', player.id)} className="text-destructive font-bold">
                           <X className="mr-2 h-4 w-4" /> Decline
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Pending', player.id)}>
+                        <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Pending', player.id)} className="font-bold">
                           <Clock className="mr-2 h-4 w-4" /> Pending
                         </DropdownMenuItem>
                       </DropdownMenuContent>
@@ -368,8 +382,9 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-medium">Currently:</span>
+            <span className="text-sm font-bold">Currently:</span>
             <Badge className={cn(
+              "font-bold",
               currentStatus === 'Confirmed' ? "bg-accent" : 
               currentStatus === 'Declined' ? "bg-destructive" : "bg-amber-500"
             )}>
@@ -381,7 +396,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               size="sm"
               onClick={() => onStatusChange(game.id, 'Confirmed')}
               className={cn(
-                "w-full gap-2 transition-all",
+                "w-full gap-2 transition-all font-bold",
                 currentStatus === 'Confirmed' ? "bg-accent" : "bg-white text-foreground border hover:bg-accent/10"
               )}
             >
@@ -393,7 +408,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               onClick={() => onStatusChange(game.id, 'Declined')}
               variant="outline"
               className={cn(
-                "w-full gap-2 transition-all",
+                "w-full gap-2 transition-all font-bold",
                 currentStatus === 'Declined' ? "bg-destructive text-white" : "hover:bg-destructive/10"
               )}
             >
@@ -430,7 +445,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               Team {game.team}
             </Badge>
           </div>
-          <div className="flex items-center gap-1.5 text-sm font-medium">
+          <div className="flex items-center gap-1.5 text-sm font-bold">
             {currentStatus === 'Pending' ? (
               <span className="flex items-center text-amber-600">
                 <Check className="h-4 w-4 mr-1 invisible" />
@@ -461,7 +476,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
             </div>
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Date</p>
-              <p className="font-medium text-foreground">{new Date(game.date).toLocaleDateString('default', { dateStyle: 'full' })}</p>
+              <p className="font-bold text-foreground">{new Date(game.date).toLocaleDateString('default', { dateStyle: 'full' })}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 text-muted-foreground">
@@ -470,7 +485,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
             </div>
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Time Window</p>
-              <p className="font-medium text-foreground">{game.startTime} - {game.endTime}</p>
+              <p className="font-bold text-foreground">{game.startTime} - {game.endTime}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 text-muted-foreground">
@@ -479,7 +494,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
             </div>
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Location</p>
-              <p className="font-medium text-foreground">{game.location}</p>
+              <p className="font-bold text-foreground">{game.location}</p>
             </div>
           </div>
           {game.kitColors && (
@@ -501,7 +516,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
             <Button 
               onClick={() => onStatusChange(game.id, 'Confirmed')}
               className={cn(
-                "flex-1 gap-2 transition-all",
+                "flex-1 gap-2 transition-all font-bold",
                 currentStatus === 'Confirmed' ? "bg-accent scale-105" : "bg-white text-foreground border border-input hover:bg-accent/10 hover:border-accent"
               )}
             >
@@ -512,7 +527,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               onClick={() => onStatusChange(game.id, 'Declined')}
               variant="outline"
               className={cn(
-                "flex-1 gap-2 transition-all",
+                "flex-1 gap-2 transition-all font-bold",
                 currentStatus === 'Declined' ? "bg-destructive text-white scale-105" : "bg-white text-foreground border border-input hover:bg-destructive/10 hover:border-destructive"
               )}
             >

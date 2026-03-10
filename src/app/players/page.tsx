@@ -50,7 +50,10 @@ import {
   Loader2, 
   ShieldCheck,
   Fingerprint,
-  Phone
+  Phone,
+  Crown,
+  UserCog,
+  ShieldAlert
 } from "lucide-react";
 import { Player, PlayerPosition, TeamType, PlayerStatus } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +63,14 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@
 import { collection, doc, deleteDoc, setDoc } from "firebase/firestore";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu";
 
 const POSITIONS: { value: PlayerPosition; label: string }[] = [
   { value: "GK", label: "Goalkeeper" },
@@ -101,6 +112,8 @@ export default function PlayersPage() {
     preferredPositions: PlayerPosition[];
     team: TeamType;
     status: PlayerStatus;
+    isAdmin: boolean;
+    isCaptain: boolean;
   }>({
     id: "",
     name: "",
@@ -111,6 +124,8 @@ export default function PlayersPage() {
     preferredPositions: [],
     team: "A",
     status: "Active",
+    isAdmin: false,
+    isCaptain: false,
   });
 
   const playersQuery = useMemoFirebase(() => {
@@ -162,7 +177,8 @@ export default function PlayersPage() {
       preferredPositions: formData.preferredPositions,
       team: formData.team,
       status: formData.status,
-      isAdmin: false
+      isAdmin: formData.isAdmin,
+      isCaptain: formData.isCaptain
     };
 
     setDoc(playerRef, finalData)
@@ -194,6 +210,8 @@ export default function PlayersPage() {
       preferredPositions: player.preferredPositions || [],
       team: player.team || "A",
       status: player.status || "Active",
+      isAdmin: player.isAdmin || false,
+      isCaptain: player.isCaptain || false,
     });
     
     setTimeout(() => {
@@ -214,7 +232,9 @@ export default function PlayersPage() {
       mobileNumber: formData.mobileNumber || "",
       preferredPositions: formData.preferredPositions,
       team: formData.team,
-      status: formData.status 
+      status: formData.status,
+      isAdmin: formData.isAdmin,
+      isCaptain: formData.isCaptain
     };
 
     setDoc(playerRef, updateData, { merge: true })
@@ -232,6 +252,29 @@ export default function PlayersPage() {
     toast({
       title: "Updating Player",
       description: "Squad information has been updated.",
+    });
+  };
+
+  const handleToggleAdminStatus = (player: Player) => {
+    if (!currentPlayer?.isAdmin) return;
+    
+    const playerRef = doc(firestore, "players", player.id);
+    const newAdminStatus = !player.isAdmin;
+    
+    const updateData = { id: player.id, isAdmin: newAdminStatus };
+
+    setDoc(playerRef, updateData, { merge: true })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: playerRef.path,
+          operation: 'update',
+          requestResourceData: updateData
+        } satisfies SecurityRuleContext));
+      });
+
+    toast({
+      title: newAdminStatus ? "Player Promoted" : "Admin Rights Revoked",
+      description: `${player.name} is ${newAdminStatus ? 'now an administrator' : 'no longer an administrator'}.`,
     });
   };
 
@@ -262,6 +305,8 @@ export default function PlayersPage() {
       preferredPositions: [],
       team: "A",
       status: "Active",
+      isAdmin: false,
+      isCaptain: false,
     });
   };
 
@@ -326,14 +371,14 @@ export default function PlayersPage() {
           {currentPlayer?.isAdmin && (
             <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if(!open) resetForm(); }}>
               <DialogTrigger asChild>
-                <Button className="bg-accent hover:bg-accent/90 gap-2">
+                <Button className="bg-accent hover:bg-accent/90 gap-2 font-bold">
                   <UserPlus className="h-4 w-4" />
                   Add Player
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                  <DialogTitle className="font-headline">Add New Squad Member</DialogTitle>
+                  <DialogTitle className="font-headline text-xl">Add New Squad Member</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
                   <div className="grid grid-cols-2 gap-4">
@@ -401,6 +446,30 @@ export default function PlayersPage() {
                       onChange={(e) => setFormData({ ...formData, id: e.target.value })}
                     />
                   </div>
+                  <div className="flex items-center space-x-4 p-3 border rounded-lg bg-muted/30">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="isCaptain" 
+                        checked={formData.isCaptain}
+                        onCheckedChange={(val) => setFormData({ ...formData, isCaptain: val as boolean })}
+                      />
+                      <Label htmlFor="isCaptain" className="font-bold flex items-center gap-1.5 cursor-pointer">
+                        <Crown className="h-4 w-4 text-accent" />
+                        Team Captain
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox 
+                        id="isAdmin" 
+                        checked={formData.isAdmin}
+                        onCheckedChange={(val) => setFormData({ ...formData, isAdmin: val as boolean })}
+                      />
+                      <Label htmlFor="isAdmin" className="font-bold flex items-center gap-1.5 cursor-pointer">
+                        <ShieldCheck className="h-4 w-4 text-primary" />
+                        Administrator
+                      </Label>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label>Team</Label>
@@ -460,7 +529,7 @@ export default function PlayersPage() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleAddPlayer} className="bg-primary w-full">Save Player Profile</Button>
+                  <Button onClick={handleAddPlayer} className="bg-primary w-full font-bold">Save Player Profile</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -470,7 +539,7 @@ export default function PlayersPage() {
         <Dialog open={isEditOpen} onOpenChange={(open) => { if(!open) { setIsEditOpen(false); resetForm(); setEditingPlayer(null); } }}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle className="font-headline">Edit Player Profile</DialogTitle>
+              <DialogTitle className="font-headline text-xl">Edit Player Profile</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
               <div className="grid grid-cols-2 gap-4">
@@ -520,6 +589,30 @@ export default function PlayersPage() {
                     value={formData.mobileNumber}
                     onChange={(e) => setFormData({ ...formData, mobileNumber: e.target.value })}
                   />
+                </div>
+              </div>
+              <div className="flex items-center space-x-4 p-3 border rounded-lg bg-muted/30">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="edit-isCaptain" 
+                    checked={formData.isCaptain}
+                    onCheckedChange={(val) => setFormData({ ...formData, isCaptain: val as boolean })}
+                  />
+                  <Label htmlFor="edit-isCaptain" className="font-bold flex items-center gap-1.5 cursor-pointer">
+                    <Crown className="h-4 w-4 text-accent" />
+                    Team Captain
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="edit-isAdmin" 
+                    checked={formData.isAdmin}
+                    onCheckedChange={(val) => setFormData({ ...formData, isAdmin: val as boolean })}
+                  />
+                  <Label htmlFor="edit-isAdmin" className="font-bold flex items-center gap-1.5 cursor-pointer">
+                    <ShieldCheck className="h-4 w-4 text-primary" />
+                    Administrator
+                  </Label>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -581,7 +674,7 @@ export default function PlayersPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleUpdatePlayer} className="bg-primary w-full">Update Player</Button>
+              <Button onClick={handleUpdatePlayer} className="bg-primary w-full font-bold">Update Player</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -611,12 +704,12 @@ export default function PlayersPage() {
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow>
-                    <TableHead className="w-[80px] text-center font-bold">#</TableHead>
-                    <TableHead className="w-[250px] font-bold">Player Info</TableHead>
-                    <TableHead className="font-bold text-center">Team</TableHead>
-                    <TableHead className="font-bold">Status</TableHead>
-                    <TableHead className="font-bold">Positions</TableHead>
-                    <TableHead className="text-right font-bold">Actions</TableHead>
+                    <TableHead className="w-[80px] text-center font-bold text-foreground">#</TableHead>
+                    <TableHead className="w-[250px] font-bold text-foreground">Player Info</TableHead>
+                    <TableHead className="font-bold text-center text-foreground">Team</TableHead>
+                    <TableHead className="font-bold text-foreground">Status</TableHead>
+                    <TableHead className="font-bold text-foreground">Positions</TableHead>
+                    <TableHead className="text-right font-bold text-foreground">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -638,12 +731,24 @@ export default function PlayersPage() {
                           </TableCell>
                           <TableCell className="font-medium">
                             <div className="flex items-center gap-3">
-                              <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
-                                {player.name.split(' ').map(n => n[0]).join('')}
+                              <div className="relative">
+                                <div className="h-10 w-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
+                                  {player.name.split(' ').map(n => n[0]).join('')}
+                                </div>
+                                {player.isCaptain && (
+                                  <div className="absolute -top-1.5 -right-1.5 bg-accent text-accent-foreground rounded-full p-0.5 shadow-sm border border-white">
+                                    <Crown className="h-3 w-3" />
+                                  </div>
+                                )}
                               </div>
                               <div className="flex flex-col">
                                 <div className="flex items-center gap-2">
                                   <p className="font-bold leading-none">{player.name}</p>
+                                  {player.isCaptain && (
+                                    <Badge variant="secondary" className="bg-accent/20 text-accent text-[10px] font-bold h-4 px-1 leading-none">
+                                      Capt.
+                                    </Badge>
+                                  )}
                                   {player.isAdmin && (
                                     <ShieldCheck className="h-3 w-3 text-primary" />
                                   )}
@@ -681,24 +786,33 @@ export default function PlayersPage() {
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
                               {currentPlayer?.isAdmin && (
-                                <>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8"
-                                    onClick={() => handleEditClick(player)}
-                                  >
-                                    <Pencil className="h-4 w-4 text-primary" />
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-8 w-8"
-                                    onClick={() => handleDeletePlayer(player.id)}
-                                  >
-                                    <Trash2 className="h-4 w-4 text-destructive" />
-                                  </Button>
-                                </>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                      <UserCog className="h-4 w-4 text-muted-foreground" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuLabel>Administrative Actions</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => handleEditClick(player)} className="gap-2">
+                                      <Pencil className="h-4 w-4" />
+                                      Edit Profile
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleToggleAdminStatus(player)} className="gap-2">
+                                      {player.isAdmin ? (
+                                        <><ShieldAlert className="h-4 w-4 text-destructive" /> Revoke Admin Role</>
+                                      ) : (
+                                        <><ShieldCheck className="h-4 w-4 text-primary" /> Promote to Admin</>
+                                      )}
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={() => handleDeletePlayer(player.id)} className="gap-2 text-destructive focus:text-destructive">
+                                      <Trash2 className="h-4 w-4" />
+                                      Delete Player
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                               )}
                             </div>
                           </TableCell>

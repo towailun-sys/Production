@@ -15,6 +15,7 @@ export interface Player {
   team: TeamType;
   status: PlayerStatus;
   isAdmin?: boolean;
+  isCaptain?: boolean;
 }
 
 export type GameType = 'Training' | 'League' | 'Friendly' | 'Internal';

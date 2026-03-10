@@ -52,6 +52,10 @@
         "isAdmin": {
           "type": "boolean",
           "description": "Whether the player has administrative privileges."
+        },
+        "isCaptain": {
+          "type": "boolean",
+          "description": "Whether the player is designated as a team captain."
         }
       },
       "required": [

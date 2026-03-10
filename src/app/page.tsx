@@ -25,7 +25,8 @@ import {
   Sparkles,
   Check,
   X,
-  UserRound
+  UserRound,
+  Crown
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, Attendance, AttendanceStatus } from "@/lib/types";
@@ -144,14 +145,15 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
             key={p.id} 
             variant="secondary" 
             className={cn(
-              "text-[9px] py-0 px-2 h-5 font-bold",
+              "text-[9px] py-0 px-2 h-5 font-bold gap-1",
               p.team === 'A' ? "bg-primary/10 text-primary border-primary/20" : "bg-indigo-100 text-indigo-700 border-indigo-200"
             )}
           >
-            {p.number && <span className="mr-1 opacity-60">#{p.number}</span>}
+            {p.isCaptain && <Crown className="h-2.5 w-2.5 text-accent" />}
+            {p.number && <span className="mr-0.5 opacity-60">#{p.number}</span>}
             {p.nickname || p.name}
             {p.preferredPositions && p.preferredPositions.length > 0 && (
-              <span className="ml-1.5 opacity-60 font-normal">({p.preferredPositions.join('/')})</span>
+              <span className="ml-1 opacity-60 font-normal">({p.preferredPositions.join('/')})</span>
             )}
           </Badge>
         ))}
@@ -253,7 +255,6 @@ export default function DashboardPage() {
       isAdmin: true,
     };
 
-    // Only provide defaults if the profile literally doesn't exist yet
     if (!currentPlayer) {
       adminData.name = user.displayName || "Admin User";
       adminData.email = user.email || "";
@@ -287,7 +288,6 @@ export default function DashboardPage() {
     const newAdminStatus = !currentPlayer.isAdmin;
     const playerRef = doc(firestore, "players", user.uid);
     
-    // SAFE UPDATE: Only toggle the boolean.
     const updateData = { id: user.uid, isAdmin: newAdminStatus };
 
     setDoc(playerRef, updateData, { merge: true })
@@ -347,14 +347,9 @@ export default function DashboardPage() {
 
   const welcomeName = currentPlayer?.nickname || currentPlayer?.name || user?.displayName || "Player";
 
-  // Filter games based on user's team
   const filteredGames = upcomingGames?.filter(game => {
-    // Admins see everything
     if (currentPlayer?.isAdmin) return true;
-    
-    // Non-admins see games for their team or "All"
     if (!currentPlayer) return false;
-    
     return game.team === 'All' || game.team === currentPlayer.team;
   }) || [];
 
@@ -378,7 +373,7 @@ export default function DashboardPage() {
                   variant="outline" 
                   size="sm" 
                   disabled={isSeeding}
-                  className="border-dashed border-primary text-primary hover:bg-primary/5"
+                  className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold"
                   onClick={handleSeedData}
                 >
                   {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
@@ -387,7 +382,7 @@ export default function DashboardPage() {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="border-dashed border-destructive text-destructive hover:bg-destructive/5"
+                  className="border-dashed border-destructive text-destructive hover:bg-destructive/5 font-bold"
                   onClick={handleToggleAdminRole}
                 >
                   <UserRound className="mr-2 h-4 w-4" />
@@ -400,7 +395,7 @@ export default function DashboardPage() {
                 variant="outline" 
                 size="sm" 
                 disabled={isClaimingAdmin}
-                className="border-dashed border-primary text-primary hover:bg-primary/5"
+                className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold"
                 onClick={handleClaimAdmin}
               >
                 {isClaimingAdmin ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
@@ -437,10 +432,13 @@ export default function DashboardPage() {
                     </p>
                     <div className="p-4 bg-white rounded-lg border flex items-center justify-between">
                       <div>
-                        <p className="text-sm font-bold">{preEnteredProfile.name} {preEnteredProfile.nickname && `"${preEnteredProfile.nickname}"`} {preEnteredProfile.number && <Badge variant="outline" className="ml-1">#{preEnteredProfile.number}</Badge>}</p>
+                        <p className="text-sm font-bold flex items-center gap-2">
+                          {preEnteredProfile.isCaptain && <Crown className="h-4 w-4 text-accent" />}
+                          {preEnteredProfile.name} {preEnteredProfile.nickname && `"${preEnteredProfile.nickname}"`} {preEnteredProfile.number && <Badge variant="outline" className="ml-1">#{preEnteredProfile.number}</Badge>}
+                        </p>
                         <p className="text-xs text-muted-foreground">Team {preEnteredProfile.team} • {preEnteredProfile.status}</p>
                       </div>
-                      <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-primary hover:bg-primary/90 gap-2">
+                      <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-primary hover:bg-primary/90 gap-2 font-bold">
                         {isLinking ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />}
                         Claim Profile
                       </Button>
@@ -468,7 +466,7 @@ export default function DashboardPage() {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-8 gap-1.5 text-amber-700 hover:bg-amber-100"
+                        className="h-8 gap-1.5 text-amber-700 hover:bg-amber-100 font-bold"
                         onClick={() => copyToClipboard(user.uid)}
                       >
                         <Copy className="h-3.5 w-3.5" />
@@ -491,7 +489,7 @@ export default function DashboardPage() {
                     )}
                   </h2>
                   <Link href="/games">
-                    <Button variant="ghost" size="sm" className="text-primary gap-1">
+                    <Button variant="ghost" size="sm" className="text-primary gap-1 font-bold">
                       Full Schedule <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
@@ -615,14 +613,24 @@ export default function DashboardPage() {
                   <div className="divide-y max-h-[400px] overflow-auto pr-2">
                     {players?.map((p) => (
                       <div key={p.id} className="py-2 flex items-center gap-2">
-                        <div className={cn(
-                          "h-8 w-8 rounded-full text-[10px] flex items-center justify-center font-bold shrink-0",
-                          p.team === 'A' ? "bg-primary/20 text-primary" : "bg-indigo-100 text-indigo-700"
-                        )}>
-                          {p.number || p.name[0]}
+                        <div className="relative shrink-0">
+                          <div className={cn(
+                            "h-8 w-8 rounded-full text-[10px] flex items-center justify-center font-bold",
+                            p.team === 'A' ? "bg-primary/20 text-primary" : "bg-indigo-100 text-indigo-700"
+                          )}>
+                            {p.number || p.name[0]}
+                          </div>
+                          {p.isCaptain && (
+                            <div className="absolute -top-1 -right-1 bg-accent text-accent-foreground rounded-full p-0.5 shadow-xs">
+                              <Crown className="h-2.5 w-2.5" />
+                            </div>
+                          )}
                         </div>
                         <div className="flex flex-col min-w-0">
-                          <span className="text-xs font-bold truncate">{p.nickname || p.name}</span>
+                          <span className="text-xs font-bold truncate flex items-center gap-1">
+                            {p.nickname || p.name}
+                            {p.isAdmin && <ShieldCheck className="h-2.5 w-2.5 text-primary" />}
+                          </span>
                           <span className="text-[10px] text-muted-foreground truncate">{p.status}</span>
                         </div>
                         {p.team && (
@@ -644,7 +652,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="pt-4 border-t">
                     <Link href="/players">
-                      <Button className="w-full bg-primary hover:bg-primary/90 shadow-md text-white">
+                      <Button className="w-full bg-primary hover:bg-primary/90 shadow-md text-white font-bold">
                         {currentPlayer?.isAdmin ? "Manage All Players" : "View Full Squad"}
                       </Button>
                     </Link>
@@ -662,21 +670,15 @@ export default function DashboardPage() {
                 <CardContent className="text-sm text-muted-foreground space-y-4">
                   <p>Check the squad roster for each game to see who is confirmed. Aim for 11+ players for match days!</p>
                   <div className="p-3 bg-muted/40 rounded-lg">
-                    <p className="font-bold text-foreground mb-2 text-xs">TEAM COLORS</p>
+                    <p className="font-bold text-foreground mb-2 text-xs">TEAM ROLES</p>
                     <div className="flex items-center gap-2 mb-1">
-                      <div className="h-2 w-2 rounded-full bg-primary" />
-                      <span className="text-primary font-bold text-[10px]">Team A (Green)</span>
+                      <Crown className="h-3 w-3 text-accent" />
+                      <span className="text-accent font-bold text-[10px]">Team Captain</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="h-2 w-2 rounded-full bg-indigo-600" />
-                      <span className="text-indigo-600 font-bold text-[10px]">Team B (Indigo)</span>
+                      <ShieldCheck className="h-3 w-3 text-primary" />
+                      <span className="text-primary font-bold text-[10px]">Administrator</span>
                     </div>
-                  </div>
-                  <div className="p-3 bg-muted/40 rounded-lg">
-                    <p className="font-bold text-foreground mb-1 text-xs">STANDARD KITS</p>
-                    <p className="text-pink-500 font-medium text-[10px]">Home 1: Pink/Grey</p>
-                    <p className="text-slate-400 font-medium text-[10px]">Home 2: New White</p>
-                    <p className="text-slate-900 font-medium text-[10px]">Away 1: Black/Black</p>
                   </div>
                 </CardContent>
               </Card>
