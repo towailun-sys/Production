@@ -45,10 +45,10 @@ import {
   Loader2,
   Users
 } from "lucide-react";
-import { Game, GameType, GameTeamScope } from "@/lib/types";
+import { Game, GameType, GameTeamScope, Player } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, doc, setDoc, deleteDoc, query, orderBy } from "firebase/firestore";
 
 const KIT_OPTIONS = [
@@ -71,6 +71,12 @@ export default function GamesPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
+
+  const playerRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(firestore, "players", user.uid);
+  }, [firestore, user]);
+  const { data: currentPlayer } = useDoc<Player>(playerRef);
 
   const [formData, setFormData] = useState<{
     type: GameType;
@@ -240,110 +246,112 @@ export default function GamesPage() {
             <h1 className="text-3xl font-headline">Game Schedule</h1>
             <p className="text-muted-foreground">Plan and manage upcoming fixtures.</p>
           </div>
-          <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if(!open) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90 gap-2">
-                <Plus className="h-4 w-4" />
-                Schedule Game
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle className="font-headline">Schedule New Event</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-2 gap-4">
+          {currentPlayer?.isAdmin && (
+            <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if(!open) resetForm(); }}>
+              <DialogTrigger asChild>
+                <Button className="bg-primary hover:bg-primary/90 gap-2">
+                  <Plus className="h-4 w-4" />
+                  Schedule Game
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle className="font-headline">Schedule New Event</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="type">Event Type</Label>
+                      <Select 
+                        value={formData.type}
+                        onValueChange={(val: GameType) => {
+                          setFormData({ ...formData, type: val, opponent: isOpponentNotRequired(val) ? "" : formData.opponent });
+                        }}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Training">Training</SelectItem>
+                          <SelectItem value="League">League Match</SelectItem>
+                          <SelectItem value="Friendly">Friendly</SelectItem>
+                          <SelectItem value="Internal">Internal</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="team">Assign Team</Label>
+                      <Select 
+                        value={formData.team}
+                        onValueChange={(val: GameTeamScope) => setFormData({ ...formData, team: val })}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select team" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="A">Team A</SelectItem>
+                          <SelectItem value="B">Team B</SelectItem>
+                          <SelectItem value="All">All Squads</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="type">Event Type</Label>
+                    <Label htmlFor="date">Date</Label>
+                    <Input id="date" type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="startTime">Start Time</Label>
+                      <Input id="startTime" type="time" value={formData.startTime} onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="endTime">End Time</Label>
+                      <Input id="endTime" type="time" value={formData.endTime} onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} />
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input id="location" placeholder="Stadium or Pitch name" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="opponent">Opponent {isOpponentNotRequired(formData.type) ? '(Auto: N/A)' : '(Optional)'}</Label>
+                    <Input 
+                      id="opponent" 
+                      placeholder={isOpponentNotRequired(formData.type) ? 'N/A' : 'Away Team Name'} 
+                      value={isOpponentNotRequired(formData.type) ? '' : formData.opponent} 
+                      onChange={(e) => setFormData({ ...formData, opponent: e.target.value })}
+                      disabled={isOpponentNotRequired(formData.type)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="kitColors">Kit Selection</Label>
                     <Select 
-                      value={formData.type}
-                      onValueChange={(val: GameType) => {
-                        setFormData({ ...formData, type: val, opponent: isOpponentNotRequired(val) ? "" : formData.opponent });
-                      }}
+                      value={formData.kitColors}
+                      onValueChange={(val) => setFormData({ ...formData, kitColors: val })}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
+                      <SelectTrigger id="kitColors">
+                        <SelectValue placeholder="Select kit colors" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="Training">Training</SelectItem>
-                        <SelectItem value="League">League Match</SelectItem>
-                        <SelectItem value="Friendly">Friendly</SelectItem>
-                        <SelectItem value="Internal">Internal</SelectItem>
+                        {KIT_OPTIONS.map((option) => (
+                          <SelectItem key={option.label} value={option.label}>
+                            <div className="flex items-center gap-2">
+                              <Shirt className={cn("h-4 w-4", option.color)} />
+                              {option.label}
+                            </div>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="team">Assign Team</Label>
-                    <Select 
-                      value={formData.team}
-                      onValueChange={(val: GameTeamScope) => setFormData({ ...formData, team: val })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select team" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="A">Team A</SelectItem>
-                        <SelectItem value="B">Team B</SelectItem>
-                        <SelectItem value="All">All Squads</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="date">Date</Label>
-                  <Input id="date" type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="startTime">Start Time</Label>
-                    <Input id="startTime" type="time" value={formData.startTime} onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="endTime">End Time</Label>
-                    <Input id="endTime" type="time" value={formData.endTime} onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} />
-                  </div>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="location">Location</Label>
-                  <Input id="location" placeholder="Stadium or Pitch name" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="opponent">Opponent {isOpponentNotRequired(formData.type) ? '(Auto: N/A)' : '(Optional)'}</Label>
-                  <Input 
-                    id="opponent" 
-                    placeholder={isOpponentNotRequired(formData.type) ? 'N/A' : 'Away Team Name'} 
-                    value={isOpponentNotRequired(formData.type) ? '' : formData.opponent} 
-                    onChange={(e) => setFormData({ ...formData, opponent: e.target.value })}
-                    disabled={isOpponentNotRequired(formData.type)}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="kitColors">Kit Selection</Label>
-                  <Select 
-                    value={formData.kitColors}
-                    onValueChange={(val) => setFormData({ ...formData, kitColors: val })}
-                  >
-                    <SelectTrigger id="kitColors">
-                      <SelectValue placeholder="Select kit colors" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {KIT_OPTIONS.map((option) => (
-                        <SelectItem key={option.label} value={option.label}>
-                          <div className="flex items-center gap-2">
-                            <Shirt className={cn("h-4 w-4", option.color)} />
-                            {option.label}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={handleAddGame} className="bg-primary w-full">Create Event</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                <DialogFooter>
+                  <Button onClick={handleAddGame} className="bg-primary w-full">Create Event</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         <div className="grid gap-6">
@@ -353,7 +361,7 @@ export default function GamesPage() {
             ))
           ) : !games || games.length === 0 ? (
             <Card className="p-12 text-center border-dashed border-2">
-              <p className="text-muted-foreground">No events scheduled. Use the button above to add one.</p>
+              <p className="text-muted-foreground">No events scheduled.</p>
             </Card>
           ) : (
             games.map((game) => (
@@ -416,23 +424,25 @@ export default function GamesPage() {
                         </a>
                       </Button>
                       
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground">
-                            <MoreVertical className="h-5 w-5" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onSelect={() => handleEditClick(game)} className="gap-2">
-                            <Pencil className="h-4 w-4" />
-                            Edit Event
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDeleteGame(game.id)} className="gap-2 text-destructive focus:text-destructive">
-                            <Trash2 className="h-4 w-4" />
-                            Delete Event
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {currentPlayer?.isAdmin && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground">
+                              <MoreVertical className="h-5 w-5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onSelect={() => handleEditClick(game)} className="gap-2">
+                              <Pencil className="h-4 w-4" />
+                              Edit Event
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleDeleteGame(game.id)} className="gap-2 text-destructive focus:text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                              Delete Event
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </div>
                 </CardContent>

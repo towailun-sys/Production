@@ -17,13 +17,14 @@ import {
   Lock,
   Loader2,
   UserPlus,
-  CheckCircle2
+  CheckCircle2,
+  ShieldCheck
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, TeamType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, query, orderBy, limit, where, doc, setDoc } from "firebase/firestore";
+import { collection, query, orderBy, limit, where, doc, setDoc, updateDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const KIT_MAP: Record<string, string> = {
@@ -56,8 +57,6 @@ export default function DashboardPage() {
     if (!user) return null;
     const now = new Date().toISOString().split('T')[0];
     
-    // If user has no profile yet, just show upcoming games for All teams
-    // Once they join, we could filter by their team
     return query(
       collection(firestore, "games"),
       where("date", ">=", now),
@@ -86,6 +85,7 @@ export default function DashboardPage() {
         preferredPositions: [],
         team: team,
         status: "Active",
+        isAdmin: false
       };
       await setDoc(doc(firestore, "players", user.uid), newPlayer);
       toast({
@@ -100,6 +100,25 @@ export default function DashboardPage() {
       });
     } finally {
       setIsJoining(false);
+    }
+  };
+
+  const handleClaimAdmin = async () => {
+    if (!user || !currentPlayer) return;
+    try {
+      await updateDoc(doc(firestore, "players", user.uid), {
+        isAdmin: true
+      });
+      toast({
+        title: "Admin Rights Granted",
+        description: "You now have administrative access to manage games and players.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Permission Denied",
+        description: "Could not grant admin rights.",
+      });
     }
   };
 
@@ -119,11 +138,24 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-background pb-12">
       <MainNav />
       <main className="container mx-auto px-4 py-8 md:py-12">
-        <header className="mb-10">
-          <h1 className="text-3xl md:text-4xl font-headline mb-2">Team Dashboard</h1>
-          <p className="text-muted-foreground font-medium">
-            Squad Status & Upcoming Schedule
-          </p>
+        <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-headline mb-2">Team Dashboard</h1>
+            <p className="text-muted-foreground font-medium">
+              Squad Status & Upcoming Schedule
+            </p>
+          </div>
+          {currentPlayer && !currentPlayer.isAdmin && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="border-dashed border-primary text-primary hover:bg-primary/5"
+              onClick={handleClaimAdmin}
+            >
+              <ShieldCheck className="mr-2 h-4 w-4" />
+              Claim Admin Rights
+            </Button>
+          )}
         </header>
 
         {!user ? (
@@ -139,7 +171,6 @@ export default function DashboardPage() {
         ) : (
           <div className="grid gap-8 lg:grid-cols-4">
             <div className="lg:col-span-3 space-y-8">
-              {/* Join Squad Prompt for new users */}
               {!currentPlayer && (
                 <Card className="border-primary bg-primary/5 shadow-lg">
                   <CardHeader>
@@ -292,7 +323,7 @@ export default function DashboardPage() {
                   <div className="pt-4">
                     <Link href="/players">
                       <Button className="w-full bg-accent hover:bg-accent/90 shadow-md">
-                        Manage Squad
+                        {currentPlayer?.isAdmin ? "Manage Squad" : "View Squad"}
                       </Button>
                     </Link>
                   </div>

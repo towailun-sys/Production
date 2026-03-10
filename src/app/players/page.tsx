@@ -41,7 +41,7 @@ import { Player, PlayerPosition, TeamType, PlayerStatus } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, doc, deleteDoc, setDoc } from "firebase/firestore";
 
 const POSITIONS: { value: PlayerPosition; label: string }[] = [
@@ -67,6 +67,12 @@ export default function PlayersPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+
+  const playerRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(firestore, "players", user.uid);
+  }, [firestore, user]);
+  const { data: currentPlayer } = useDoc<Player>(playerRef);
   
   const [formData, setFormData] = useState<{
     id: string;
@@ -130,6 +136,7 @@ export default function PlayersPage() {
       preferredPositions: formData.preferredPositions,
       team: formData.team,
       status: formData.status,
+      isAdmin: false
     });
 
     resetForm();
@@ -259,108 +266,110 @@ export default function PlayersPage() {
             <p className="text-muted-foreground">Manage your team squad and details.</p>
           </div>
           
-          <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if(!open) resetForm(); }}>
-            <DialogTrigger asChild>
-              <Button className="bg-accent hover:bg-accent/90 gap-2">
-                <UserPlus className="h-4 w-4" />
-                Add New Player
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <DialogHeader>
-                <DialogTitle className="font-headline">Add Player Profile</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="id">User ID (Firebase UID)</Label>
-                  <Input 
-                    id="id" 
-                    placeholder="Enter player's UID" 
-                    value={formData.id}
-                    onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input 
-                    id="name" 
-                    placeholder="John Doe" 
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="nickname">Nickname (Optional)</Label>
-                  <Input 
-                    id="nickname" 
-                    placeholder="The Rock" 
-                    value={formData.nickname}
-                    onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
+          {currentPlayer?.isAdmin && (
+            <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if(!open) resetForm(); }}>
+              <DialogTrigger asChild>
+                <Button className="bg-accent hover:bg-accent/90 gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Add New Player
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle className="font-headline">Add Player Profile</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
-                    <Label>Team</Label>
-                    <RadioGroup 
-                      value={formData.team} 
-                      onValueChange={(val: TeamType) => setFormData({ ...formData, team: val })}
-                      className="flex gap-4 p-2"
-                    >
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="A" id="team-a" />
-                        <Label htmlFor="team-a">A</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <RadioGroupItem value="B" id="team-b" />
-                        <Label htmlFor="team-b">B</Label>
-                      </div>
-                    </RadioGroup>
+                    <Label htmlFor="id">User ID (Firebase UID)</Label>
+                    <Input 
+                      id="id" 
+                      placeholder="Enter player's UID" 
+                      value={formData.id}
+                      onChange={(e) => setFormData({ ...formData, id: e.target.value })}
+                    />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="status">Status</Label>
-                    <Select 
-                      value={formData.status} 
-                      onValueChange={(val: PlayerStatus) => setFormData({ ...formData, status: val })}
-                    >
-                      <SelectTrigger id="status">
-                        <SelectValue placeholder="Select status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {STATUS_OPTIONS.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            {opt.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="name">Full Name</Label>
+                    <Input 
+                      id="name" 
+                      placeholder="John Doe" 
+                      value={formData.name}
+                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="nickname">Nickname (Optional)</Label>
+                    <Input 
+                      id="nickname" 
+                      placeholder="The Rock" 
+                      value={formData.nickname}
+                      onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label>Team</Label>
+                      <RadioGroup 
+                        value={formData.team} 
+                        onValueChange={(val: TeamType) => setFormData({ ...formData, team: val })}
+                        className="flex gap-4 p-2"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="A" id="team-a" />
+                          <Label htmlFor="team-a">A</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="B" id="team-b" />
+                          <Label htmlFor="team-b">B</Label>
+                        </div>
+                      </RadioGroup>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="status">Status</Label>
+                      <Select 
+                        value={formData.status} 
+                        onValueChange={(val: PlayerStatus) => setFormData({ ...formData, status: val })}
+                      >
+                        <SelectTrigger id="status">
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {STATUS_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Preferred Positions</Label>
+                    <div className="grid grid-cols-2 gap-3 p-3 border rounded-md bg-muted/20">
+                      {POSITIONS.map((pos) => (
+                        <div key={pos.value} className="flex items-center space-x-2">
+                          <Checkbox 
+                            id={`pos-${pos.value}`} 
+                            checked={formData.preferredPositions.includes(pos.value)}
+                            onCheckedChange={() => handlePositionToggle(pos.value)}
+                          />
+                          <label
+                            htmlFor={`pos-${pos.value}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                          >
+                            {pos.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-                <div className="grid gap-2">
-                  <Label>Preferred Positions</Label>
-                  <div className="grid grid-cols-2 gap-3 p-3 border rounded-md bg-muted/20">
-                    {POSITIONS.map((pos) => (
-                      <div key={pos.value} className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={`pos-${pos.value}`} 
-                          checked={formData.preferredPositions.includes(pos.value)}
-                          onCheckedChange={() => handlePositionToggle(pos.value)}
-                        />
-                        <label
-                          htmlFor={`pos-${pos.value}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                        >
-                          {pos.label}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button onClick={handleAddPlayer} className="bg-primary w-full">Save Player</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                <DialogFooter>
+                  <Button onClick={handleAddPlayer} className="bg-primary w-full">Save Player</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
 
         <Dialog open={isEditOpen} onOpenChange={(open) => { if(!open) { setIsEditOpen(false); resetForm(); setEditingPlayer(null); } }}>
@@ -501,7 +510,12 @@ export default function PlayersPage() {
                                 {player.name.split(' ').map(n => n[0]).join('')}
                               </div>
                               <div className="flex flex-col">
-                                <p className="font-bold leading-none">{player.name}</p>
+                                <div className="flex items-center gap-2">
+                                  <p className="font-bold leading-none">{player.name}</p>
+                                  {player.isAdmin && (
+                                    <ShieldCheck className="h-3 w-3 text-primary" />
+                                  )}
+                                </div>
                                 <div className="flex items-center gap-2 mt-1">
                                   {player.nickname && <span className="text-xs text-muted-foreground font-medium italic">"{player.nickname}"</span>}
                                   {player.email && (
@@ -533,22 +547,26 @@ export default function PlayersPage() {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-2">
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-8 w-8"
-                                onClick={() => handleEditClick(player)}
-                              >
-                                <Pencil className="h-4 w-4 text-primary" />
-                              </Button>
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-8 w-8"
-                                onClick={() => handleDeletePlayer(player.id)}
-                              >
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
+                              {currentPlayer?.isAdmin && (
+                                <>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8"
+                                    onClick={() => handleEditClick(player)}
+                                  >
+                                    <Pencil className="h-4 w-4 text-primary" />
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-8 w-8"
+                                    onClick={() => handleDeletePlayer(player.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </>
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
