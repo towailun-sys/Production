@@ -36,11 +36,13 @@ export default function DashboardPage() {
 
   if (!isLoaded) return null;
 
-  const currentMonthGames = games.filter(game => {
-    const gameDate = new Date(game.date);
-    const now = new Date();
-    return gameDate.getMonth() === now.getMonth() && gameDate.getFullYear() === now.getFullYear();
-  });
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+
+  const upcomingGames = games
+    .filter(game => new Date(game.date) >= now)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+    .slice(0, 5);
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -49,7 +51,7 @@ export default function DashboardPage() {
         <header className="mb-10">
           <h1 className="text-3xl md:text-4xl font-headline mb-2">Team Dashboard</h1>
           <p className="text-muted-foreground font-medium">
-            {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })} Season Overview
+            Squad Status & Upcoming Schedule
           </p>
         </header>
 
@@ -59,7 +61,7 @@ export default function DashboardPage() {
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-headline flex items-center gap-2">
                   <Calendar className="h-6 w-6 text-primary" />
-                  This Month's Fixtures
+                  Upcoming Fixtures
                 </h2>
                 <Link href="/games">
                   <Button variant="ghost" size="sm" className="text-primary gap-1">
@@ -69,12 +71,12 @@ export default function DashboardPage() {
               </div>
 
               <div className="grid gap-6">
-                {currentMonthGames.length === 0 ? (
+                {upcomingGames.length === 0 ? (
                   <Card className="p-12 text-center border-dashed border-2">
-                    <p className="text-muted-foreground">No games scheduled for this month.</p>
+                    <p className="text-muted-foreground">No upcoming games scheduled.</p>
                   </Card>
                 ) : (
-                  currentMonthGames.map((game) => {
+                  upcomingGames.map((game) => {
                     const gameAttendance = attendance.filter(a => a.gameId === game.id);
                     const confirmedPlayers = gameAttendance
                       .filter(a => a.status === 'Confirmed')
