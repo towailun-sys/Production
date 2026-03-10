@@ -151,7 +151,13 @@ const baseDict = {
     myStatus: "My Status",
     currently: "Currently",
     signinRequired: "Sign in required",
-    signinDesc: "Please sign in with your Google account to manage your availability for upcoming team events."
+    signinDesc: "Please sign in with your Google account to manage your availability for upcoming team events.",
+    dateLabel: "Date",
+    timeLabel: "Time Window",
+    locationLabel: "Location",
+    attendingQuestion: "Are you attending?",
+    confirmationRequired: "Confirmation Required",
+    viewFullRoster: "View Full Squad Roster"
   }
 };
 
@@ -304,7 +310,13 @@ const zhDict: typeof baseDict = {
     myStatus: "我的狀態",
     currently: "目前",
     signinRequired: "請先登入",
-    signinDesc: "請使用你的 Google 帳號登入，以管理你出席球隊活動的情況。"
+    signinDesc: "請使用你的 Google 帳號登入，以管理你出席球隊活動的情況。",
+    dateLabel: "日期",
+    timeLabel: "時間",
+    locationLabel: "地點",
+    attendingQuestion: "你會出席嗎？",
+    confirmationRequired: "請確認出席情況",
+    viewFullRoster: "查看完整隊員名單"
   }
 };
 

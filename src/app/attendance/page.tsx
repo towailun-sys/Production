@@ -333,7 +333,7 @@ function GameRosterList({
                       )}>
                         {dict.common.teams[player.team as 'A' | 'B']}
                       </span>
-                      {" • "}{player.preferredPositions?.map(p => dict.common.positions[p.toLowerCase() as keyof typeof dict.common.positions] || p).join(', ') || dict.common.any}
+                      {" • "}{player.preferredPositions?.map(pos => dict.common.positions[pos.toLowerCase() as keyof typeof dict.common.positions] || pos).join(', ') || dict.common.any}
                     </div>
                   </div>
                 </div>
@@ -474,7 +474,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
             {currentStatus === 'Pending' ? (
               <span className="flex items-center text-amber-600">
                 <Check className="h-4 w-4 mr-1 invisible" />
-                Confirmation Required
+                {dict.attendance.confirmationRequired}
               </span>
             ) : (
               <span className={cn(
@@ -500,7 +500,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               <Calendar className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Date</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{dict.attendance.dateLabel}</p>
               <p className="font-bold text-foreground">{formatGameDate(game.date)}</p>
             </div>
           </div>
@@ -509,7 +509,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               <Clock className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Time Window</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{dict.attendance.timeLabel}</p>
               <p className="font-bold text-foreground">{game.startTime} - {game.endTime}</p>
             </div>
           </div>
@@ -518,7 +518,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               <MapPin className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Location</p>
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{dict.attendance.locationLabel}</p>
               <p className="font-bold text-foreground">{game.location}</p>
             </div>
           </div>
@@ -536,7 +536,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
         </div>
 
         <div className="flex flex-col justify-center items-center gap-4 bg-muted/20 p-6 rounded-xl border border-dashed text-foreground">
-          <div className="font-bold text-center">Are you attending?</div>
+          <div className="font-bold text-center">{dict.attendance.attendingQuestion}</div>
           <div className="flex w-full gap-3">
             <Button 
               onClick={() => onStatusChange(game.id, 'Confirmed')}
@@ -561,7 +561,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
             </Button>
           </div>
           <Link href={`/attendance?gameId=${game.id}`} className="text-xs text-primary font-bold hover:underline">
-            View Full Squad Roster
+            {dict.attendance.viewFullRoster}
           </Link>
         </div>
       </CardContent>
