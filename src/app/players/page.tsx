@@ -36,7 +36,21 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { Search, UserPlus, Filter, Pencil, Trash2, Mail, Activity, HeartPulse, Ban, CreditCard, Lock, Loader2, ShieldCheck } from "lucide-react";
+import { 
+  Search, 
+  UserPlus, 
+  Filter, 
+  Pencil, 
+  Trash2, 
+  Mail, 
+  Activity, 
+  HeartPulse, 
+  Ban, 
+  CreditCard, 
+  Lock, 
+  Loader2, 
+  ShieldCheck 
+} from "lucide-react";
 import { Player, PlayerPosition, TeamType, PlayerStatus } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";

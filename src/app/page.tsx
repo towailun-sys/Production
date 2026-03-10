@@ -19,7 +19,8 @@ import {
   UserPlus,
   CheckCircle2,
   ShieldCheck,
-  Users
+  Users,
+  Database
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, TeamType } from "@/lib/types";
@@ -45,6 +46,7 @@ export default function DashboardPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isJoining, setIsJoining] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
 
   // Get current player profile
   const playerRef = useMemoFirebase(() => {
@@ -58,13 +60,23 @@ export default function DashboardPage() {
     if (!user) return null;
     const now = new Date().toISOString().split('T')[0];
     
+    // Admins see all, others see their team or "All"
+    if (currentPlayer?.isAdmin) {
+      return query(
+        collection(firestore, "games"),
+        where("date", ">=", now),
+        orderBy("date", "asc"),
+        limit(5)
+      );
+    }
+
     return query(
       collection(firestore, "games"),
       where("date", ">=", now),
       orderBy("date", "asc"),
       limit(5)
     );
-  }, [firestore, user]);
+  }, [firestore, user, currentPlayer?.isAdmin]);
 
   const { data: upcomingGames, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
   
@@ -123,6 +135,47 @@ export default function DashboardPage() {
     }
   };
 
+  const handleSeedData = async () => {
+    if (!user || !currentPlayer?.isAdmin) return;
+    setIsSeeding(true);
+    
+    const sampleGames = [
+      { id: "seed-g1", date: new Date().toISOString().split('T')[0], startTime: "19:00", endTime: "21:00", location: "Central Sports Complex", type: "League", team: "A", opponent: "Blue Arrows FC", kitColors: "Home 1: Pink/Grey" },
+      { id: "seed-g2", date: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0], startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", kitColors: "Home 2: New White / New White" },
+      { id: "seed-g3", date: new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0], startTime: "20:00", endTime: "22:00", location: "Power League North", type: "Internal", team: "B", opponent: "N/A", kitColors: "Away 1: Black/Black" },
+    ];
+
+    const samplePlayers = [
+      { id: "seed-p1", name: "David Miller", team: "A" as TeamType, status: "Active" as any, preferredPositions: ["GK"], email: "david.m@example.com", isAdmin: false },
+      { id: "seed-p2", name: "Sam Jackson", team: "A" as TeamType, status: "Active" as any, preferredPositions: ["DF"], email: "sam.j@example.com", isAdmin: false },
+      { id: "seed-p3", name: "Marcus Rashford", team: "B" as TeamType, status: "Active" as any, preferredPositions: ["FW"], email: "rashy@example.com", isAdmin: false },
+    ];
+
+    try {
+      // Seed Games
+      for (const g of sampleGames) {
+        await setDoc(doc(firestore, "games", g.id), g);
+      }
+      // Seed Players
+      for (const p of samplePlayers) {
+        await setDoc(doc(firestore, "players", p.id), p);
+      }
+
+      toast({
+        title: "Database Seeded",
+        description: "Sample fixtures and teammates have been added to the cloud.",
+      });
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Seeding Failed",
+        description: "Could not populate database.",
+      });
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
   if (isUserLoading || (user && isProfileLoading)) {
     return (
       <div className="min-h-screen bg-background pb-12">
@@ -146,17 +199,31 @@ export default function DashboardPage() {
               Squad Status & Upcoming Schedule
             </p>
           </div>
-          {currentPlayer && !currentPlayer.isAdmin && (
-            <Button 
-              variant="outline" 
-              size="sm" 
-              className="border-dashed border-primary text-primary hover:bg-primary/5"
-              onClick={handleClaimAdmin}
-            >
-              <ShieldCheck className="mr-2 h-4 w-4" />
-              Claim Admin Rights
-            </Button>
-          )}
+          <div className="flex gap-2">
+            {currentPlayer?.isAdmin && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                disabled={isSeeding}
+                className="border-dashed border-accent text-accent hover:bg-accent/5"
+                onClick={handleSeedData}
+              >
+                {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
+                Seed Sample Data
+              </Button>
+            )}
+            {currentPlayer && !currentPlayer.isAdmin && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-dashed border-primary text-primary hover:bg-primary/5"
+                onClick={handleClaimAdmin}
+              >
+                <ShieldCheck className="mr-2 h-4 w-4" />
+                Claim Admin Rights
+              </Button>
+            )}
+          </div>
         </header>
 
         {!user ? (
@@ -231,6 +298,9 @@ export default function DashboardPage() {
                   ) : !upcomingGames || upcomingGames.length === 0 ? (
                     <Card className="p-12 text-center border-dashed border-2">
                       <p className="text-muted-foreground">No upcoming games scheduled.</p>
+                      {currentPlayer?.isAdmin && (
+                        <p className="text-xs text-primary mt-2">Try clicking "Seed Sample Data" above to populate fixtures.</p>
+                      )}
                     </Card>
                   ) : (
                     upcomingGames
