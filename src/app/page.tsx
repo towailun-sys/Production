@@ -24,7 +24,8 @@ import {
   Copy,
   Sparkles,
   Check,
-  X
+  X,
+  UserRound
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, Attendance, AttendanceStatus } from "@/lib/types";
@@ -186,7 +187,7 @@ export default function DashboardPage() {
       collection(firestore, "games"),
       where("date", ">=", now),
       orderBy("date", "asc"),
-      limit(5)
+      limit(10)
     );
   }, [firestore, user, isUserLoading]);
 
@@ -257,8 +258,8 @@ export default function DashboardPage() {
     setDoc(adminRef, adminData, { merge: true })
       .then(() => {
         toast({
-          title: "Admin Rights Requested",
-          description: "You are now requesting administrative access.",
+          title: "Admin Rights Granted",
+          description: "You now have administrative access.",
         });
       })
       .catch(async (error) => {
@@ -271,6 +272,27 @@ export default function DashboardPage() {
       .finally(() => {
         setIsClaimingAdmin(false);
       });
+  };
+
+  const handleToggleAdminRole = () => {
+    if (!user || !currentPlayer) return;
+    const newAdminStatus = !currentPlayer.isAdmin;
+    const playerRef = doc(firestore, "players", user.uid);
+    const updateData = { id: user.uid, isAdmin: newAdminStatus };
+
+    setDoc(playerRef, updateData, { merge: true })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: playerRef.path,
+          operation: 'write',
+          requestResourceData: updateData
+        } satisfies SecurityRuleContext));
+      });
+
+    toast({
+      title: newAdminStatus ? "Admin Mode" : "Player Mode",
+      description: newAdminStatus ? "You can now manage the full squad." : "Administrative tools are now hidden.",
+    });
   };
 
   const handleSeedData = () => {
@@ -328,20 +350,31 @@ export default function DashboardPage() {
               {user ? "Your personalized squad overview and upcoming fixtures." : "Squad Status & Upcoming Schedule"}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {currentPlayer?.isAdmin && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                disabled={isSeeding}
-                className="border-dashed border-accent text-accent hover:bg-accent/5"
-                onClick={handleSeedData}
-              >
-                {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
-                Seed Sample Data
-              </Button>
+              <>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={isSeeding}
+                  className="border-dashed border-accent text-accent hover:bg-accent/5"
+                  onClick={handleSeedData}
+                >
+                  {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
+                  Seed Data
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="border-dashed border-destructive text-destructive hover:bg-destructive/5"
+                  onClick={handleToggleAdminRole}
+                >
+                  <UserRound className="mr-2 h-4 w-4" />
+                  Test as Player
+                </Button>
+              </>
             )}
-            {(!currentPlayer || !currentPlayer.isAdmin) && user && (
+            {user && (!currentPlayer || !currentPlayer.isAdmin) && (
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -388,7 +421,7 @@ export default function DashboardPage() {
                       </div>
                       <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-accent hover:bg-accent/90 gap-2">
                         {isLinking ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />}
-                        This is Me! Claim Profile
+                        Claim Profile
                       </Button>
                     </div>
                   </CardContent>
@@ -432,7 +465,7 @@ export default function DashboardPage() {
                     Upcoming Fixtures
                     {currentPlayer && (
                       <Badge variant="outline" className="ml-2 bg-primary/10 text-primary border-primary/20">
-                        {currentPlayer.isAdmin ? "All Squads (Admin View)" : `Team ${currentPlayer.team}`}
+                        {currentPlayer.isAdmin ? "Full Access View" : `Team ${currentPlayer.team} View`}
                       </Badge>
                     )}
                   </h2>
