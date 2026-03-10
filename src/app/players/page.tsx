@@ -49,14 +49,15 @@ import {
   CreditCard, 
   Lock, 
   Loader2, 
-  ShieldCheck 
+  ShieldCheck,
+  Fingerprint
 } from "lucide-react";
 import { Player, PlayerPosition, TeamType, PlayerStatus } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, doc, deleteDoc, setDoc } from "firebase/firestore";
+import { collection, doc, deleteDoc, setDoc, addDoc } from "firebase/firestore";
 
 const POSITIONS: { value: PlayerPosition; label: string }[] = [
   { value: "GK", label: "Goalkeeper" },
@@ -131,40 +132,58 @@ export default function PlayersPage() {
   };
 
   const handleAddPlayer = async () => {
-    if (!formData.name || !formData.id) {
+    if (!formData.name) {
       toast({
         variant: "destructive",
-        title: "Missing Information",
-        description: "Please enter the player's full name and User ID (UID).",
+        title: "Missing Name",
+        description: "Player name is required.",
       });
       return;
     }
 
-    const playerRef = doc(firestore, "players", formData.id);
+    try {
+      if (formData.id) {
+        // Explicitly linked with UID
+        const playerRef = doc(firestore, "players", formData.id);
+        await setDoc(playerRef, {
+          id: formData.id,
+          name: formData.name,
+          nickname: formData.nickname || "",
+          email: formData.email || "",
+          preferredPositions: formData.preferredPositions,
+          team: formData.team,
+          status: formData.status,
+          isAdmin: false
+        });
+      } else {
+        // Pre-entry (No UID yet)
+        const playersCol = collection(firestore, "players");
+        await addDoc(playersCol, {
+          name: formData.name,
+          nickname: formData.nickname || "",
+          email: formData.email || "",
+          preferredPositions: formData.preferredPositions,
+          team: formData.team,
+          status: formData.status,
+          isAdmin: false
+        });
+      }
 
-    await setDoc(playerRef, {
-      id: formData.id,
-      name: formData.name,
-      nickname: formData.nickname || "",
-      email: formData.email || "",
-      preferredPositions: formData.preferredPositions,
-      team: formData.team,
-      status: formData.status,
-      isAdmin: false
-    });
-
-    resetForm();
-    setIsAddOpen(false);
-    toast({
-      title: "Player Linked",
-      description: `${formData.name} has been linked to UID: ${formData.id.substring(0, 8)}...`,
-    });
+      resetForm();
+      setIsAddOpen(false);
+      toast({
+        title: "Player Profile Created",
+        description: formData.id ? "Linked to UID successfully." : "Pre-entry added (UID pending).",
+      });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleEditClick = (player: Player) => {
     setEditingPlayer(player);
     setFormData({
-      id: player.id,
+      id: player.id || "",
       name: player.name,
       nickname: player.nickname || "",
       email: player.email || "",
@@ -181,33 +200,39 @@ export default function PlayersPage() {
   const handleUpdatePlayer = async () => {
     if (!editingPlayer || !formData.name) return;
 
-    const playerRef = doc(firestore, "players", editingPlayer.id);
+    try {
+      const playerRef = doc(firestore, "players", editingPlayer.id);
+      await setDoc(playerRef, {
+        name: formData.name,
+        nickname: formData.nickname || "",
+        email: formData.email || "",
+        preferredPositions: formData.preferredPositions,
+        team: formData.team,
+        status: formData.status 
+      }, { merge: true });
 
-    await setDoc(playerRef, {
-      id: editingPlayer.id,
-      name: formData.name,
-      nickname: formData.nickname || "",
-      email: formData.email || "",
-      preferredPositions: formData.preferredPositions,
-      team: formData.team,
-      status: formData.status 
-    }, { merge: true });
-
-    resetForm();
-    setIsEditOpen(false);
-    setEditingPlayer(null);
-    toast({
-      title: "Player Updated",
-      description: "Squad information has been saved.",
-    });
+      resetForm();
+      setIsEditOpen(false);
+      setEditingPlayer(null);
+      toast({
+        title: "Player Updated",
+        description: "Squad information has been saved.",
+      });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const handleDeletePlayer = async (id: string) => {
-    await deleteDoc(doc(firestore, "players", id));
-    toast({
-      title: "Player Removed",
-      description: "The player has been removed from the squad list.",
-    });
+    try {
+      await deleteDoc(doc(firestore, "players", id));
+      toast({
+        title: "Player Removed",
+        description: "The player has been removed from the squad list.",
+      });
+    } catch (e) {
+      console.error(e);
+    }
   };
 
   const resetForm = () => {
@@ -277,7 +302,7 @@ export default function PlayersPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-headline">Player Management</h1>
-            <p className="text-muted-foreground">Link player Google IDs to their squad profiles.</p>
+            <p className="text-muted-foreground">Manage your squad and link Google accounts.</p>
           </div>
           
           {currentPlayer?.isAdmin && (
@@ -285,27 +310,14 @@ export default function PlayersPage() {
               <DialogTrigger asChild>
                 <Button className="bg-accent hover:bg-accent/90 gap-2">
                   <UserPlus className="h-4 w-4" />
-                  Link New Player
+                  Add Player
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                  <DialogTitle className="font-headline">Create & Link Profile</DialogTitle>
+                  <DialogTitle className="font-headline">Add New Squad Member</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="id" className="flex items-center gap-2">
-                      User ID (Firebase UID)
-                      <Badge variant="secondary" className="text-[10px] h-4">Required for Linkage</Badge>
-                    </Label>
-                    <Input 
-                      id="id" 
-                      placeholder="Paste player's UID here" 
-                      value={formData.id}
-                      onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                    />
-                    <p className="text-[10px] text-muted-foreground">This links the profile to the user's Google account login.</p>
-                  </div>
                   <div className="grid gap-2">
                     <Label htmlFor="name">Full Name</Label>
                     <Input 
@@ -322,6 +334,29 @@ export default function PlayersPage() {
                       placeholder="The Rock" 
                       value={formData.nickname}
                       onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="email">Email Address</Label>
+                    <Input 
+                      id="email" 
+                      type="email"
+                      placeholder="john.doe@example.com" 
+                      value={formData.email}
+                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    />
+                    <p className="text-[10px] text-muted-foreground">Used for auto-linking when they sign in with Google.</p>
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="id" className="flex items-center gap-2">
+                      User ID (Optional)
+                      <Fingerprint className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Label>
+                    <Input 
+                      id="id" 
+                      placeholder="UID (leave blank for pre-entry)" 
+                      value={formData.id}
+                      onChange={(e) => setFormData({ ...formData, id: e.target.value })}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
@@ -383,7 +418,7 @@ export default function PlayersPage() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleAddPlayer} className="bg-primary w-full">Link & Save Player</Button>
+                  <Button onClick={handleAddPlayer} className="bg-primary w-full">Save Player Profile</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -410,6 +445,15 @@ export default function PlayersPage() {
                   id="edit-nickname" 
                   value={formData.nickname}
                   onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-email">Email Address</Label>
+                <Input 
+                  id="edit-email" 
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -501,7 +545,7 @@ export default function PlayersPage() {
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow>
-                    <TableHead className="w-[250px] font-bold">Player (Linked UID)</TableHead>
+                    <TableHead className="w-[250px] font-bold">Player Info</TableHead>
                     <TableHead className="font-bold text-center">Team</TableHead>
                     <TableHead className="font-bold">Status</TableHead>
                     <TableHead className="font-bold">Positions</TableHead>
@@ -519,6 +563,7 @@ export default function PlayersPage() {
                     filteredPlayers.map((player) => {
                       const statusCfg = getStatusConfig(player.status);
                       const StatusIcon = statusCfg.icon;
+                      const isLinked = player.id.length > 20; // Heuristic for Firebase UID
                       
                       return (
                         <TableRow key={player.id} className="hover:bg-accent/5">
@@ -535,10 +580,11 @@ export default function PlayersPage() {
                                   )}
                                 </div>
                                 <div className="flex flex-col gap-0.5 mt-1">
-                                  {player.nickname && <span className="text-xs text-primary font-bold">Nickname: "{player.nickname}"</span>}
+                                  {player.nickname && <span className="text-xs text-primary font-bold">"{player.nickname}"</span>}
                                   <span className="flex items-center text-[9px] font-mono text-muted-foreground gap-1">
-                                    UID: {player.id.substring(0, 12)}...
+                                    {isLinked ? `UID: ${player.id.substring(0, 8)}...` : <Badge variant="secondary" className="text-[8px] h-3 px-1">UID Pending</Badge>}
                                   </span>
+                                  {player.email && <span className="text-[10px] text-muted-foreground">{player.email}</span>}
                                 </div>
                               </div>
                             </div>

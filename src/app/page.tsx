@@ -21,13 +21,14 @@ import {
   Database,
   UserCheck,
   Fingerprint,
-  Copy
+  Copy,
+  Sparkles
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, TeamType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, query, orderBy, limit, where, doc, setDoc } from "firebase/firestore";
+import { collection, query, orderBy, limit, where, doc, setDoc, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const KIT_MAP: Record<string, string> = {
@@ -48,13 +49,22 @@ export default function DashboardPage() {
   const { toast } = useToast();
   const [isSeeding, setIsSeeding] = useState(false);
   const [isClaimingAdmin, setIsClaimingAdmin] = useState(false);
+  const [isLinking, setIsLinking] = useState(false);
 
-  // Get current player profile
+  // Get current player profile by UID
   const playerRef = useMemoFirebase(() => {
     if (!user) return null;
     return doc(firestore, "players", user.uid);
   }, [firestore, user]);
   const { data: currentPlayer, isLoading: isProfileLoading } = useDoc<Player>(playerRef);
+
+  // Search for matching pre-entered profile by Email
+  const emailMatchQuery = useMemoFirebase(() => {
+    if (!user || currentPlayer) return null;
+    return query(collection(firestore, "players"), where("email", "==", user.email), limit(1));
+  }, [firestore, user, currentPlayer]);
+  const { data: matchedProfiles } = useCollection<Player>(emailMatchQuery);
+  const preEnteredProfile = matchedProfiles?.[0];
 
   // Query games
   const gamesQuery = useMemoFirebase(() => {
@@ -77,6 +87,38 @@ export default function DashboardPage() {
   }, [firestore, user]);
   
   const { data: players } = useCollection<Player>(playersQuery);
+
+  const handleClaimProfile = async () => {
+    if (!user || !preEnteredProfile) return;
+    setIsLinking(true);
+    try {
+      // 1. Create new record with UID as doc ID
+      const newDocRef = doc(firestore, "players", user.uid);
+      await setDoc(newDocRef, {
+        ...preEnteredProfile,
+        id: user.uid,
+        email: user.email // Ensure email is current
+      });
+
+      // 2. Delete the old pre-entry record
+      const oldDocRef = doc(firestore, "players", preEnteredProfile.id);
+      await deleteDoc(oldDocRef);
+
+      toast({
+        title: "Profile Claimed!",
+        description: `Welcome to the squad, ${preEnteredProfile.nickname || preEnteredProfile.name}.`,
+      });
+    } catch (e) {
+      console.error(e);
+      toast({
+        variant: "destructive",
+        title: "Claim Failed",
+        description: "Could not link your profile.",
+      });
+    } finally {
+      setIsLinking(false);
+    }
+  };
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
@@ -211,7 +253,31 @@ export default function DashboardPage() {
         ) : (
           <div className="grid gap-8 lg:grid-cols-4">
             <div className="lg:col-span-3 space-y-8">
-              {!currentPlayer && (
+              {!currentPlayer && preEnteredProfile ? (
+                <Card className="border-accent border-2 bg-accent/5 shadow-xl animate-in zoom-in-95 duration-500">
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 text-accent">
+                      <Sparkles className="h-6 w-6" />
+                      We found your profile!
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <p className="text-foreground font-medium">
+                      Hello {user.displayName}! An administrator has already created a squad profile for <strong>{preEnteredProfile.name}</strong> ({preEnteredProfile.email}). 
+                    </p>
+                    <div className="p-4 bg-white rounded-lg border flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-bold">{preEnteredProfile.name} {preEnteredProfile.nickname && `"${preEnteredProfile.nickname}"`}</p>
+                        <p className="text-xs text-muted-foreground">Team {preEnteredProfile.team} • {preEnteredProfile.status}</p>
+                      </div>
+                      <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-accent hover:bg-accent/90 gap-2">
+                        {isLinking ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />}
+                        This is Me! Claim Profile
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ) : !currentPlayer && (
                 <Card className="border-amber-200 bg-amber-50 shadow-md">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-amber-800">
