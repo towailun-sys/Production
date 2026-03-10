@@ -38,6 +38,7 @@ import { Label } from "@/components/ui/label";
 import { Plus, Search, UserPlus, Filter, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Player, PlayerPosition } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 const mockPlayers: Player[] = [
   { id: "1", name: "David Miller", nickname: "Miller", preferredPosition: "GK" },

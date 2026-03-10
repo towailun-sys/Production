@@ -40,6 +40,7 @@ import {
 } from "lucide-react";
 import { Game, GameType } from "@/lib/types";
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 const mockGames: Game[] = [
   { id: "1", date: "2024-06-15", time: "19:00", location: "Central Sports Complex", type: "League", opponent: "Blue Arrows FC" },
