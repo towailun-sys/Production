@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+import { dict } from "@/lib/i18n";
 
 const KIT_MAP: Record<string, string> = {
   "Home 1: Pink/Grey": "text-pink-500",
@@ -94,7 +95,7 @@ export default function AttendancePage() {
 
     toast({
       title: "Status Updated",
-      description: `Attendance set to ${status}.`,
+      description: `Attendance set to ${status === 'Confirmed' ? dict.common.join : dict.common.decline}.`,
     });
   };
 
@@ -117,9 +118,9 @@ export default function AttendancePage() {
           <div className="bg-muted p-6 rounded-full mb-6">
             <Lock className="h-12 w-12 text-muted-foreground" />
           </div>
-          <h1 className="text-3xl font-headline mb-4">Sign in required</h1>
+          <h1 className="text-3xl font-headline mb-4">{dict.attendance.signinRequired}</h1>
           <p className="text-muted-foreground max-w-md mb-8">
-            Please sign in with your Google account to manage your availability for upcoming team events.
+            {dict.attendance.signinDesc}
           </p>
         </main>
       </div>
@@ -133,7 +134,7 @@ export default function AttendancePage() {
           <MainNav />
           <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            <p className="mt-4 text-muted-foreground">Loading roster...</p>
+            <p className="mt-4 text-muted-foreground">{dict.common.loading}</p>
           </main>
         </div>
       );
@@ -157,7 +158,7 @@ export default function AttendancePage() {
         <main className="container mx-auto px-4 py-8">
           <Link href="/games" className="inline-flex items-center text-sm font-bold text-primary hover:underline mb-6">
             <ChevronLeft className="h-4 w-4 mr-1" />
-            Back to Schedule
+            {dict.attendance.backToSchedule}
           </Link>
           
           <header className="mb-8">
@@ -172,13 +173,13 @@ export default function AttendancePage() {
                   "bg-muted text-muted-foreground"
                 )}
               >
-                Team {specificGame.team}
+                {dict.common.team} {specificGame.team}
               </Badge>
             </div>
             <h1 className="text-3xl font-headline">
-              {specificGame.type === 'Training' ? 'Team Training Session' : 
-               specificGame.type === 'Internal' ? 'Internal Squad Game' : 
-               `Match vs ${specificGame.opponent || 'TBD'}`}
+              {specificGame.type === 'Training' ? dict.common.training : 
+               specificGame.type === 'Internal' ? dict.common.internal : 
+               `${dict.common.matchVs} ${specificGame.opponent || dict.common.tbd}`}
             </h1>
             <div className="flex flex-wrap gap-4 mt-4 text-muted-foreground text-sm">
               <span className="flex items-center gap-1.5 font-medium"><Calendar className="h-4 w-4" /> {new Date(specificGame.date).toLocaleDateString()}</span>
@@ -205,8 +206,8 @@ export default function AttendancePage() {
       <MainNav />
       <main className="container mx-auto px-4 py-8">
         <header className="mb-10 max-w-2xl">
-          <h1 className="text-3xl font-headline mb-2">My Attendance</h1>
-          <p className="text-muted-foreground">Confirm your availability for upcoming games and training.</p>
+          <h1 className="text-3xl font-headline mb-2">{dict.attendance.title}</h1>
+          <p className="text-muted-foreground">{dict.attendance.subtitle}</p>
         </header>
 
         <div className="space-y-8 max-w-4xl">
@@ -273,7 +274,7 @@ function GameRosterList({
       <CardHeader className="bg-primary/5 flex flex-row items-center justify-between">
         <CardTitle className="text-xl flex items-center gap-2">
           <Users className="h-5 w-5" />
-          Squad Roster
+          {dict.attendance.rosterTitle}
         </CardTitle>
         <div className="flex gap-4 text-sm font-bold">
           <span className="text-accent flex items-center gap-1"><Check className="h-4 w-4" /> {confirmedCount}</span>
@@ -302,11 +303,11 @@ function GameRosterList({
                   </div>
                   <div>
                     <div className="font-bold flex items-center gap-2">
-                      {player.name} 
+                      <span>{player.name}</span>
                       {player.nickname && <span className="text-muted-foreground text-xs italic font-normal">"{player.nickname}"</span>}
                       {player.isCaptain && (
                         <Badge variant="secondary" className="bg-accent/20 text-accent text-[10px] font-bold h-4 px-1 leading-none uppercase tracking-wider">
-                          Capt.
+                          {dict.common.captain}
                         </Badge>
                       )}
                     </div>
@@ -315,9 +316,9 @@ function GameRosterList({
                         "font-bold",
                         player.team === 'A' ? "text-primary" : "text-indigo-600"
                       )}>
-                        Team {player.team}
+                        {dict.common.team} {player.team}
                       </span>
-                      {" • "}{player.preferredPositions?.join(', ') || 'Any'}
+                      {" • "}{player.preferredPositions?.join(', ') || dict.common.any}
                     </div>
                   </div>
                 </div>
@@ -345,10 +346,10 @@ function GameRosterList({
                         <DropdownMenuLabel>Manual Override</DropdownMenuLabel>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Confirmed', player.id)} className="text-accent font-bold">
-                          <Check className="mr-2 h-4 w-4" /> Confirm
+                          <Check className="mr-2 h-4 w-4" /> {dict.common.confirm}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Declined', player.id)} className="text-destructive font-bold">
-                          <X className="mr-2 h-4 w-4" /> Decline
+                          <X className="mr-2 h-4 w-4" /> {dict.common.decline}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Pending', player.id)} className="font-bold">
                           <Clock className="mr-2 h-4 w-4" /> Pending
@@ -377,11 +378,11 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
     return (
       <Card className="border-none shadow-lg overflow-hidden bg-white">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg">My Status</CardTitle>
+          <CardTitle className="text-lg">{dict.attendance.myStatus}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between">
-            <span className="text-sm font-bold">Currently:</span>
+            <span className="text-sm font-bold">{dict.attendance.currently}:</span>
             <Badge className={cn(
               "font-bold",
               currentStatus === 'Confirmed' ? "bg-accent" : 
@@ -400,7 +401,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               )}
             >
               <Check className="h-4 w-4" />
-              Join
+              {dict.common.join}
             </Button>
             <Button 
               size="sm"
@@ -412,7 +413,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               )}
             >
               <X className="h-4 w-4" />
-              Decline
+              {dict.common.decline}
             </Button>
           </div>
         </CardContent>
@@ -441,7 +442,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
                 "bg-muted text-muted-foreground"
               )}
             >
-              Team {game.team}
+              {dict.common.team} {game.team}
             </Badge>
           </div>
           <div className="flex items-center gap-1.5 text-sm font-bold">
@@ -462,9 +463,9 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
           </div>
         </div>
         <CardTitle className="text-2xl mt-4 font-headline">
-          {game.type === 'Training' ? 'Team Training Session' : 
-           game.type === 'Internal' ? 'Internal Squad Game' : 
-           `Match vs ${game.opponent || 'TBD'}`}
+          {game.type === 'Training' ? dict.common.training : 
+           game.type === 'Internal' ? dict.common.internal : 
+           `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-6 grid gap-6 md:grid-cols-2">
@@ -502,7 +503,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
                 <Shirt className={cn("h-5 w-5", getKitColorClass(game.kitColors))} />
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Kit Selection</p>
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{dict.games.dialog.kit}</p>
                 <p className={cn("font-bold", getKitColorClass(game.kitColors))}>{game.kitColors}</p>
               </div>
             </div>
@@ -520,7 +521,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               )}
             >
               <Check className="h-4 w-4" />
-              Join
+              {dict.common.join}
             </Button>
             <Button 
               onClick={() => onStatusChange(game.id, 'Declined')}
@@ -531,7 +532,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               )}
             >
               <X className="h-4 w-4" />
-              Decline
+              {dict.common.decline}
             </Button>
           </div>
           <Link href={`/attendance?gameId=${game.id}`} className="text-xs text-primary font-bold hover:underline">

@@ -36,6 +36,7 @@ import { collection, query, orderBy, limit, where, doc, setDoc, deleteDoc } from
 import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+import { dict } from "@/lib/i18n";
 
 const KIT_MAP: Record<string, string> = {
   "Home 1: Pink/Grey": "text-pink-500",
@@ -96,7 +97,7 @@ function UserAttendanceToggle({ gameId, userId }: { gameId: string, userId: stri
         )}
         onClick={() => updateStatus('Confirmed')}
       >
-        <Check className="h-3.5 w-3.5 mr-1.5" /> Join
+        <Check className="h-3.5 w-3.5 mr-1.5" /> {dict.common.join}
       </Button>
       <Button 
         size="sm" 
@@ -107,7 +108,7 @@ function UserAttendanceToggle({ gameId, userId }: { gameId: string, userId: stri
         )}
         onClick={() => updateStatus('Declined')}
       >
-        <X className="h-3.5 w-3.5 mr-1.5" /> Decline
+        <X className="h-3.5 w-3.5 mr-1.5" /> {dict.common.decline}
       </Button>
     </div>
   );
@@ -130,14 +131,14 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
     .filter(Boolean) as Player[] || [];
 
   if (confirmedPlayers.length === 0) {
-    return <div className="text-[10px] text-muted-foreground italic mt-2">No confirmations yet.</div>;
+    return <div className="text-[10px] text-muted-foreground italic mt-2">{dict.dashboard.noConfirmations}</div>;
   }
 
   return (
     <div className="mt-4 pt-3 border-t border-dashed">
       <div className="flex items-center gap-1.5 mb-2">
         <Check className="h-3 w-3 text-primary" />
-        <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Confirmed Squad ({confirmedPlayers.length})</span>
+        <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{dict.dashboard.confirmedSquad} ({confirmedPlayers.length})</span>
       </div>
       <div className="flex flex-wrap gap-1.5">
         {confirmedPlayers.map((p) => (
@@ -181,7 +182,6 @@ export default function DashboardPage() {
     return query(collection(firestore, "players"), where("email", "==", user.email), limit(1));
   }, [firestore, user, currentPlayer, isUserLoading]);
   const { data: matchedProfiles } = useCollection<Player>(emailMatchQuery);
-  // Find a profile that isn't the current UID to avoid infinite loop
   const preEnteredProfile = matchedProfiles?.find(p => p.id !== user?.uid);
 
   const gamesQuery = useMemoFirebase(() => {
@@ -217,10 +217,8 @@ export default function DashboardPage() {
       isLinked: true 
     };
 
-    // 1. Create the new profile document with user's UID
     setDoc(newDocRef, claimData)
       .then(() => {
-        // 2. Delete the old placeholder record (security rules now allow this via email match)
         const oldDocRef = doc(firestore, "players", preEnteredProfile.id);
         deleteDoc(oldDocRef)
           .catch((err) => {
@@ -350,7 +348,7 @@ export default function DashboardPage() {
         <MainNav />
         <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-          <div className="text-muted-foreground font-medium">Loading squad data...</div>
+          <div className="text-muted-foreground font-medium">{dict.common.loading}</div>
         </main>
       </div>
     );
@@ -371,10 +369,10 @@ export default function DashboardPage() {
         <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl md:text-4xl font-headline mb-2">
-              {user ? `Welcome back, ${welcomeName}!` : "Team Dashboard"}
+              {user ? `${dict.dashboard.welcome}, ${welcomeName}!` : dict.nav.dashboard}
             </h1>
             <div className="text-muted-foreground font-medium">
-              {user ? "Your personalized squad overview and upcoming fixtures." : "Squad Status & Upcoming Schedule"}
+              {dict.dashboard.subtitle}
             </div>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -388,7 +386,7 @@ export default function DashboardPage() {
                   onClick={handleSeedData}
                 >
                   {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
-                  Seed Data
+                  {dict.dashboard.seedData}
                 </Button>
                 <Button 
                   variant="outline" 
@@ -397,7 +395,7 @@ export default function DashboardPage() {
                   onClick={handleToggleAdminRole}
                 >
                   <UserRound className="mr-2 h-4 w-4" />
-                  Test as Player
+                  {dict.dashboard.testAsPlayer}
                 </Button>
               </>
             )}
@@ -410,7 +408,7 @@ export default function DashboardPage() {
                 onClick={handleClaimAdmin}
               >
                 {isClaimingAdmin ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
-                Claim Admin Rights
+                {dict.dashboard.claimAdmin}
               </Button>
             )}
           </div>
@@ -421,9 +419,9 @@ export default function DashboardPage() {
             <div className="bg-primary/10 p-4 rounded-full mb-4">
               <Lock className="h-8 w-8 text-primary" />
             </div>
-            <h2 className="text-2xl font-headline mb-2">Private Squad Access</h2>
+            <h2 className="text-2xl font-headline mb-2">{dict.attendance.signinRequired}</h2>
             <div className="text-muted-foreground max-w-sm mb-6">
-              Please sign in with your Google account to view the team schedule and register for games.
+              {dict.attendance.signinDesc}
             </div>
           </div>
         ) : (
@@ -434,12 +432,12 @@ export default function DashboardPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-primary">
                       <Sparkles className="h-6 w-6" />
-                      We found your profile!
+                      {dict.dashboard.claimProfileTitle}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="text-foreground font-medium">
-                      Hello {user.displayName}! An administrator has already created a squad profile for <strong>{preEnteredProfile.name}</strong> ({preEnteredProfile.email}). 
+                      {dict.dashboard.claimProfileDesc(preEnteredProfile.name, preEnteredProfile.email || "")}
                     </div>
                     <div className="p-4 bg-white rounded-lg border flex items-center justify-between">
                       <div>
@@ -447,11 +445,11 @@ export default function DashboardPage() {
                           {preEnteredProfile.isCaptain && <Crown className="h-4 w-4 text-accent" />}
                           {preEnteredProfile.name} {preEnteredProfile.nickname && `"${preEnteredProfile.nickname}"`} {preEnteredProfile.number && <Badge variant="outline" className="ml-1">#{preEnteredProfile.number}</Badge>}
                         </div>
-                        <div className="text-xs text-muted-foreground">Team {preEnteredProfile.team} • {preEnteredProfile.status}</div>
+                        <div className="text-xs text-muted-foreground">{dict.common.team} {preEnteredProfile.team} • {preEnteredProfile.status}</div>
                       </div>
                       <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-primary hover:bg-primary/90 gap-2 font-bold">
                         {isLinking ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />}
-                        Claim Profile
+                        {dict.dashboard.claimProfileBtn}
                       </Button>
                     </div>
                   </CardContent>
@@ -461,13 +459,12 @@ export default function DashboardPage() {
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-amber-800">
                       <UserCheck className="h-6 w-6" />
-                      Profile Pending
+                      {dict.dashboard.pendingProfileTitle}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="text-amber-700">
-                      Hello, {user.displayName}! Your account is not yet assigned to a squad. 
-                      Please provide your User ID to the Team Administrator so they can link your account to a squad profile.
+                      {dict.dashboard.pendingProfileDesc}
                     </div>
                     <div className="flex items-center justify-between p-3 bg-white/50 border border-amber-200 rounded-lg">
                       <div className="flex items-center gap-2 overflow-hidden">
@@ -481,7 +478,7 @@ export default function DashboardPage() {
                         onClick={() => copyToClipboard(user.uid)}
                       >
                         <Copy className="h-3.5 w-3.5" />
-                        Copy ID
+                        {dict.dashboard.copyId}
                       </Button>
                     </div>
                   </CardContent>
@@ -492,16 +489,16 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-headline flex items-center gap-2">
                     <Calendar className="h-6 w-6 text-primary" />
-                    Upcoming Fixtures
+                    {dict.dashboard.upcomingFixtures}
                     {currentPlayer && (
                       <Badge variant="outline" className="ml-2 bg-primary/10 text-primary border-primary/20">
-                        {currentPlayer.isAdmin ? "Full Access View" : `Team ${currentPlayer.team} View`}
+                        {currentPlayer.isAdmin ? dict.dashboard.fullAccess : dict.dashboard.teamView(currentPlayer.team)}
                       </Badge>
                     )}
                   </h2>
                   <Link href="/games">
                     <Button variant="ghost" size="sm" className="text-primary gap-1 font-bold">
-                      Full Schedule <ArrowRight className="h-4 w-4" />
+                      {dict.dashboard.fullSchedule} <ArrowRight className="h-4 w-4" />
                     </Button>
                   </Link>
                 </div>
@@ -513,7 +510,7 @@ export default function DashboardPage() {
                     ))
                   ) : filteredGames.length === 0 ? (
                     <Card className="p-12 text-center border-dashed border-2">
-                      <div className="text-muted-foreground">No upcoming games scheduled for your team.</div>
+                      <div className="text-muted-foreground">{dict.dashboard.noGames}</div>
                     </Card>
                   ) : (
                     filteredGames.map((game) => (
@@ -534,7 +531,7 @@ export default function DashboardPage() {
                                     "bg-muted text-muted-foreground"
                                   )}
                                 >
-                                  Team {game.team}
+                                  {dict.common.team} {game.team}
                                 </Badge>
                                 <span className="text-sm font-bold text-muted-foreground flex items-center gap-1">
                                   <Clock className="h-3.5 w-3.5" />
@@ -543,9 +540,9 @@ export default function DashboardPage() {
                               </div>
                               
                               <h3 className="text-xl font-headline mb-4">
-                                {game.type === 'Training' ? 'Team Training Session' : 
-                                 game.type === 'Internal' ? 'Internal Squad Game' : 
-                                 `vs ${game.opponent || 'TBD'}`}
+                                {game.type === 'Training' ? dict.common.training : 
+                                 game.type === 'Internal' ? dict.common.internal : 
+                                 `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
                               </h3>
 
                               <div className="grid gap-2 text-sm text-muted-foreground">
@@ -560,7 +557,7 @@ export default function DashboardPage() {
                                 {game.kitColors && (
                                   <div className={cn("flex items-center gap-2 font-bold", getKitColorClass(game.kitColors))}>
                                     <Shirt className="h-4 w-4" />
-                                    Kit: {game.kitColors}
+                                    {dict.games.dialog.kit}: {game.kitColors}
                                   </div>
                                 )}
                               </div>
@@ -571,7 +568,7 @@ export default function DashboardPage() {
                             <div className="bg-muted/30 p-6 md:w-80 border-t md:border-t-0 md:border-l flex flex-col justify-between">
                               <div>
                                 <div className="flex items-center justify-between mb-4">
-                                  <div className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Availability</div>
+                                  <div className="text-sm font-bold uppercase tracking-wider text-muted-foreground">{dict.dashboard.availability}</div>
                                   {currentPlayer && (
                                     <Badge 
                                       variant="outline" 
@@ -581,7 +578,7 @@ export default function DashboardPage() {
                                         currentPlayer.team === game.team ? "bg-emerald-600" : "bg-muted text-muted-foreground"
                                       )}
                                     >
-                                      {currentPlayer.team === game.team || game.team === 'All' ? 'My Game' : 'Other Team'}
+                                      {currentPlayer.team === game.team || game.team === 'All' ? dict.dashboard.myGame : dict.dashboard.otherTeam}
                                     </Badge>
                                   )}
                                 </div>
@@ -598,7 +595,7 @@ export default function DashboardPage() {
                                 <Link href={`/attendance?gameId=${game.id}`} className="w-full">
                                   <Button variant="outline" size="sm" className="w-full text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white gap-2">
                                     <Users className="h-3 w-3" />
-                                    {currentPlayer?.isAdmin ? "Manage Full Roster" : "View Squad Roster"}
+                                    {currentPlayer?.isAdmin ? dict.dashboard.manageRoster : dict.dashboard.viewRoster}
                                   </Button>
                                 </Link>
                               </div>
@@ -617,7 +614,7 @@ export default function DashboardPage() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Trophy className="h-5 w-5 text-primary" />
-                    Squad Teammates
+                    {dict.dashboard.teammates}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -644,7 +641,7 @@ export default function DashboardPage() {
                             {p.isLinked && (
                               <span className="inline-flex items-center gap-0.5 text-emerald-600 font-bold text-[9px] bg-emerald-50 px-1 rounded">
                                 <LinkIcon className="h-3 w-3" />
-                                Linked
+                                {dict.common.linked}
                               </span>
                             )}
                           </div>
@@ -670,7 +667,7 @@ export default function DashboardPage() {
                   <div className="pt-4 border-t">
                     <Link href="/players">
                       <Button className="w-full bg-primary hover:bg-primary/90 shadow-md text-white font-bold">
-                        {currentPlayer?.isAdmin ? "Manage All Players" : "View Full Squad"}
+                        {currentPlayer?.isAdmin ? dict.dashboard.managePlayers : dict.dashboard.viewPlayers}
                       </Button>
                     </Link>
                   </div>
@@ -681,24 +678,24 @@ export default function DashboardPage() {
                 <CardHeader className="pb-2">
                   <CardTitle className="text-lg flex items-center gap-2">
                     <Info className="h-5 w-5 text-primary" />
-                    Quick Info
+                    {dict.dashboard.quickInfo}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="text-sm text-muted-foreground space-y-4">
-                  <div>Check the squad roster for each game to see who is confirmed. Aim for 11+ players for match days!</div>
+                  <div>{dict.dashboard.quickInfoDesc}</div>
                   <div className="p-3 bg-muted/40 rounded-lg">
-                    <div className="font-bold text-foreground mb-2 text-xs">TEAM ROLES</div>
+                    <div className="font-bold text-foreground mb-2 text-xs">{dict.dashboard.roles}</div>
                     <div className="flex items-center gap-2 mb-1">
                       <Crown className="h-3 w-3 text-accent" />
-                      <span className="text-accent font-bold text-[10px]">Team Captain</span>
+                      <span className="text-accent font-bold text-[10px]">{dict.common.captain}</span>
                     </div>
                     <div className="flex items-center gap-2 mb-1">
                       <ShieldCheck className="h-3 w-3 text-primary" />
-                      <span className="text-primary font-bold text-[10px]">Administrator</span>
+                      <span className="text-primary font-bold text-[10px]">{dict.common.admin}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <LinkIcon className="h-3 w-3 text-emerald-500" />
-                      <span className="text-emerald-600 font-bold text-[10px]">Account Linked</span>
+                      <span className="text-emerald-600 font-bold text-[10px]">{dict.common.linked}</span>
                     </div>
                   </div>
                 </CardContent>

@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -29,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
+import { dict } from "@/lib/i18n";
 
 export function MainNav() {
   const pathname = usePathname();
@@ -50,7 +50,6 @@ export function MainNav() {
         description: "Welcome back to SquadFlow.",
       });
     } catch (error: any) {
-      // Handle cases where the user cancels the login flow gracefully
       if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
         return;
       }
@@ -59,7 +58,6 @@ export function MainNav() {
       
       let description = error.message || "Could not complete Google authentication.";
       
-      // Handle specific configuration error
       if (error.code === 'auth/operation-not-allowed') {
         description = "Google Sign-In is not enabled in your Firebase Console. Please go to Authentication > Sign-in method and enable Google.";
       }
@@ -87,25 +85,25 @@ export function MainNav() {
   const routes = [
     {
       href: "/",
-      label: "Dashboard",
+      label: dict.nav.dashboard,
       icon: LayoutDashboard,
       active: pathname === "/",
     },
     {
       href: "/attendance",
-      label: "My Attendance",
+      label: dict.nav.attendance,
       icon: CheckCircle2,
       active: pathname === "/attendance",
     },
     {
       href: "/players",
-      label: "Players",
+      label: dict.nav.players,
       icon: Users,
       active: pathname === "/players",
     },
     {
       href: "/games",
-      label: "Games",
+      label: dict.nav.games,
       icon: Calendar,
       active: pathname === "/games",
     },
@@ -117,7 +115,7 @@ export function MainNav() {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
             <Trophy className="h-8 w-8 text-accent" />
-            <span className="font-headline text-xl font-bold tracking-tight">SquadFlow</span>
+            <span className="font-headline text-xl font-bold tracking-tight">{dict.nav.title}</span>
           </div>
 
           {/* Desktop Nav */}
@@ -161,14 +159,14 @@ export function MainNav() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive">
                       <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
+                      <span>{dict.nav.signOut}</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
                 <Button onClick={handleLogin} variant="outline" size="sm" className="bg-white text-primary hover:bg-accent hover:text-white border-none font-bold gap-2">
                   <LogIn className="h-4 w-4" />
-                  Sign In
+                  {dict.nav.signIn}
                 </Button>
               )}
             </div>
@@ -210,13 +208,13 @@ export function MainNav() {
             ))}
             {!isUserLoading && !user && (
               <Button onClick={handleLogin} variant="outline" className="w-full mt-4 bg-white text-primary border-none font-bold">
-                Sign In with Google
+                {dict.nav.signIn} with Google
               </Button>
             )}
             {user && (
               <Button onClick={handleLogout} variant="ghost" className="w-full mt-4 text-primary-foreground/80 hover:text-white justify-start gap-3 px-3">
                 <LogOut className="h-5 w-5" />
-                Sign Out
+                {dict.nav.signOut}
               </Button>
             )}
           </div>

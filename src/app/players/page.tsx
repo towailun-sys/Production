@@ -63,6 +63,7 @@ import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@
 import { collection, doc, deleteDoc, setDoc } from "firebase/firestore";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
+import { dict } from "@/lib/i18n";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -73,17 +74,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const POSITIONS: { value: PlayerPosition; label: string }[] = [
-  { value: "GK", label: "Goalkeeper" },
-  { value: "DF", label: "Defender" },
-  { value: "MF", label: "Midfielder" },
-  { value: "FW", label: "Forward" },
+  { value: "GK", label: dict.common.positions.gk },
+  { value: "DF", label: dict.common.positions.df },
+  { value: "MF", label: dict.common.positions.mf },
+  { value: "FW", label: dict.common.positions.fw },
 ];
 
 const STATUS_OPTIONS: { value: PlayerStatus; label: string; icon: any; color: string }[] = [
-  { value: "Active", label: "Active", icon: Activity, color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-  { value: "Injured", label: "Injured", icon: HeartPulse, color: "text-rose-600 bg-rose-50 border-rose-200" },
-  { value: "Not Available", label: "Not Available", icon: Ban, color: "text-slate-600 bg-slate-50 border-slate-200" },
-  { value: "Pending for Club Fee", label: "Fee Pending", icon: CreditCard, color: "text-amber-600 bg-amber-50 border-amber-200" },
+  { value: "Active", label: dict.common.status.active, icon: Activity, color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
+  { value: "Injured", label: dict.common.status.injured, icon: HeartPulse, color: "text-rose-600 bg-rose-50 border-rose-200" },
+  { value: "Not Available", label: dict.common.status.notAvailable, icon: Ban, color: "text-slate-600 bg-slate-50 border-slate-200" },
+  { value: "Pending for Club Fee", label: dict.common.status.feePending, icon: CreditCard, color: "text-amber-600 bg-amber-50 border-amber-200" },
 ];
 
 export default function PlayersPage() {
@@ -181,7 +182,7 @@ export default function PlayersPage() {
       status: formData.status,
       isAdmin: formData.isAdmin,
       isCaptain: formData.isCaptain,
-      isLinked: !!formData.id // Assume if admin manually added a UID, it's linked
+      isLinked: !!formData.id 
     };
 
     setDoc(playerRef, finalData)
@@ -370,8 +371,8 @@ export default function PlayersPage() {
       <main className="container mx-auto px-4 py-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
-            <h1 className="text-3xl font-headline">Player Management</h1>
-            <div className="text-muted-foreground">Manage your squad and link Google accounts.</div>
+            <h1 className="text-3xl font-headline">{dict.players.title}</h1>
+            <div className="text-muted-foreground">{dict.players.subtitle}</div>
           </div>
           
           {currentPlayer?.isAdmin && (
@@ -379,17 +380,17 @@ export default function PlayersPage() {
               <DialogTrigger asChild>
                 <Button className="bg-accent hover:bg-accent/90 gap-2 font-bold">
                   <UserPlus className="h-4 w-4" />
-                  Add Player
+                  {dict.players.addPlayer}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                  <DialogTitle className="font-headline text-xl">Add New Squad Member</DialogTitle>
+                  <DialogTitle className="font-headline text-xl">{dict.players.dialog.addTitle}</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="name">Full Name</Label>
+                      <Label htmlFor="name">{dict.players.dialog.fullName}</Label>
                       <Input 
                         id="name" 
                         placeholder="John Doe" 
@@ -398,7 +399,7 @@ export default function PlayersPage() {
                       />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="number">Squad Number</Label>
+                      <Label htmlFor="number">{dict.players.dialog.number}</Label>
                       <Input 
                         id="number" 
                         type="number"
@@ -409,7 +410,7 @@ export default function PlayersPage() {
                     </div>
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="nickname">Nickname (Display Name)</Label>
+                    <Label htmlFor="nickname">{dict.players.dialog.nickname}</Label>
                     <Input 
                       id="nickname" 
                       placeholder="The Rock" 
@@ -418,7 +419,7 @@ export default function PlayersPage() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="email">Email Address</Label>
+                    <Label htmlFor="email">{dict.players.dialog.email}</Label>
                     <Input 
                       id="email" 
                       type="email"
@@ -428,7 +429,7 @@ export default function PlayersPage() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="mobileNumber">Mobile Number</Label>
+                    <Label htmlFor="mobileNumber">{dict.players.dialog.mobile}</Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input 
@@ -442,12 +443,12 @@ export default function PlayersPage() {
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="id" className="flex items-center gap-2">
-                      User ID (Optional)
+                      {dict.players.dialog.userId}
                       <Fingerprint className="h-3.5 w-3.5 text-muted-foreground" />
                     </Label>
                     <Input 
                       id="id" 
-                      placeholder="UID (leave blank for pre-entry)" 
+                      placeholder="UID" 
                       value={formData.id}
                       onChange={(e) => setFormData({ ...formData, id: e.target.value })}
                     />
@@ -461,7 +462,7 @@ export default function PlayersPage() {
                       />
                       <Label htmlFor="isCaptain" className="font-bold flex items-center gap-1.5 cursor-pointer">
                         <Crown className="h-4 w-4 text-accent" />
-                        Team Captain
+                        {dict.players.dialog.captain}
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -472,13 +473,13 @@ export default function PlayersPage() {
                       />
                       <Label htmlFor="isAdmin" className="font-bold flex items-center gap-1.5 cursor-pointer">
                         <ShieldCheck className="h-4 w-4 text-primary" />
-                        Administrator
+                        {dict.players.dialog.admin}
                       </Label>
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
-                      <Label>Team</Label>
+                      <Label>{dict.common.team}</Label>
                       <RadioGroup 
                         value={formData.team} 
                         onValueChange={(val: TeamType) => setFormData({ ...formData, team: val })}
@@ -486,16 +487,16 @@ export default function PlayersPage() {
                       >
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="A" id="team-a" />
-                          <Label htmlFor="team-a" className="font-bold text-primary">Team A</Label>
+                          <Label htmlFor="team-a" className="font-bold text-primary">{dict.common.team} A</Label>
                         </div>
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="B" id="team-b" />
-                          <Label htmlFor="team-b" className="font-bold text-indigo-600">Team B</Label>
+                          <Label htmlFor="team-b" className="font-bold text-indigo-600">{dict.common.team} B</Label>
                         </div>
                       </RadioGroup>
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="status">Status</Label>
+                      <Label htmlFor="status">{dict.common.status}</Label>
                       <Select 
                         value={formData.status} 
                         onValueChange={(val: PlayerStatus) => setFormData({ ...formData, status: val })}
@@ -514,7 +515,7 @@ export default function PlayersPage() {
                     </div>
                   </div>
                   <div className="grid gap-2">
-                    <Label>Preferred Positions</Label>
+                    <Label>{dict.players.dialog.preferredPositions}</Label>
                     <div className="grid grid-cols-2 gap-3 p-3 border rounded-md bg-muted/20">
                       {POSITIONS.map((pos) => (
                         <div key={pos.value} className="flex items-center space-x-2">
@@ -535,7 +536,7 @@ export default function PlayersPage() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleAddPlayer} className="bg-primary w-full font-bold">Save Player Profile</Button>
+                  <Button onClick={handleAddPlayer} className="bg-primary w-full font-bold">{dict.players.dialog.save}</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -545,12 +546,12 @@ export default function PlayersPage() {
         <Dialog open={isEditOpen} onOpenChange={(open) => { if(!open) { setIsEditOpen(false); resetForm(); setEditingPlayer(null); } }}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
-              <DialogTitle className="font-headline text-xl">Edit Player Profile</DialogTitle>
+              <DialogTitle className="font-headline text-xl">{dict.players.dialog.editTitle}</DialogTitle>
             </DialogHeader>
             <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-name">Full Name</Label>
+                  <Label htmlFor="edit-name">{dict.players.dialog.fullName}</Label>
                   <Input 
                     id="edit-name" 
                     value={formData.name}
@@ -558,7 +559,7 @@ export default function PlayersPage() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-number">Squad Number</Label>
+                  <Label htmlFor="edit-number">{dict.players.dialog.number}</Label>
                   <Input 
                     id="edit-number" 
                     type="number"
@@ -568,7 +569,7 @@ export default function PlayersPage() {
                 </div>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-nickname">Nickname</Label>
+                <Label htmlFor="edit-nickname">{dict.players.dialog.nickname}</Label>
                 <Input 
                   id="edit-nickname" 
                   value={formData.nickname}
@@ -576,7 +577,7 @@ export default function PlayersPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-email">Email Address</Label>
+                <Label htmlFor="edit-email">{dict.players.dialog.email}</Label>
                 <Input 
                   id="edit-email" 
                   type="email"
@@ -585,7 +586,7 @@ export default function PlayersPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-mobileNumber">Mobile Number</Label>
+                <Label htmlFor="edit-mobileNumber">{dict.players.dialog.mobile}</Label>
                 <div className="relative">
                   <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input 
@@ -606,7 +607,7 @@ export default function PlayersPage() {
                   />
                   <Label htmlFor="edit-isCaptain" className="font-bold flex items-center gap-1.5 cursor-pointer">
                     <Crown className="h-4 w-4 text-accent" />
-                    Team Captain
+                    {dict.players.dialog.captain}
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -617,13 +618,13 @@ export default function PlayersPage() {
                   />
                   <Label htmlFor="edit-isAdmin" className="font-bold flex items-center gap-1.5 cursor-pointer">
                     <ShieldCheck className="h-4 w-4 text-primary" />
-                    Administrator
+                    {dict.players.dialog.admin}
                   </Label>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label>Team</Label>
+                  <Label>{dict.common.team}</Label>
                   <RadioGroup 
                     value={formData.team} 
                     onValueChange={(val: TeamType) => setFormData({ ...formData, team: val })}
@@ -631,16 +632,16 @@ export default function PlayersPage() {
                   >
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="A" id="edit-team-a" />
-                      <Label htmlFor="edit-team-a" className="font-bold text-primary">Team A</Label>
+                      <Label htmlFor="edit-team-a" className="font-bold text-primary">{dict.common.team} A</Label>
                     </div>
                     <div className="flex items-center space-x-2">
                       <RadioGroupItem value="B" id="edit-team-b" />
-                      <Label htmlFor="edit-team-b" className="font-bold text-indigo-600">Team B</Label>
+                      <Label htmlFor="edit-team-b" className="font-bold text-indigo-600">{dict.common.team} B</Label>
                     </div>
                   </RadioGroup>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-status">Status</Label>
+                  <Label htmlFor="edit-status">{dict.common.status}</Label>
                   <Select 
                     value={formData.status} 
                     onValueChange={(val: PlayerStatus) => setFormData({ ...formData, status: val })}
@@ -659,7 +660,7 @@ export default function PlayersPage() {
                 </div>
               </div>
               <div className="grid gap-2">
-                <Label>Preferred Positions</Label>
+                <Label>{dict.players.dialog.preferredPositions}</Label>
                 <div className="grid grid-cols-2 gap-3 p-3 border rounded-md bg-muted/20">
                   {POSITIONS.map((pos) => (
                     <div key={pos.value} className="flex items-center space-x-2">
@@ -680,7 +681,7 @@ export default function PlayersPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleUpdatePlayer} className="bg-primary w-full font-bold">Update Player</Button>
+              <Button onClick={handleUpdatePlayer} className="bg-primary w-full font-bold">{dict.players.dialog.update}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -690,7 +691,7 @@ export default function PlayersPage() {
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Search players..." 
+                placeholder={dict.players.searchPlaceholder}
                 className="pl-9 bg-muted/30 border-none focus-visible:ring-1 focus-visible:ring-primary" 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -704,18 +705,18 @@ export default function PlayersPage() {
             {isPlayersLoading ? (
               <div className="p-20 text-center">
                 <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary mb-2" />
-                <div className="text-muted-foreground">Loading squad list...</div>
+                <div className="text-muted-foreground">{dict.common.loading}</div>
               </div>
             ) : (
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow>
-                    <TableHead className="w-[80px] text-center font-bold text-foreground">#</TableHead>
-                    <TableHead className="w-[250px] font-bold text-foreground">Player Info</TableHead>
-                    <TableHead className="font-bold text-center text-foreground">Team</TableHead>
-                    <TableHead className="font-bold text-foreground">Status</TableHead>
-                    <TableHead className="font-bold text-foreground">Positions</TableHead>
-                    <TableHead className="text-right font-bold text-foreground">Actions</TableHead>
+                    <TableHead className="w-[80px] text-center font-bold text-foreground">{dict.players.tableHeader.number}</TableHead>
+                    <TableHead className="w-[250px] font-bold text-foreground">{dict.players.tableHeader.info}</TableHead>
+                    <TableHead className="font-bold text-center text-foreground">{dict.players.tableHeader.team}</TableHead>
+                    <TableHead className="font-bold text-foreground">{dict.players.tableHeader.status}</TableHead>
+                    <TableHead className="font-bold text-foreground">{dict.players.tableHeader.positions}</TableHead>
+                    <TableHead className="text-right font-bold text-foreground">{dict.players.tableHeader.actions}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -752,7 +753,7 @@ export default function PlayersPage() {
                                   <div className="font-bold leading-none">{player.name}</div>
                                   {player.isCaptain && (
                                     <Badge variant="secondary" className="bg-accent/20 text-accent text-[10px] font-bold h-4 px-1 leading-none">
-                                      Capt.
+                                      {dict.common.captain}
                                     </Badge>
                                   )}
                                   {player.isAdmin && (
@@ -763,7 +764,7 @@ export default function PlayersPage() {
                                   {player.isLinked && (
                                     <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] font-bold border border-emerald-100 w-fit mb-1">
                                       <LinkIcon className="h-4 w-4" />
-                                      Linked
+                                      {dict.common.linked}
                                     </div>
                                   )}
                                   {player.nickname && <div className="text-xs text-primary font-bold">"{player.nickname}"</div>}
@@ -783,7 +784,7 @@ export default function PlayersPage() {
                               "font-bold",
                               player.team === 'A' ? "bg-primary" : "bg-indigo-600"
                             )}>
-                              Team {player.team || 'A'}
+                              {dict.common.team} {player.team || 'A'}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -809,7 +810,7 @@ export default function PlayersPage() {
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem onClick={() => handleEditClick(player)} className="gap-2">
                                       <Pencil className="h-4 w-4" />
-                                      Edit Profile
+                                      {dict.players.dialog.editTitle}
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleToggleAdminStatus(player)} className="gap-2">
                                       {player.isAdmin ? (
@@ -821,7 +822,7 @@ export default function PlayersPage() {
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem onClick={() => handleDeletePlayer(player.id)} className="gap-2 text-destructive focus:text-destructive">
                                       <Trash2 className="h-4 w-4" />
-                                      Delete Player
+                                      {dict.common.delete}
                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
