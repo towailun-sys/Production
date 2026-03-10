@@ -56,7 +56,7 @@ const baseDict = {
   },
   nav: {
     title: "SquadFlow",
-    dashboard: "Dashboard",
+    dashboard: "Upcoming Fixture",
     attendance: "My Attendance",
     players: "Players",
     games: "Games",
@@ -216,7 +216,7 @@ const zhDict: typeof baseDict = {
   },
   nav: {
     title: "SquadFlow",
-    dashboard: "概覽",
+    dashboard: "可供出席的場次",
     attendance: "我出席的",
     players: "球員",
     games: "場次",

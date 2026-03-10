@@ -389,7 +389,7 @@ export default function DashboardPage() {
         <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl md:text-4xl font-headline mb-2">
-              {user ? `${dict.dashboard.welcome}, ${welcomeName}!` : dict.nav.dashboard}
+              {user ? (language === 'zh' ? `${dict.dashboard.welcome}，${welcomeName}！` : `${dict.dashboard.welcome}, ${welcomeName}!`) : dict.nav.dashboard}
             </h1>
             <div className="text-muted-foreground font-medium">
               {dict.dashboard.subtitle}
@@ -509,7 +509,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-headline flex items-center gap-2">
                     <Calendar className="h-6 w-6 text-primary" />
-                    {dict.dashboard.upcomingFixtures}
+                    {dict.nav.dashboard}
                     {currentPlayer && (
                       <Badge variant="outline" className="ml-2 bg-primary/10 text-primary border-primary/20 font-bold">
                         {currentPlayer.isAdmin ? dict.dashboard.fullAccess : dict.dashboard.teamView(dict.common.teams[currentPlayer.team])}
