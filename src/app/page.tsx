@@ -16,17 +16,16 @@ import {
   Shirt,
   Lock,
   Loader2,
-  UserPlus,
-  CheckCircle2,
   ShieldCheck,
   Users,
-  Database
+  Database,
+  UserCheck
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, TeamType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, query, orderBy, limit, where, doc, setDoc, updateDoc } from "firebase/firestore";
+import { collection, query, orderBy, limit, where, doc, setDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
 
 const KIT_MAP: Record<string, string> = {
@@ -45,8 +44,8 @@ export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
-  const [isJoining, setIsJoining] = useState(false);
   const [isSeeding, setIsSeeding] = useState(false);
+  const [isClaimingAdmin, setIsClaimingAdmin] = useState(false);
 
   // Get current player profile
   const playerRef = useMemoFirebase(() => {
@@ -55,28 +54,19 @@ export default function DashboardPage() {
   }, [firestore, user]);
   const { data: currentPlayer, isLoading: isProfileLoading } = useDoc<Player>(playerRef);
 
-  // Query games for the user's team or all teams
+  // Query games
   const gamesQuery = useMemoFirebase(() => {
     if (!user) return null;
     const now = new Date().toISOString().split('T')[0];
     
     // Admins see all, others see their team or "All"
-    if (currentPlayer?.isAdmin) {
-      return query(
-        collection(firestore, "games"),
-        where("date", ">=", now),
-        orderBy("date", "asc"),
-        limit(5)
-      );
-    }
-
     return query(
       collection(firestore, "games"),
       where("date", ">=", now),
       orderBy("date", "asc"),
       limit(5)
     );
-  }, [firestore, user, currentPlayer?.isAdmin]);
+  }, [firestore, user]);
 
   const { data: upcomingGames, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
   
@@ -87,44 +77,24 @@ export default function DashboardPage() {
   
   const { data: players } = useCollection<Player>(playersQuery);
 
-  const handleJoinSquad = async (team: TeamType) => {
-    if (!user) return;
-    setIsJoining(true);
-    try {
-      const newPlayer: Player = {
-        id: user.uid,
-        name: user.displayName || "Unknown Player",
-        email: user.email || "",
-        preferredPositions: [],
-        team: team,
-        status: "Active",
-        isAdmin: false
-      };
-      await setDoc(doc(firestore, "players", user.uid), newPlayer);
-      toast({
-        title: "Welcome to the Squad!",
-        description: `You have successfully joined Team ${team}.`,
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Failed to join",
-        description: "Could not create your player profile.",
-      });
-    } finally {
-      setIsJoining(false);
-    }
-  };
-
   const handleClaimAdmin = async () => {
-    if (!user || !currentPlayer) return;
+    if (!user) return;
+    setIsClaimingAdmin(true);
     try {
-      await updateDoc(doc(firestore, "players", user.uid), {
-        isAdmin: true
-      });
+      // Use setDoc with merge: true to bootstrap the admin profile if it doesn't exist
+      await setDoc(doc(firestore, "players", user.uid), {
+        id: user.uid,
+        name: user.displayName || "Admin User",
+        email: user.email || "",
+        isAdmin: true,
+        status: "Active",
+        team: "A", // Default assigned team for bootstrapping
+        preferredPositions: []
+      }, { merge: true });
+
       toast({
         title: "Admin Rights Granted",
-        description: "You now have administrative access to manage games and players.",
+        description: "You now have administrative access to manage the squad.",
       });
     } catch (error) {
       toast({
@@ -132,6 +102,8 @@ export default function DashboardPage() {
         title: "Permission Denied",
         description: "Could not grant admin rights.",
       });
+    } finally {
+      setIsClaimingAdmin(false);
     }
   };
 
@@ -152,18 +124,16 @@ export default function DashboardPage() {
     ];
 
     try {
-      // Seed Games
       for (const g of sampleGames) {
         await setDoc(doc(firestore, "games", g.id), g);
       }
-      // Seed Players
       for (const p of samplePlayers) {
         await setDoc(doc(firestore, "players", p.id), p);
       }
 
       toast({
         title: "Database Seeded",
-        description: "Sample fixtures and teammates have been added to the cloud.",
+        description: "Sample fixtures and teammates have been added.",
       });
     } catch (error) {
       toast({
@@ -212,14 +182,15 @@ export default function DashboardPage() {
                 Seed Sample Data
               </Button>
             )}
-            {currentPlayer && !currentPlayer.isAdmin && (
+            {(!currentPlayer || !currentPlayer.isAdmin) && (
               <Button 
                 variant="outline" 
                 size="sm" 
+                disabled={isClaimingAdmin}
                 className="border-dashed border-primary text-primary hover:bg-primary/5"
                 onClick={handleClaimAdmin}
               >
-                <ShieldCheck className="mr-2 h-4 w-4" />
+                {isClaimingAdmin ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
                 Claim Admin Rights
               </Button>
             )}
@@ -233,41 +204,25 @@ export default function DashboardPage() {
             </div>
             <h2 className="text-2xl font-headline mb-2">Private Squad Access</h2>
             <p className="text-muted-foreground max-w-sm mb-6">
-              Please sign in with your Google account to view the team schedule, check player availability, and register for upcoming fixtures.
+              Please sign in with your Google account to view the team schedule and register for games.
             </p>
           </div>
         ) : (
           <div className="grid gap-8 lg:grid-cols-4">
             <div className="lg:col-span-3 space-y-8">
               {!currentPlayer && (
-                <Card className="border-primary bg-primary/5 shadow-lg">
+                <Card className="border-amber-200 bg-amber-50 shadow-md">
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <UserPlus className="h-6 w-6 text-primary" />
-                      Welcome, {user.displayName}!
+                    <CardTitle className="flex items-center gap-2 text-amber-800">
+                      <UserCheck className="h-6 w-6" />
+                      Profile Pending
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground mb-6">
-                      You haven't joined a team yet. Please select your squad to start registering for games and viewing your personalized schedule.
+                    <p className="text-amber-700">
+                      Hello, {user.displayName}! Your account is not yet assigned to a squad. 
+                      Please wait for the Team Administrator to assign you to Team A or Team B.
                     </p>
-                    <div className="flex flex-wrap gap-4">
-                      <Button 
-                        disabled={isJoining}
-                        onClick={() => handleJoinSquad('A')}
-                        className="bg-primary hover:bg-primary/90 min-w-[140px]"
-                      >
-                        Join Team A
-                      </Button>
-                      <Button 
-                        disabled={isJoining}
-                        onClick={() => handleJoinSquad('B')}
-                        variant="outline"
-                        className="border-primary text-primary hover:bg-primary/10 min-w-[140px]"
-                      >
-                        Join Team B
-                      </Button>
-                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -298,9 +253,6 @@ export default function DashboardPage() {
                   ) : !upcomingGames || upcomingGames.length === 0 ? (
                     <Card className="p-12 text-center border-dashed border-2">
                       <p className="text-muted-foreground">No upcoming games scheduled.</p>
-                      {currentPlayer?.isAdmin && (
-                        <p className="text-xs text-primary mt-2">Try clicking "Seed Sample Data" above to populate fixtures.</p>
-                      )}
                     </Card>
                   ) : (
                     upcomingGames
@@ -369,7 +321,7 @@ export default function DashboardPage() {
                                 </Link>
                                 <Link href="/attendance" className="w-full">
                                   <Button variant="ghost" size="sm" className="w-full text-xs font-bold gap-2 text-muted-foreground">
-                                    <CheckCircle2 className="h-3 w-3" />
+                                    <UserCheck className="h-3 w-3" />
                                     Register
                                   </Button>
                                 </Link>
@@ -407,7 +359,7 @@ export default function DashboardPage() {
                       </div>
                     ))}
                     {(!players || players.length === 0) && (
-                      <p className="text-xs text-muted-foreground italic py-4">No teammates yet.</p>
+                      <p className="text-xs text-muted-foreground italic py-4">No teammates assigned yet.</p>
                     )}
                   </div>
                   <div className="pt-4 border-t">
