@@ -164,9 +164,11 @@ export default function DashboardPage() {
       <main className="container mx-auto px-4 py-8 md:py-12">
         <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl md:text-4xl font-headline mb-2">Team Dashboard</h1>
+            <h1 className="text-3xl md:text-4xl font-headline mb-2">
+              {user ? `Welcome back, ${currentPlayer?.nickname || currentPlayer?.name || user.displayName}!` : "Team Dashboard"}
+            </h1>
             <p className="text-muted-foreground font-medium">
-              Squad Status & Upcoming Schedule
+              {user ? "Your personalized squad overview and upcoming fixtures." : "Squad Status & Upcoming Schedule"}
             </p>
           </div>
           <div className="flex gap-2">
@@ -182,7 +184,7 @@ export default function DashboardPage() {
                 Seed Sample Data
               </Button>
             )}
-            {(!currentPlayer || !currentPlayer.isAdmin) && (
+            {(!currentPlayer || !currentPlayer.isAdmin) && user && (
               <Button 
                 variant="outline" 
                 size="sm" 
