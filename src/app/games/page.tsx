@@ -51,6 +51,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, doc, setDoc, deleteDoc, query, orderBy } from "firebase/firestore";
 import Link from "next/link";
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 const KIT_OPTIONS = [
   { label: "Home 1: Pink/Grey", color: "text-pink-500" },
@@ -123,7 +125,7 @@ export default function GamesPage() {
     return type === 'Internal' || type === 'Training';
   };
 
-  const handleAddGame = async () => {
+  const handleAddGame = () => {
     if (!formData.date || !formData.startTime || !formData.endTime || !formData.location) {
       toast({
         variant: "destructive",
@@ -136,7 +138,7 @@ export default function GamesPage() {
     const id = Math.random().toString(36).substring(2, 11);
     const gameRef = doc(firestore, "games", id);
 
-    await setDoc(gameRef, {
+    const gameData = {
       id,
       type: formData.type,
       team: formData.team,
@@ -146,13 +148,22 @@ export default function GamesPage() {
       location: formData.location,
       opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || "TBD"),
       kitColors: formData.kitColors || "TBD",
-    });
+    };
+
+    setDoc(gameRef, gameData)
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: gameRef.path,
+          operation: 'create',
+          requestResourceData: gameData
+        } satisfies SecurityRuleContext));
+      });
 
     setIsAddOpen(false);
     resetForm();
     toast({
       title: "Event Scheduled",
-      description: "The new event has been added to the calendar.",
+      description: "The new event is being added to the calendar.",
     });
   };
 
@@ -174,7 +185,7 @@ export default function GamesPage() {
     }, 150);
   };
 
-  const handleUpdateGame = async () => {
+  const handleUpdateGame = () => {
     if (!editingGame || !formData.date || !formData.startTime || !formData.endTime || !formData.location) {
       toast({
         variant: "destructive",
@@ -186,7 +197,8 @@ export default function GamesPage() {
 
     const gameRef = doc(firestore, "games", editingGame.id);
 
-    await setDoc(gameRef, {
+    const updateData = {
+      id: editingGame.id,
       type: formData.type, 
       team: formData.team,
       date: formData.date, 
@@ -195,22 +207,39 @@ export default function GamesPage() {
       location: formData.location, 
       opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || "TBD"),
       kitColors: formData.kitColors || "TBD",
-    }, { merge: true });
+    };
+
+    setDoc(gameRef, updateData, { merge: true })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: gameRef.path,
+          operation: 'update',
+          requestResourceData: updateData
+        } satisfies SecurityRuleContext));
+      });
 
     setIsEditOpen(false);
     setEditingGame(null);
     resetForm();
     toast({
       title: "Event Updated",
-      description: "Changes to the event have been saved.",
+      description: "Changes to the event are being saved.",
     });
   };
 
-  const handleDeleteGame = async (id: string) => {
-    await deleteDoc(doc(firestore, "games", id));
+  const handleDeleteGame = (id: string) => {
+    const gameRef = doc(firestore, "games", id);
+    deleteDoc(gameRef)
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: gameRef.path,
+          operation: 'delete'
+        } satisfies SecurityRuleContext));
+      });
+
     toast({
       title: "Event Deleted",
-      description: "The event has been removed from the schedule.",
+      description: "The event is being removed from the schedule.",
     });
   };
 

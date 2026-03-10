@@ -34,6 +34,8 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 const KIT_MAP: Record<string, string> = {
   "Home 1: Pink/Grey": "text-pink-500",
@@ -75,13 +77,22 @@ export default function AttendancePage() {
     const playerId = targetPlayerId || user.uid;
     const attendanceRef = doc(firestore, "games", gameId, "attendanceRecords", playerId);
     
-    setDoc(attendanceRef, {
+    const attendanceData = {
       id: playerId,
       playerId: playerId,
       gameId: gameId,
       status: status,
       lastUpdated: new Date().toISOString()
-    }, { merge: true });
+    };
+
+    setDoc(attendanceRef, attendanceData, { merge: true })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: attendanceRef.path,
+          operation: 'write',
+          requestResourceData: attendanceData
+        } satisfies SecurityRuleContext));
+      });
 
     toast({
       title: "Status Updated",

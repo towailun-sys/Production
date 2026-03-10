@@ -31,6 +31,8 @@ import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, query, orderBy, limit, where, doc, setDoc, deleteDoc } from "firebase/firestore";
 import { useToast } from "@/hooks/use-toast";
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 const KIT_MAP: Record<string, string> = {
   "Home 1: Pink/Grey": "text-pink-500",
@@ -135,34 +137,36 @@ export default function DashboardPage() {
   
   const { data: players } = useCollection<Player>(playersQuery);
 
-  const handleClaimProfile = async () => {
+  const handleClaimProfile = () => {
     if (!user || !preEnteredProfile) return;
     setIsLinking(true);
-    try {
-      const newDocRef = doc(firestore, "players", user.uid);
-      await setDoc(newDocRef, {
-        ...preEnteredProfile,
-        id: user.uid,
-        email: user.email 
-      });
+    
+    const newDocRef = doc(firestore, "players", user.uid);
+    const claimData = {
+      ...preEnteredProfile,
+      id: user.uid,
+      email: user.email 
+    };
 
-      const oldDocRef = doc(firestore, "players", preEnteredProfile.id);
-      await deleteDoc(oldDocRef);
-
-      toast({
-        title: "Profile Claimed!",
-        description: `Welcome to the squad, ${preEnteredProfile.nickname || preEnteredProfile.name}.`,
+    setDoc(newDocRef, claimData)
+      .then(() => {
+        const oldDocRef = doc(firestore, "players", preEnteredProfile.id);
+        deleteDoc(oldDocRef);
+        toast({
+          title: "Profile Claimed!",
+          description: `Welcome to the squad, ${preEnteredProfile.nickname || preEnteredProfile.name}.`,
+        });
+      })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: newDocRef.path,
+          operation: 'create',
+          requestResourceData: claimData
+        } satisfies SecurityRuleContext));
+      })
+      .finally(() => {
+        setIsLinking(false);
       });
-    } catch (e) {
-      console.error(e);
-      toast({
-        variant: "destructive",
-        title: "Claim Failed",
-        description: "Could not link your profile.",
-      });
-    } finally {
-      setIsLinking(false);
-    }
   };
 
   const copyToClipboard = (text: string) => {
@@ -173,36 +177,41 @@ export default function DashboardPage() {
     });
   };
 
-  const handleClaimAdmin = async () => {
+  const handleClaimAdmin = () => {
     if (!user) return;
     setIsClaimingAdmin(true);
-    try {
-      await setDoc(doc(firestore, "players", user.uid), {
-        id: user.uid,
-        name: user.displayName || "Admin User",
-        email: user.email || "",
-        isAdmin: true,
-        status: "Active",
-        team: "A",
-        preferredPositions: []
-      }, { merge: true });
+    
+    const adminRef = doc(firestore, "players", user.uid);
+    const adminData = {
+      id: user.uid,
+      name: user.displayName || "Admin User",
+      email: user.email || "",
+      isAdmin: true,
+      status: "Active",
+      team: "A",
+      preferredPositions: []
+    };
 
-      toast({
-        title: "Admin Rights Granted",
-        description: "You now have administrative access to manage the squad.",
+    setDoc(adminRef, adminData, { merge: true })
+      .then(() => {
+        toast({
+          title: "Admin Rights Requested",
+          description: "You are now requesting administrative access.",
+        });
+      })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: adminRef.path,
+          operation: 'write',
+          requestResourceData: adminData
+        } satisfies SecurityRuleContext));
+      })
+      .finally(() => {
+        setIsClaimingAdmin(false);
       });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Permission Denied",
-        description: "Could not grant admin rights.",
-      });
-    } finally {
-      setIsClaimingAdmin(false);
-    }
   };
 
-  const handleSeedData = async () => {
+  const handleSeedData = () => {
     if (!user || !currentPlayer?.isAdmin) return;
     setIsSeeding(true);
     
@@ -212,24 +221,22 @@ export default function DashboardPage() {
       { id: "seed-g3", date: new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0], startTime: "20:00", endTime: "22:00", location: "Power League North", type: "Internal", team: "B", opponent: "N/A", kitColors: "Away 1: Black/Black" },
     ];
 
-    try {
-      for (const g of sampleGames) {
-        await setDoc(doc(firestore, "games", g.id), g);
-      }
+    sampleGames.forEach(g => {
+      const gRef = doc(firestore, "games", g.id);
+      setDoc(gRef, g).catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: gRef.path,
+          operation: 'create',
+          requestResourceData: g
+        } satisfies SecurityRuleContext));
+      });
+    });
 
-      toast({
-        title: "Database Seeded",
-        description: "Sample fixtures and teammates have been added.",
-      });
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Seeding Failed",
-        description: "Could not populate database.",
-      });
-    } finally {
-      setIsSeeding(false);
-    }
+    toast({
+      title: "Seeding Initiated",
+      description: "Sample fixtures are being added to the database.",
+    });
+    setIsSeeding(false);
   };
 
   if (isUserLoading || (user && isProfileLoading)) {

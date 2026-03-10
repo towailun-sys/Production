@@ -57,7 +57,9 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, doc, deleteDoc, setDoc, addDoc } from "firebase/firestore";
+import { collection, doc, deleteDoc, setDoc } from "firebase/firestore";
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 const POSITIONS: { value: PlayerPosition; label: string }[] = [
   { value: "GK", label: "Goalkeeper" },
@@ -131,7 +133,7 @@ export default function PlayersPage() {
     });
   };
 
-  const handleAddPlayer = async () => {
+  const handleAddPlayer = () => {
     if (!formData.name) {
       toast({
         variant: "destructive",
@@ -141,43 +143,35 @@ export default function PlayersPage() {
       return;
     }
 
-    try {
-      if (formData.id) {
-        // Explicitly linked with UID
-        const playerRef = doc(firestore, "players", formData.id);
-        await setDoc(playerRef, {
-          id: formData.id,
-          name: formData.name,
-          nickname: formData.nickname || "",
-          email: formData.email || "",
-          preferredPositions: formData.preferredPositions,
-          team: formData.team,
-          status: formData.status,
-          isAdmin: false
-        });
-      } else {
-        // Pre-entry (No UID yet)
-        const playersCol = collection(firestore, "players");
-        await addDoc(playersCol, {
-          name: formData.name,
-          nickname: formData.nickname || "",
-          email: formData.email || "",
-          preferredPositions: formData.preferredPositions,
-          team: formData.team,
-          status: formData.status,
-          isAdmin: false
-        });
-      }
+    const playerId = formData.id || doc(collection(firestore, "players")).id;
+    const playerRef = doc(firestore, "players", playerId);
+    
+    const finalData = {
+      id: playerId,
+      name: formData.name,
+      nickname: formData.nickname || "",
+      email: formData.email || "",
+      preferredPositions: formData.preferredPositions,
+      team: formData.team,
+      status: formData.status,
+      isAdmin: false
+    };
 
-      resetForm();
-      setIsAddOpen(false);
-      toast({
-        title: "Player Profile Created",
-        description: formData.id ? "Linked to UID successfully." : "Pre-entry added (UID pending).",
+    setDoc(playerRef, finalData)
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: playerRef.path,
+          operation: 'create',
+          requestResourceData: finalData
+        } satisfies SecurityRuleContext));
       });
-    } catch (e) {
-      console.error(e);
-    }
+
+    resetForm();
+    setIsAddOpen(false);
+    toast({
+      title: "Saving Player",
+      description: "The profile is being saved to the squad list.",
+    });
   };
 
   const handleEditClick = (player: Player) => {
@@ -197,42 +191,52 @@ export default function PlayersPage() {
     }, 50);
   };
 
-  const handleUpdatePlayer = async () => {
+  const handleUpdatePlayer = () => {
     if (!editingPlayer || !formData.name) return;
 
-    try {
-      const playerRef = doc(firestore, "players", editingPlayer.id);
-      await setDoc(playerRef, {
-        name: formData.name,
-        nickname: formData.nickname || "",
-        email: formData.email || "",
-        preferredPositions: formData.preferredPositions,
-        team: formData.team,
-        status: formData.status 
-      }, { merge: true });
+    const playerRef = doc(firestore, "players", editingPlayer.id);
+    const updateData = {
+      id: editingPlayer.id,
+      name: formData.name,
+      nickname: formData.nickname || "",
+      email: formData.email || "",
+      preferredPositions: formData.preferredPositions,
+      team: formData.team,
+      status: formData.status 
+    };
 
-      resetForm();
-      setIsEditOpen(false);
-      setEditingPlayer(null);
-      toast({
-        title: "Player Updated",
-        description: "Squad information has been saved.",
+    setDoc(playerRef, updateData, { merge: true })
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: playerRef.path,
+          operation: 'update',
+          requestResourceData: updateData
+        } satisfies SecurityRuleContext));
       });
-    } catch (e) {
-      console.error(e);
-    }
+
+    resetForm();
+    setIsEditOpen(false);
+    setEditingPlayer(null);
+    toast({
+      title: "Updating Player",
+      description: "Squad information has been updated.",
+    });
   };
 
-  const handleDeletePlayer = async (id: string) => {
-    try {
-      await deleteDoc(doc(firestore, "players", id));
-      toast({
-        title: "Player Removed",
-        description: "The player has been removed from the squad list.",
+  const handleDeletePlayer = (id: string) => {
+    const playerRef = doc(firestore, "players", id);
+    deleteDoc(playerRef)
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: playerRef.path,
+          operation: 'delete'
+        } satisfies SecurityRuleContext));
       });
-    } catch (e) {
-      console.error(e);
-    }
+
+    toast({
+      title: "Removing Player",
+      description: "The player is being removed from the squad list.",
+    });
   };
 
   const resetForm = () => {
