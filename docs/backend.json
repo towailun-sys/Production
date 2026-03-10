@@ -27,6 +27,10 @@
           "type": "string",
           "description": "The player's email address."
         },
+        "mobileNumber": {
+          "type": "string",
+          "description": "The player's mobile contact number."
+        },
         "preferredPositions": {
           "type": "array",
           "items": {

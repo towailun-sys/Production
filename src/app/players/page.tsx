@@ -50,7 +50,7 @@ import {
   Loader2, 
   ShieldCheck,
   Fingerprint,
-  Hash
+  Phone
 } from "lucide-react";
 import { Player, PlayerPosition, TeamType, PlayerStatus } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -97,6 +97,7 @@ export default function PlayersPage() {
     nickname: string;
     number: string;
     email: string;
+    mobileNumber: string;
     preferredPositions: PlayerPosition[];
     team: TeamType;
     status: PlayerStatus;
@@ -106,6 +107,7 @@ export default function PlayersPage() {
     nickname: "",
     number: "",
     email: "",
+    mobileNumber: "",
     preferredPositions: [],
     team: "A",
     status: "Active",
@@ -122,6 +124,7 @@ export default function PlayersPage() {
     p.name.toLowerCase().includes(search.toLowerCase()) || 
     p.nickname?.toLowerCase().includes(search.toLowerCase()) ||
     p.email?.toLowerCase().includes(search.toLowerCase()) ||
+    p.mobileNumber?.includes(search) ||
     p.number?.toString().includes(search)
   );
 
@@ -155,6 +158,7 @@ export default function PlayersPage() {
       nickname: formData.nickname || "",
       number: formData.number ? parseInt(formData.number) : null,
       email: formData.email || "",
+      mobileNumber: formData.mobileNumber || "",
       preferredPositions: formData.preferredPositions,
       team: formData.team,
       status: formData.status,
@@ -186,6 +190,7 @@ export default function PlayersPage() {
       nickname: player.nickname || "",
       number: player.number?.toString() || "",
       email: player.email || "",
+      mobileNumber: player.mobileNumber || "",
       preferredPositions: player.preferredPositions || [],
       team: player.team || "A",
       status: player.status || "Active",
@@ -206,6 +211,7 @@ export default function PlayersPage() {
       nickname: formData.nickname || "",
       number: formData.number ? parseInt(formData.number) : null,
       email: formData.email || "",
+      mobileNumber: formData.mobileNumber || "",
       preferredPositions: formData.preferredPositions,
       team: formData.team,
       status: formData.status 
@@ -252,6 +258,7 @@ export default function PlayersPage() {
       nickname: "",
       number: "",
       email: "",
+      mobileNumber: "",
       preferredPositions: [],
       team: "A",
       status: "Active",
@@ -328,7 +335,7 @@ export default function PlayersPage() {
                 <DialogHeader>
                   <DialogTitle className="font-headline">Add New Squad Member</DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
+                <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="name">Full Name</Label>
@@ -368,6 +375,19 @@ export default function PlayersPage() {
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="mobileNumber">Mobile Number</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input 
+                        id="mobileNumber" 
+                        placeholder="012-3456789" 
+                        className="pl-9"
+                        value={formData.mobileNumber}
+                        onChange={(e) => setFormData({ ...formData, mobileNumber: e.target.value })}
+                      />
+                    </div>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="id" className="flex items-center gap-2">
@@ -452,7 +472,7 @@ export default function PlayersPage() {
             <DialogHeader>
               <DialogTitle className="font-headline">Edit Player Profile</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="edit-name">Full Name</Label>
@@ -488,6 +508,19 @@ export default function PlayersPage() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-mobileNumber">Mobile Number</Label>
+                <div className="relative">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    id="edit-mobileNumber" 
+                    placeholder="012-3456789" 
+                    className="pl-9"
+                    value={formData.mobileNumber}
+                    onChange={(e) => setFormData({ ...formData, mobileNumber: e.target.value })}
+                  />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
@@ -597,7 +630,6 @@ export default function PlayersPage() {
                     filteredPlayers.map((player) => {
                       const statusCfg = getStatusConfig(player.status);
                       const StatusIcon = statusCfg.icon;
-                      const isLinked = player.id.length > 20;
                       
                       return (
                         <TableRow key={player.id} className="hover:bg-accent/5">
@@ -619,6 +651,12 @@ export default function PlayersPage() {
                                 <div className="flex flex-col gap-0.5 mt-1">
                                   {player.nickname && <span className="text-xs text-primary font-bold">"{player.nickname}"</span>}
                                   {player.email && <span className="text-[10px] text-muted-foreground">{player.email}</span>}
+                                  {player.mobileNumber && (
+                                    <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
+                                      <Phone className="h-2.5 w-2.5" />
+                                      {player.mobileNumber}
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>

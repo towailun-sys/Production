@@ -10,6 +10,7 @@ export interface Player {
   nickname?: string;
   number?: number;
   email?: string;
+  mobileNumber?: string;
   preferredPositions: PlayerPosition[];
   team: TeamType;
   status: PlayerStatus;
