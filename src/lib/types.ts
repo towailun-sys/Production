@@ -31,6 +31,7 @@ export interface Game {
   team: GameTeamScope;
   opponent?: string;
   kitColors?: string;
+  additionalDetails?: string;
 }
 
 export type AttendanceStatus = 'Confirmed' | 'Declined' | 'Pending';

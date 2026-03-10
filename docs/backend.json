@@ -109,6 +109,10 @@
         "kitColors": {
           "type": "string",
           "description": "The assigned kit for this game."
+        },
+        "additionalDetails": {
+          "type": "string",
+          "description": "Optional extra notes for the game."
         }
       },
       "required": [

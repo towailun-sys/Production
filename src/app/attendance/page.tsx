@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useSearchParams } from "next/navigation";
@@ -17,7 +18,8 @@ import {
   ChevronLeft,
   MoreVertical,
   Loader2,
-  Crown
+  Crown,
+  Info
 } from "lucide-react";
 import { Game, AttendanceStatus, Player, Attendance } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -198,6 +200,17 @@ export default function AttendancePage() {
               <span className="flex items-center gap-1.5 font-medium"><Clock className="h-4 w-4" /> {specificGame.startTime} - {specificGame.endTime}</span>
               <span className="flex items-center gap-1.5 font-medium"><MapPin className="h-4 w-4" /> {specificGame.location}</span>
             </div>
+            {specificGame.additionalDetails && (
+              <div className="mt-4 p-4 bg-muted/20 border-l-4 border-primary/40 rounded-r-lg max-w-2xl">
+                <div className="flex items-center gap-2 text-sm font-bold text-muted-foreground mb-1 uppercase tracking-wider">
+                  <Info className="h-4 w-4" />
+                  {dict.attendance.detailsLabel}
+                </div>
+                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                  {specificGame.additionalDetails}
+                </p>
+              </div>
+            )}
           </header>
 
           <div className="grid lg:grid-cols-3 gap-8">
@@ -526,6 +539,17 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
               <div>
                 <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{dict.games.dialog.kit}</p>
                 <p className={cn("font-bold", getKitColorClass(game.kitColors))}>{dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}</p>
+              </div>
+            </div>
+          )}
+          {game.additionalDetails && (
+            <div className="flex items-start gap-3 text-muted-foreground">
+              <div className="bg-indigo-100 p-2 rounded-full">
+                <Info className="h-5 w-5 text-indigo-600" />
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">{dict.attendance.detailsLabel}</p>
+                <p className="text-sm text-foreground whitespace-pre-wrap">{game.additionalDetails}</p>
               </div>
             </div>
           )}

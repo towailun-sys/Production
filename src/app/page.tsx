@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -326,9 +327,9 @@ export default function DashboardPage() {
     setIsSeeding(true);
     
     const sampleGames = [
-      { id: "seed-g1", date: new Date().toISOString().split('T')[0], startTime: "19:00", endTime: "21:00", location: "Central Sports Complex", type: "League", team: "A", opponent: "Blue Arrows FC", kitColors: "Home 1: Pink/Grey" },
-      { id: "seed-g2", date: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0], startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", opponent: "N/A", kitColors: "Home 2: New White / New White" },
-      { id: "seed-g3", date: new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0], startTime: "20:00", endTime: "22:00", location: "Power League North", type: "Internal", team: "B", opponent: "N/A", kitColors: "Away 1: Black/Black" },
+      { id: "seed-g1", date: new Date().toISOString().split('T')[0], startTime: "19:00", endTime: "21:00", location: "Central Sports Complex", type: "League", team: "A", opponent: "Blue Arrows FC", kitColors: "Home 1: Pink/Grey", additionalDetails: "Please arrive 30 mins early for warm up." },
+      { id: "seed-g2", date: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0], startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", opponent: "N/A", kitColors: "Home 2: New White / New White", additionalDetails: "Tactics session." },
+      { id: "seed-g3", date: new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0], startTime: "20:00", endTime: "22:00", location: "Power League North", type: "Internal", team: "B", opponent: "N/A", kitColors: "Away 1: Black/Black", additionalDetails: "Internal squad selection match." },
     ];
 
     sampleGames.forEach(g => {
@@ -439,7 +440,7 @@ export default function DashboardPage() {
               <Lock className="h-8 w-8 text-primary" />
             </div>
             <h2 className="text-2xl font-headline mb-2">{dict.attendance.signinRequired}</h2>
-            <div className="text-muted-foreground max-w-sm mb-6">
+            <div className="text-muted-foreground max-sm mb-6">
               {dict.attendance.signinDesc}
             </div>
           </div>
@@ -574,6 +575,12 @@ export default function DashboardPage() {
                                   <div className={cn("flex items-center gap-2 font-bold", getKitColorClass(game.kitColors))}>
                                     <Shirt className="h-4 w-4" />
                                     {dict.games.dialog.kit}: {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
+                                  </div>
+                                )}
+                                {game.additionalDetails && (
+                                  <div className="flex items-start gap-2 text-xs italic mt-1 bg-muted/30 p-2 rounded">
+                                    <Info className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
+                                    <span className="truncate">{game.additionalDetails}</span>
                                   </div>
                                 )}
                               </div>

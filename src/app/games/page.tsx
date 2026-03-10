@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -18,6 +19,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -42,7 +44,8 @@ import {
   Shirt,
   Lock,
   Loader2,
-  Users
+  Users,
+  Info
 } from "lucide-react";
 import { Game, GameType, GameTeamScope, Player } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -91,6 +94,7 @@ export default function GamesPage() {
     location: string;
     opponent: string;
     kitColors: string;
+    additionalDetails: string;
   }>({
     type: "Training",
     team: "All",
@@ -100,6 +104,7 @@ export default function GamesPage() {
     location: "",
     opponent: "",
     kitColors: "TBD",
+    additionalDetails: "",
   });
 
   const gamesQuery = useMemoFirebase(() => {
@@ -118,7 +123,8 @@ export default function GamesPage() {
       endTime: "", 
       location: "", 
       opponent: "", 
-      kitColors: "TBD" 
+      kitColors: "TBD",
+      additionalDetails: "",
     });
   };
 
@@ -149,6 +155,7 @@ export default function GamesPage() {
       location: formData.location,
       opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || "TBD"),
       kitColors: formData.kitColors || "TBD",
+      additionalDetails: formData.additionalDetails || "",
     };
 
     setDoc(gameRef, gameData)
@@ -179,6 +186,7 @@ export default function GamesPage() {
       location: game.location,
       opponent: (game.opponent === "N/A" || !game.opponent) ? "" : game.opponent,
       kitColors: game.kitColors || "TBD",
+      additionalDetails: game.additionalDetails || "",
     });
     
     setTimeout(() => {
@@ -208,6 +216,7 @@ export default function GamesPage() {
       location: formData.location, 
       opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || "TBD"),
       kitColors: formData.kitColors || "TBD",
+      additionalDetails: formData.additionalDetails || "",
     };
 
     setDoc(gameRef, updateData, { merge: true })
@@ -289,7 +298,7 @@ export default function GamesPage() {
                 <DialogHeader>
                   <DialogTitle className="font-headline">{dict.games.dialog.addTitle}</DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
+                <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="type">{dict.games.dialog.type}</Label>
@@ -376,6 +385,15 @@ export default function GamesPage() {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="additionalDetails">{dict.games.dialog.details}</Label>
+                    <Textarea 
+                      id="additionalDetails" 
+                      placeholder="e.g. Pitch 4, bring water, etc." 
+                      value={formData.additionalDetails} 
+                      onChange={(e) => setFormData({ ...formData, additionalDetails: e.target.value })}
+                    />
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button onClick={handleAddGame} className="bg-primary w-full font-bold">{dict.games.dialog.create}</Button>
@@ -453,6 +471,12 @@ export default function GamesPage() {
                           </div>
                         )}
                       </div>
+                      {game.additionalDetails && (
+                        <div className="flex items-start gap-1.5 text-xs text-muted-foreground mt-2 bg-muted/20 p-2 rounded">
+                          <Info className="h-3 w-3 mt-0.5 shrink-0" />
+                          <p>{game.additionalDetails}</p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex md:flex-col items-center gap-2 justify-end">
@@ -495,7 +519,7 @@ export default function GamesPage() {
             <DialogHeader>
               <DialogTitle className="font-headline">{dict.games.dialog.editTitle}</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
+            <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="edit-type">{dict.games.dialog.type}</Label>
@@ -579,6 +603,15 @@ export default function GamesPage() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-additionalDetails">{dict.games.dialog.details}</Label>
+                <Textarea 
+                  id="edit-additionalDetails" 
+                  placeholder="e.g. Pitch 4, bring water, etc." 
+                  value={formData.additionalDetails} 
+                  onChange={(e) => setFormData({ ...formData, additionalDetails: e.target.value })}
+                />
               </div>
             </div>
             <DialogFooter>
