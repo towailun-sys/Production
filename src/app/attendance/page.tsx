@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useSearchParams } from "next/navigation";
@@ -302,7 +301,7 @@ function GameRosterList({
                     )}
                   </div>
                   <div>
-                    <p className="font-bold flex items-center gap-2">
+                    <div className="font-bold flex items-center gap-2">
                       {player.name} 
                       {player.nickname && <span className="text-muted-foreground text-xs italic font-normal">"{player.nickname}"</span>}
                       {player.isCaptain && (
@@ -310,8 +309,8 @@ function GameRosterList({
                           Capt.
                         </Badge>
                       )}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
+                    </div>
+                    <div className="text-xs text-muted-foreground">
                       <span className={cn(
                         "font-bold",
                         player.team === 'A' ? "text-primary" : "text-indigo-600"
@@ -319,7 +318,7 @@ function GameRosterList({
                         Team {player.team}
                       </span>
                       {" • "}{player.preferredPositions?.join(', ') || 'Any'}
-                    </p>
+                    </div>
                   </div>
                 </div>
                 
@@ -511,7 +510,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
         </div>
 
         <div className="flex flex-col justify-center items-center gap-4 bg-muted/20 p-6 rounded-xl border border-dashed text-foreground">
-          <p className="font-bold text-center">Are you attending?</p>
+          <div className="font-bold text-center">Are you attending?</div>
           <div className="flex w-full gap-3">
             <Button 
               onClick={() => onStatusChange(game.id, 'Confirmed')}
