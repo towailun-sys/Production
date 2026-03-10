@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button";
 import { 
   Card, 
   CardContent, 
-  CardHeader, 
-  CardTitle 
+  CardHeader 
 } from "@/components/ui/card";
 import { 
   Table, 
@@ -35,10 +34,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
-import { Plus, Search, UserPlus, Filter, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Search, UserPlus, Filter, Pencil, Trash2 } from "lucide-react";
 import { Player, PlayerPosition } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/hooks/use-toast";
 
 const mockPlayers: Player[] = [
   { id: "1", name: "David Miller", nickname: "Miller", preferredPosition: "GK" },
@@ -51,11 +51,97 @@ const mockPlayers: Player[] = [
 export default function PlayersPage() {
   const [players, setPlayers] = useState<Player[]>(mockPlayers);
   const [search, setSearch] = useState("");
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  
+  const [formData, setFormData] = useState<{
+    name: string;
+    nickname: string;
+    preferredPosition: PlayerPosition;
+  }>({
+    name: "",
+    nickname: "",
+    preferredPosition: "MF",
+  });
+
+  const { toast } = useToast();
 
   const filteredPlayers = players.filter(p => 
     p.name.toLowerCase().includes(search.toLowerCase()) || 
     p.nickname?.toLowerCase().includes(search.toLowerCase())
   );
+
+  const handleAddPlayer = () => {
+    if (!formData.name) {
+      toast({
+        variant: "destructive",
+        title: "Missing Information",
+        description: "Please enter at least the player's full name.",
+      });
+      return;
+    }
+
+    const newPlayer: Player = {
+      id: Math.random().toString(36).substr(2, 9),
+      name: formData.name,
+      nickname: formData.nickname || undefined,
+      preferredPosition: formData.preferredPosition,
+    };
+
+    setPlayers([...players, newPlayer]);
+    resetForm();
+    setIsAddOpen(false);
+    toast({
+      title: "Player Added",
+      description: `${newPlayer.name} has been added to the squad.`,
+    });
+  };
+
+  const handleEditClick = (player: Player) => {
+    setEditingPlayer(player);
+    setFormData({
+      name: player.name,
+      nickname: player.nickname || "",
+      preferredPosition: player.preferredPosition,
+    });
+    setIsEditOpen(true);
+  };
+
+  const handleUpdatePlayer = () => {
+    if (!editingPlayer || !formData.name) return;
+
+    const updatedPlayers = players.map(p => 
+      p.id === editingPlayer.id 
+        ? { ...p, name: formData.name, nickname: formData.nickname || undefined, preferredPosition: formData.preferredPosition }
+        : p
+    );
+
+    setPlayers(updatedPlayers);
+    resetForm();
+    setIsEditOpen(false);
+    setEditingPlayer(null);
+    toast({
+      title: "Player Updated",
+      description: "Squad information has been saved.",
+    });
+  };
+
+  const handleDeletePlayer = (id: string) => {
+    setPlayers(players.filter(p => p.id !== id));
+    toast({
+      title: "Player Removed",
+      description: "The player has been removed from the squad list.",
+    });
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      nickname: "",
+      preferredPosition: "MF",
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -66,7 +152,8 @@ export default function PlayersPage() {
             <h1 className="text-3xl font-headline">Player Management</h1>
             <p className="text-muted-foreground">Manage your team squad and details.</p>
           </div>
-          <Dialog>
+          
+          <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if(!open) resetForm(); }}>
             <DialogTrigger asChild>
               <Button className="bg-accent hover:bg-accent/90 gap-2">
                 <UserPlus className="h-4 w-4" />
@@ -80,15 +167,28 @@ export default function PlayersPage() {
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="name">Full Name</Label>
-                  <Input id="name" placeholder="John Doe" />
+                  <Input 
+                    id="name" 
+                    placeholder="John Doe" 
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="nickname">Nickname (Optional)</Label>
-                  <Input id="nickname" placeholder="The Rock" />
+                  <Input 
+                    id="nickname" 
+                    placeholder="The Rock" 
+                    value={formData.nickname}
+                    onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
+                  />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="position">Preferred Position</Label>
-                  <Select>
+                  <Select 
+                    value={formData.preferredPosition}
+                    onValueChange={(val: PlayerPosition) => setFormData({ ...formData, preferredPosition: val })}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select position" />
                     </SelectTrigger>
@@ -102,11 +202,58 @@ export default function PlayersPage() {
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" className="bg-primary w-full">Save Player</Button>
+                <Button onClick={handleAddPlayer} className="bg-primary w-full">Save Player</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Edit Dialog */}
+        <Dialog open={isEditOpen} onOpenChange={(open) => { setIsEditOpen(open); if(!open) resetForm(); }}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="font-headline">Edit Player Profile</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-name">Full Name</Label>
+                <Input 
+                  id="edit-name" 
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-nickname">Nickname (Optional)</Label>
+                <Input 
+                  id="edit-nickname" 
+                  value={formData.nickname}
+                  onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-position">Preferred Position</Label>
+                <Select 
+                  value={formData.preferredPosition}
+                  onValueChange={(val: PlayerPosition) => setFormData({ ...formData, preferredPosition: val })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select position" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="GK">Goalkeeper (GK)</SelectItem>
+                    <SelectItem value="DF">Defender (DF)</SelectItem>
+                    <SelectItem value="MF">Midfielder (MF)</SelectItem>
+                    <SelectItem value="FW">Forward (FW)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleUpdatePlayer} className="bg-primary w-full">Update Player</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
 
         <Card className="border-none shadow-lg overflow-hidden">
           <CardHeader className="bg-white border-b py-4 px-6 flex flex-row items-center justify-between">
@@ -127,7 +274,7 @@ export default function PlayersPage() {
             <Table>
               <TableHeader className="bg-muted/30">
                 <TableRow>
-                  <TableHead className="w-[100px] font-bold">Player</TableHead>
+                  <TableHead className="w-[200px] font-bold">Player</TableHead>
                   <TableHead className="font-bold">Nickname</TableHead>
                   <TableHead className="font-bold">Position</TableHead>
                   <TableHead className="text-right font-bold">Actions</TableHead>
@@ -165,10 +312,20 @@ export default function PlayersPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8"
+                            onClick={() => handleEditClick(player)}
+                          >
                             <Pencil className="h-4 w-4 text-primary" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8"
+                            onClick={() => handleDeletePlayer(player.id)}
+                          >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </div>
