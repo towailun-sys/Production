@@ -1,14 +1,12 @@
 
 "use client";
 
+import { useState, useEffect } from "react";
 import { MainNav } from "@/components/layout/main-nav";
 import { Button } from "@/components/ui/button";
 import { 
   Card, 
   CardContent, 
-  CardHeader, 
-  CardTitle,
-  CardFooter
 } from "@/components/ui/card";
 import { 
   Dialog, 
@@ -29,27 +27,77 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { 
-  Calendar, 
   Clock, 
   MapPin, 
   Plus, 
-  Trophy, 
-  Users, 
   MoreVertical,
   ChevronRight
 } from "lucide-react";
 import { Game, GameType } from "@/lib/types";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
-
-const mockGames: Game[] = [
-  { id: "1", date: "2024-06-15", time: "19:00", location: "Central Sports Complex", type: "League", opponent: "Blue Arrows FC" },
-  { id: "2", date: "2024-06-20", time: "18:30", location: "Community Field A", type: "Training" },
-  { id: "3", date: "2024-06-27", time: "20:00", location: "Stadium Main Pitch", type: "Friendly", opponent: "Legends United" },
-];
+import { getStoredGames, saveStoredGames } from "@/lib/local-store";
+import { useToast } from "@/hooks/use-toast";
 
 export default function GamesPage() {
-  const [games, setGames] = useState<Game[]>(mockGames);
+  const [games, setGames] = useState<Game[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const { toast } = useToast();
+
+  const [formData, setFormData] = useState<{
+    type: GameType;
+    date: string;
+    time: string;
+    location: string;
+    opponent: string;
+  }>({
+    type: "Training",
+    date: "",
+    time: "",
+    location: "",
+    opponent: "",
+  });
+
+  useEffect(() => {
+    setGames(getStoredGames());
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      saveStoredGames(games);
+    }
+  }, [games, isLoaded]);
+
+  const handleAddGame = () => {
+    if (!formData.date || !formData.time || !formData.location) {
+      toast({
+        variant: "destructive",
+        title: "Missing Information",
+        description: "Please fill in date, time, and location.",
+      });
+      return;
+    }
+
+    const newGame: Game = {
+      id: Math.random().toString(36).substring(2, 11),
+      type: formData.type,
+      date: formData.date,
+      time: formData.time,
+      location: formData.location,
+      opponent: formData.opponent || undefined,
+    };
+
+    setGames([...games, newGame].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()));
+    setIsAddOpen(false);
+    setFormData({ type: "Training", date: "", time: "", location: "", opponent: "" });
+    toast({
+      title: "Event Scheduled",
+      description: "The new event has been added to the calendar.",
+    });
+  };
+
+  if (!isLoaded) return null;
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -60,7 +108,7 @@ export default function GamesPage() {
             <h1 className="text-3xl font-headline">Game Schedule</h1>
             <p className="text-muted-foreground">Plan and manage upcoming fixtures.</p>
           </div>
-          <Dialog>
+          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
             <DialogTrigger asChild>
               <Button className="bg-primary hover:bg-primary/90 gap-2">
                 <Plus className="h-4 w-4" />
@@ -74,7 +122,10 @@ export default function GamesPage() {
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label htmlFor="type">Event Type</Label>
-                  <Select>
+                  <Select 
+                    value={formData.type}
+                    onValueChange={(val: GameType) => setFormData({ ...formData, type: val })}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
@@ -89,24 +140,24 @@ export default function GamesPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="date">Date</Label>
-                    <Input id="date" type="date" />
+                    <Input id="date" type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="time">Time</Label>
-                    <Input id="time" type="time" />
+                    <Input id="time" type="time" value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })} />
                   </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="location">Location</Label>
-                  <Input id="location" placeholder="Stadium or Pitch name" />
+                  <Input id="location" placeholder="Stadium or Pitch name" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="opponent">Opponent (Optional)</Label>
-                  <Input id="opponent" placeholder="Away Team Name" />
+                  <Input id="opponent" placeholder="Away Team Name" value={formData.opponent} onChange={(e) => setFormData({ ...formData, opponent: e.target.value })} />
                 </div>
               </div>
               <DialogFooter>
-                <Button type="submit" className="bg-accent w-full">Create Event</Button>
+                <Button onClick={handleAddGame} className="bg-accent w-full">Create Event</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

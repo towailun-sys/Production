@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MainNav } from "@/components/layout/main-nav";
 import { Button } from "@/components/ui/button";
 import { 
@@ -39,21 +39,15 @@ import { Player, PlayerPosition } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-
-const mockPlayers: Player[] = [
-  { id: "1", name: "David Miller", nickname: "Miller", preferredPosition: "GK" },
-  { id: "2", name: "Samuel Jackson", preferredPosition: "DF" },
-  { id: "3", name: "Marcus Rashford", nickname: "Rashy", preferredPosition: "FW" },
-  { id: "4", name: "Kevin De Bruyne", nickname: "KDB", preferredPosition: "MF" },
-  { id: "5", name: "Virgil Van Dijk", nickname: "VVD", preferredPosition: "DF" },
-];
+import { getStoredPlayers, saveStoredPlayers } from "@/lib/local-store";
 
 export default function PlayersPage() {
-  const [players, setPlayers] = useState<Player[]>(mockPlayers);
+  const [players, setPlayers] = useState<Player[]>([]);
   const [search, setSearch] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
   
   const [formData, setFormData] = useState<{
     name: string;
@@ -66,6 +60,17 @@ export default function PlayersPage() {
   });
 
   const { toast } = useToast();
+
+  useEffect(() => {
+    setPlayers(getStoredPlayers());
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      saveStoredPlayers(players);
+    }
+  }, [players, isLoaded]);
 
   const filteredPlayers = players.filter(p => 
     p.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -83,7 +88,7 @@ export default function PlayersPage() {
     }
 
     const newPlayer: Player = {
-      id: Math.random().toString(36).substr(2, 9),
+      id: Math.random().toString(36).substring(2, 11),
       name: formData.name,
       nickname: formData.nickname || undefined,
       preferredPosition: formData.preferredPosition,
@@ -142,6 +147,8 @@ export default function PlayersPage() {
       preferredPosition: "MF",
     });
   };
+
+  if (!isLoaded) return null;
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -208,7 +215,6 @@ export default function PlayersPage() {
           </Dialog>
         </div>
 
-        {/* Edit Dialog */}
         <Dialog open={isEditOpen} onOpenChange={(open) => { setIsEditOpen(open); if(!open) resetForm(); }}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
