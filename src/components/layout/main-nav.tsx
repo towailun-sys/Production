@@ -50,6 +50,11 @@ export function MainNav() {
         description: "Welcome back to SquadFlow.",
       });
     } catch (error: any) {
+      // Handle cases where the user cancels the login flow gracefully
+      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+        return;
+      }
+
       console.error("Login failed:", error);
       
       let description = error.message || "Could not complete Google authentication.";
