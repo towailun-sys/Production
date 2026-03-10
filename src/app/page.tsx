@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -637,11 +636,16 @@ export default function DashboardPage() {
                           )}
                         </div>
                         <div className="flex flex-col min-w-0">
-                          <span className="text-xs font-bold truncate flex items-center gap-1">
+                          <div className="text-xs font-bold truncate flex flex-wrap items-center gap-1.5">
                             {p.nickname || p.name}
                             {p.isAdmin && <ShieldCheck className="h-2.5 w-2.5 text-primary" />}
-                            {p.isLinked && <LinkIcon className="h-2.5 w-2.5 text-emerald-500" title="Account Linked" />}
-                          </span>
+                            {p.isLinked && (
+                              <span className="inline-flex items-center gap-0.5 text-emerald-600 font-bold text-[9px] bg-emerald-50 px-1 rounded">
+                                <LinkIcon className="h-3 w-3" />
+                                Linked
+                              </span>
+                            )}
+                          </div>
                           <span className="text-[10px] text-muted-foreground truncate">{p.status}</span>
                         </div>
                         {p.team && (

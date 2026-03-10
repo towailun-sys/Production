@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -759,11 +758,14 @@ export default function PlayersPage() {
                                   {player.isAdmin && (
                                     <ShieldCheck className="h-3 w-3 text-primary" />
                                   )}
-                                  {player.isLinked && (
-                                    <LinkIcon className="h-3 w-3 text-emerald-500" title="Account Linked" />
-                                  )}
                                 </div>
                                 <div className="flex flex-col gap-0.5 mt-1">
+                                  {player.isLinked && (
+                                    <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded text-[10px] font-bold border border-emerald-100 w-fit mb-1">
+                                      <LinkIcon className="h-4 w-4" />
+                                      Linked
+                                    </div>
+                                  )}
                                   {player.nickname && <div className="text-xs text-primary font-bold">"{player.nickname}"</div>}
                                   {player.email && <div className="text-[10px] text-muted-foreground">{player.email}</div>}
                                   {player.mobileNumber && (
