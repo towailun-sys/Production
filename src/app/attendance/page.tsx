@@ -55,7 +55,7 @@ export default function AttendancePage() {
   const { toast } = useToast();
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
-  const { dict } = useTranslation();
+  const { language, dict } = useTranslation();
 
   const gameRef = useMemoFirebase(() => {
     if (isUserLoading || !user || !gameId) return null;
@@ -98,6 +98,18 @@ export default function AttendancePage() {
       title: "Status Updated",
       description: `Attendance set to ${status === 'Confirmed' ? dict.common.join : dict.common.decline}.`,
     });
+  };
+
+  const formatGameDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    if (language === 'zh') {
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      const weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+      const weekday = weekdays[date.getDay()];
+      return `${month}月${day}日 ${weekday}`;
+    }
+    return date.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' });
   };
 
   if (isUserLoading) {
@@ -183,7 +195,7 @@ export default function AttendancePage() {
                `${dict.common.matchVs} ${specificGame.opponent || dict.common.tbd}`}
             </h1>
             <div className="flex flex-wrap gap-4 mt-4 text-muted-foreground text-sm">
-              <span className="flex items-center gap-1.5 font-medium"><Calendar className="h-4 w-4" /> {new Date(specificGame.date).toLocaleDateString()}</span>
+              <span className="flex items-center gap-1.5 font-medium"><Calendar className="h-4 w-4" /> {formatGameDate(specificGame.date)}</span>
               <span className="flex items-center gap-1.5 font-medium"><Clock className="h-4 w-4" /> {specificGame.startTime} - {specificGame.endTime}</span>
               <span className="flex items-center gap-1.5 font-medium"><MapPin className="h-4 w-4" /> {specificGame.location}</span>
             </div>
@@ -369,11 +381,23 @@ function GameRosterList({
 
 function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: { game: Game, userId: string, onStatusChange: (id: string, s: AttendanceStatus) => void, isCondensed?: boolean }) {
   const firestore = useFirestore();
-  const { dict } = useTranslation();
+  const { language, dict } = useTranslation();
   const attendanceRef = useMemoFirebase(() => doc(firestore, "games", game.id, "attendanceRecords", userId), [firestore, game.id, userId]);
   const { data: attendance } = useDoc<any>(attendanceRef);
   
   const currentStatus: AttendanceStatus = attendance?.status || 'Pending';
+
+  const formatGameDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    if (language === 'zh') {
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      const weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+      const weekday = weekdays[date.getDay()];
+      return `${month}月${day}日 ${weekday}`;
+    }
+    return date.toLocaleDateString('default', { dateStyle: 'full' });
+  };
 
   if (isCondensed) {
     return (
@@ -477,7 +501,7 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
             </div>
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Date</p>
-              <p className="font-bold text-foreground">{new Date(game.date).toLocaleDateString('default', { dateStyle: 'full' })}</p>
+              <p className="font-bold text-foreground">{formatGameDate(game.date)}</p>
             </div>
           </div>
           <div className="flex items-center gap-3 text-muted-foreground">

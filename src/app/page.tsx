@@ -172,7 +172,7 @@ export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
-  const { dict } = useTranslation();
+  const { language, dict } = useTranslation();
   
   const [isSeeding, setIsSeeding] = useState(false);
   const [isClaimingAdmin, setIsClaimingAdmin] = useState(false);
@@ -347,6 +347,19 @@ export default function DashboardPage() {
       description: "Sample fixtures are being added to the database.",
     });
     setIsSeeding(false);
+  };
+
+  const formatGameDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    if (language === 'zh') {
+      // Format: 3月12日 星期四
+      const month = date.getMonth() + 1;
+      const day = date.getDate();
+      const weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+      const weekday = weekdays[date.getDay()];
+      return `${month}月${day}日 ${weekday}`;
+    }
+    return date.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' });
   };
 
   if (isUserLoading || (user && isProfileLoading)) {
@@ -555,7 +568,7 @@ export default function DashboardPage() {
                               <div className="grid gap-2 text-sm text-muted-foreground">
                                 <div className="flex items-center gap-2">
                                   <Calendar className="h-4 w-4 text-primary" />
-                                  {new Date(game.date).toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' })}
+                                  {formatGameDate(game.date)}
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <MapPin className="h-4 w-4 text-primary" />
