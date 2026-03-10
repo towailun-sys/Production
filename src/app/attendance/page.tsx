@@ -18,7 +18,7 @@ import { Game, AttendanceStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, query, orderBy, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { collection, query, orderBy, doc, setDoc } from "firebase/firestore";
 
 const KIT_MAP: Record<string, string> = {
   "Home 1: Pink/Grey": "text-pink-500",
@@ -35,9 +35,13 @@ const getKitColorClass = (kitLabel: string) => {
 export default function AttendancePage() {
   const { toast } = useToast();
   const firestore = useFirestore();
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
 
-  const gamesQuery = useMemoFirebase(() => query(collection(firestore, "games"), orderBy("date", "asc")), [firestore]);
+  const gamesQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(collection(firestore, "games"), orderBy("date", "asc"));
+  }, [firestore, user]);
+
   const { data: games, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
 
   const handleStatusChange = (gameId: string, status: AttendanceStatus) => {
@@ -65,6 +69,17 @@ export default function AttendancePage() {
       description: "Your status has been updated for this event.",
     });
   };
+
+  if (isUserLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <MainNav />
+        <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        </main>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
