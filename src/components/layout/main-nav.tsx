@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -48,7 +47,7 @@ export function MainNav() {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-primary text-primary-foreground shadow-sm">
+    <nav className="sticky top-0 z-40 w-full border-b bg-primary text-primary-foreground shadow-sm">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">

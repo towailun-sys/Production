@@ -241,61 +241,6 @@ export default function GamesPage() {
           </Dialog>
         </div>
 
-        {/* Edit Dialog */}
-        <Dialog open={isEditOpen} onOpenChange={(open) => { setIsEditOpen(open); if(!open) { setEditingGame(null); resetForm(); } }}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle className="font-headline">Edit Event</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-type">Event Type</Label>
-                <Select 
-                  value={formData.type}
-                  onValueChange={(val: GameType) => setFormData({ ...formData, type: val, opponent: isOpponentNotRequired(val) ? "" : formData.opponent })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Training">Training Session</SelectItem>
-                    <SelectItem value="League">League Match</SelectItem>
-                    <SelectItem value="Friendly">Friendly Match</SelectItem>
-                    <SelectItem value="Internal">Internal Game</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-date">Date</Label>
-                  <Input id="edit-date" type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-time">Time</Label>
-                  <Input id="edit-time" type="time" value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })} />
-                </div>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-location">Location</Label>
-                <Input id="edit-location" placeholder="Stadium or Pitch name" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-opponent">Opponent {isOpponentNotRequired(formData.type) ? '(Auto: N/A)' : '(Optional)'}</Label>
-                <Input 
-                  id="edit-opponent" 
-                  placeholder={isOpponentNotRequired(formData.type) ? 'N/A' : 'Away Team Name'} 
-                  value={isOpponentNotRequired(formData.type) ? '' : formData.opponent} 
-                  onChange={(e) => setFormData({ ...formData, opponent: e.target.value })}
-                  disabled={isOpponentNotRequired(formData.type)}
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button onClick={handleUpdateGame} className="bg-primary w-full">Save Changes</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
         <div className="grid gap-6">
           {games.length === 0 ? (
             <Card className="p-12 text-center border-dashed border-2">
@@ -362,7 +307,7 @@ export default function GamesPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleEditClick(game)} className="gap-2">
+                          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleEditClick(game); }} className="gap-2">
                             <Pencil className="h-4 w-4" />
                             Edit Event
                           </DropdownMenuItem>
@@ -379,6 +324,61 @@ export default function GamesPage() {
             ))
           )}
         </div>
+
+        {/* Edit Dialog - Moved here to ensure it's at the end of DOM for consistent layering */}
+        <Dialog open={isEditOpen} onOpenChange={(open) => { setIsEditOpen(open); if(!open) { setEditingGame(null); resetForm(); } }}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle className="font-headline">Edit Event</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-type">Event Type</Label>
+                <Select 
+                  value={formData.type}
+                  onValueChange={(val: GameType) => setFormData({ ...formData, type: val, opponent: isOpponentNotRequired(val) ? "" : formData.opponent })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Training">Training Session</SelectItem>
+                    <SelectItem value="League">League Match</SelectItem>
+                    <SelectItem value="Friendly">Friendly Match</SelectItem>
+                    <SelectItem value="Internal">Internal Game</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-date">Date</Label>
+                  <Input id="edit-date" type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-time">Time</Label>
+                  <Input id="edit-time" type="time" value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })} />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-location">Location</Label>
+                <Input id="edit-location" placeholder="Stadium or Pitch name" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-opponent">Opponent {isOpponentNotRequired(formData.type) ? '(Auto: N/A)' : '(Optional)'}</Label>
+                <Input 
+                  id="edit-opponent" 
+                  placeholder={isOpponentNotRequired(formData.type) ? 'N/A' : 'Away Team Name'} 
+                  value={isOpponentNotRequired(formData.type) ? '' : formData.opponent} 
+                  onChange={(e) => setFormData({ ...formData, opponent: e.target.value })}
+                  disabled={isOpponentNotRequired(formData.type)}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button onClick={handleUpdateGame} className="bg-primary w-full">Save Changes</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
