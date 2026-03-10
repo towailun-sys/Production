@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from "react";
@@ -122,7 +121,11 @@ export default function PlayersPage() {
       nickname: player.nickname || "",
       preferredPositions: player.preferredPositions,
     });
-    setIsEditOpen(true);
+    
+    // Crucial: Use a small delay to ensure any active DropdownMenu closes
+    setTimeout(() => {
+      setIsEditOpen(true);
+    }, 50);
   };
 
   const handleUpdatePlayer = () => {
@@ -250,7 +253,7 @@ export default function PlayersPage() {
           </Dialog>
         </div>
 
-        <Dialog open={isEditOpen} onOpenChange={(open) => { setIsEditOpen(open); if(!open) resetForm(); }}>
+        <Dialog open={isEditOpen} onOpenChange={(open) => { if(!open) { setIsEditOpen(false); resetForm(); setEditingPlayer(null); } }}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle className="font-headline">Edit Player Profile</DialogTitle>

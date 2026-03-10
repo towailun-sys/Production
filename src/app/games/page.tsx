@@ -123,7 +123,12 @@ export default function GamesPage() {
       location: game.location,
       opponent: (game.opponent === "N/A" || !game.opponent) ? "" : game.opponent,
     });
-    setIsEditOpen(true);
+    
+    // Crucial: Use a small delay to ensure the DropdownMenu closes fully
+    // and releases the focus/pointer lock before opening the Dialog.
+    setTimeout(() => {
+      setIsEditOpen(true);
+    }, 50);
   };
 
   const handleUpdateGame = () => {
@@ -307,7 +312,7 @@ export default function GamesPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleEditClick(game); }} className="gap-2">
+                          <DropdownMenuItem onSelect={() => handleEditClick(game)} className="gap-2">
                             <Pencil className="h-4 w-4" />
                             Edit Event
                           </DropdownMenuItem>
@@ -325,8 +330,7 @@ export default function GamesPage() {
           )}
         </div>
 
-        {/* Edit Dialog - Moved here to ensure it's at the end of DOM for consistent layering */}
-        <Dialog open={isEditOpen} onOpenChange={(open) => { setIsEditOpen(open); if(!open) { setEditingGame(null); resetForm(); } }}>
+        <Dialog open={isEditOpen} onOpenChange={(open) => { if(!open) { setIsEditOpen(false); setEditingGame(null); resetForm(); } }}>
           <DialogContent className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle className="font-headline">Edit Event</DialogTitle>
