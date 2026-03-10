@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -38,7 +39,6 @@ export function MainNav() {
 
   const handleLogin = async () => {
     const provider = new GoogleAuthProvider();
-    // Hint: GoogleAuthProvider needs to be enabled in Firebase Console
     provider.setCustomParameters({
       prompt: 'select_account'
     });
@@ -51,10 +51,18 @@ export function MainNav() {
       });
     } catch (error: any) {
       console.error("Login failed:", error);
+      
+      let description = error.message || "Could not complete Google authentication.";
+      
+      // Handle specific configuration error
+      if (error.code === 'auth/operation-not-allowed') {
+        description = "Google Sign-In is not enabled in your Firebase Console. Please go to Authentication > Sign-in method and enable Google.";
+      }
+
       toast({
         variant: "destructive",
         title: "Sign in failed",
-        description: error.message || "Could not complete Google authentication.",
+        description,
       });
     }
   };
