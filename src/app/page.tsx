@@ -19,7 +19,9 @@ import {
   ShieldCheck,
   Users,
   Database,
-  UserCheck
+  UserCheck,
+  Fingerprint,
+  Copy
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, TeamType } from "@/lib/types";
@@ -59,7 +61,6 @@ export default function DashboardPage() {
     if (!user) return null;
     const now = new Date().toISOString().split('T')[0];
     
-    // Admins see all, others see their team or "All"
     return query(
       collection(firestore, "games"),
       where("date", ">=", now),
@@ -77,18 +78,25 @@ export default function DashboardPage() {
   
   const { data: players } = useCollection<Player>(playersQuery);
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "ID Copied",
+      description: "Your User ID has been copied to clipboard.",
+    });
+  };
+
   const handleClaimAdmin = async () => {
     if (!user) return;
     setIsClaimingAdmin(true);
     try {
-      // Use setDoc with merge: true to bootstrap the admin profile if it doesn't exist
       await setDoc(doc(firestore, "players", user.uid), {
         id: user.uid,
         name: user.displayName || "Admin User",
         email: user.email || "",
         isAdmin: true,
         status: "Active",
-        team: "A", // Default assigned team for bootstrapping
+        team: "A",
         preferredPositions: []
       }, { merge: true });
 
@@ -117,18 +125,9 @@ export default function DashboardPage() {
       { id: "seed-g3", date: new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0], startTime: "20:00", endTime: "22:00", location: "Power League North", type: "Internal", team: "B", opponent: "N/A", kitColors: "Away 1: Black/Black" },
     ];
 
-    const samplePlayers = [
-      { id: "seed-p1", name: "David Miller", team: "A" as TeamType, status: "Active" as any, preferredPositions: ["GK"], email: "david.m@example.com", isAdmin: false },
-      { id: "seed-p2", name: "Sam Jackson", team: "A" as TeamType, status: "Active" as any, preferredPositions: ["DF"], email: "sam.j@example.com", isAdmin: false },
-      { id: "seed-p3", name: "Marcus Rashford", team: "B" as TeamType, status: "Active" as any, preferredPositions: ["FW"], email: "rashy@example.com", isAdmin: false },
-    ];
-
     try {
       for (const g of sampleGames) {
         await setDoc(doc(firestore, "games", g.id), g);
-      }
-      for (const p of samplePlayers) {
-        await setDoc(doc(firestore, "players", p.id), p);
       }
 
       toast({
@@ -220,11 +219,26 @@ export default function DashboardPage() {
                       Profile Pending
                     </CardTitle>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="space-y-4">
                     <p className="text-amber-700">
                       Hello, {user.displayName}! Your account is not yet assigned to a squad. 
-                      Please wait for the Team Administrator to assign you to Team A or Team B.
+                      Please provide your User ID to the Team Administrator so they can link your account to a squad profile.
                     </p>
+                    <div className="flex items-center justify-between p-3 bg-white/50 border border-amber-200 rounded-lg">
+                      <div className="flex items-center gap-2 overflow-hidden">
+                        <Fingerprint className="h-4 w-4 text-amber-600 shrink-0" />
+                        <code className="text-xs font-mono text-amber-900 truncate">{user.uid}</code>
+                      </div>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 gap-1.5 text-amber-700 hover:bg-amber-100"
+                        onClick={() => copyToClipboard(user.uid)}
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                        Copy ID
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               )}

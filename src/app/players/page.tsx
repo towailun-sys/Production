@@ -135,7 +135,7 @@ export default function PlayersPage() {
       toast({
         variant: "destructive",
         title: "Missing Information",
-        description: "Please enter the player's full name and User ID.",
+        description: "Please enter the player's full name and User ID (UID).",
       });
       return;
     }
@@ -156,8 +156,8 @@ export default function PlayersPage() {
     resetForm();
     setIsAddOpen(false);
     toast({
-      title: "Player Added",
-      description: `${formData.name} has been added to the squad.`,
+      title: "Player Linked",
+      description: `${formData.name} has been linked to UID: ${formData.id.substring(0, 8)}...`,
     });
   };
 
@@ -277,7 +277,7 @@ export default function PlayersPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-headline">Player Management</h1>
-            <p className="text-muted-foreground">Manage your team squad and details.</p>
+            <p className="text-muted-foreground">Link player Google IDs to their squad profiles.</p>
           </div>
           
           {currentPlayer?.isAdmin && (
@@ -285,22 +285,26 @@ export default function PlayersPage() {
               <DialogTrigger asChild>
                 <Button className="bg-accent hover:bg-accent/90 gap-2">
                   <UserPlus className="h-4 w-4" />
-                  Add New Player
+                  Link New Player
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                  <DialogTitle className="font-headline">Add Player Profile</DialogTitle>
+                  <DialogTitle className="font-headline">Create & Link Profile</DialogTitle>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="id">User ID (Firebase UID)</Label>
+                    <Label htmlFor="id" className="flex items-center gap-2">
+                      User ID (Firebase UID)
+                      <Badge variant="secondary" className="text-[10px] h-4">Required for Linkage</Badge>
+                    </Label>
                     <Input 
                       id="id" 
-                      placeholder="Enter player's UID" 
+                      placeholder="Paste player's UID here" 
                       value={formData.id}
                       onChange={(e) => setFormData({ ...formData, id: e.target.value })}
                     />
+                    <p className="text-[10px] text-muted-foreground">This links the profile to the user's Google account login.</p>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="name">Full Name</Label>
@@ -312,7 +316,7 @@ export default function PlayersPage() {
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="nickname">Nickname (Optional)</Label>
+                    <Label htmlFor="nickname">Nickname (Display Name)</Label>
                     <Input 
                       id="nickname" 
                       placeholder="The Rock" 
@@ -379,7 +383,7 @@ export default function PlayersPage() {
                   </div>
                 </div>
                 <DialogFooter>
-                  <Button onClick={handleAddPlayer} className="bg-primary w-full">Save Player</Button>
+                  <Button onClick={handleAddPlayer} className="bg-primary w-full">Link & Save Player</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -401,7 +405,7 @@ export default function PlayersPage() {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-nickname">Nickname (Optional)</Label>
+                <Label htmlFor="edit-nickname">Nickname</Label>
                 <Input 
                   id="edit-nickname" 
                   value={formData.nickname}
@@ -497,7 +501,7 @@ export default function PlayersPage() {
               <Table>
                 <TableHeader className="bg-muted/30">
                   <TableRow>
-                    <TableHead className="w-[250px] font-bold">Player</TableHead>
+                    <TableHead className="w-[250px] font-bold">Player (Linked UID)</TableHead>
                     <TableHead className="font-bold text-center">Team</TableHead>
                     <TableHead className="font-bold">Status</TableHead>
                     <TableHead className="font-bold">Positions</TableHead>
@@ -530,14 +534,11 @@ export default function PlayersPage() {
                                     <ShieldCheck className="h-3 w-3 text-primary" />
                                   )}
                                 </div>
-                                <div className="flex items-center gap-2 mt-1">
-                                  {player.nickname && <span className="text-xs text-muted-foreground font-medium italic">"{player.nickname}"</span>}
-                                  {player.email && (
-                                    <span className="flex items-center text-[10px] text-muted-foreground gap-1">
-                                      <Mail className="h-3 w-3" />
-                                      {player.email}
-                                    </span>
-                                  )}
+                                <div className="flex flex-col gap-0.5 mt-1">
+                                  {player.nickname && <span className="text-xs text-primary font-bold">Nickname: "{player.nickname}"</span>}
+                                  <span className="flex items-center text-[9px] font-mono text-muted-foreground gap-1">
+                                    UID: {player.id.substring(0, 12)}...
+                                  </span>
                                 </div>
                               </div>
                             </div>
