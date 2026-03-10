@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -56,13 +57,15 @@ export default function GamesPage() {
   const [formData, setFormData] = useState<{
     type: GameType;
     date: string;
-    time: string;
+    startTime: string;
+    endTime: string;
     location: string;
     opponent: string;
   }>({
     type: "Training",
     date: "",
-    time: "",
+    startTime: "",
+    endTime: "",
     location: "",
     opponent: "",
   });
@@ -79,7 +82,7 @@ export default function GamesPage() {
   }, [games, isLoaded]);
 
   const resetForm = () => {
-    setFormData({ type: "Training", date: "", time: "", location: "", opponent: "" });
+    setFormData({ type: "Training", date: "", startTime: "", endTime: "", location: "", opponent: "" });
   };
 
   const isOpponentNotRequired = (type: GameType) => {
@@ -87,11 +90,11 @@ export default function GamesPage() {
   };
 
   const handleAddGame = () => {
-    if (!formData.date || !formData.time || !formData.location) {
+    if (!formData.date || !formData.startTime || !formData.endTime || !formData.location) {
       toast({
         variant: "destructive",
         title: "Missing Information",
-        description: "Please fill in date, time, and location.",
+        description: "Please fill in date, start time, end time, and location.",
       });
       return;
     }
@@ -100,7 +103,8 @@ export default function GamesPage() {
       id: Math.random().toString(36).substring(2, 11),
       type: formData.type,
       date: formData.date,
-      time: formData.time,
+      startTime: formData.startTime,
+      endTime: formData.endTime,
       location: formData.location,
       opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || undefined),
     };
@@ -119,24 +123,23 @@ export default function GamesPage() {
     setFormData({
       type: game.type,
       date: game.date,
-      time: game.time,
+      startTime: game.startTime,
+      endTime: game.endTime,
       location: game.location,
       opponent: (game.opponent === "N/A" || !game.opponent) ? "" : game.opponent,
     });
     
-    // Crucial: Use a small delay to ensure the DropdownMenu closes fully
-    // and releases the focus/pointer lock before opening the Dialog.
     setTimeout(() => {
       setIsEditOpen(true);
     }, 50);
   };
 
   const handleUpdateGame = () => {
-    if (!editingGame || !formData.date || !formData.time || !formData.location) {
+    if (!editingGame || !formData.date || !formData.startTime || !formData.endTime || !formData.location) {
       toast({
         variant: "destructive",
         title: "Missing Information",
-        description: "Please fill in date, time, and location.",
+        description: "Please fill in date, start time, end time, and location.",
       });
       return;
     }
@@ -147,7 +150,8 @@ export default function GamesPage() {
             ...g, 
             type: formData.type, 
             date: formData.date, 
-            time: formData.time, 
+            startTime: formData.startTime,
+            endTime: formData.endTime,
             location: formData.location, 
             opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || undefined)
           }
@@ -214,14 +218,18 @@ export default function GamesPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="date">Date</Label>
+                  <Input id="date" type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="date">Date</Label>
-                    <Input id="date" type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
+                    <Label htmlFor="startTime">Start Time</Label>
+                    <Input id="startTime" type="time" value={formData.startTime} onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="time">Time</Label>
-                    <Input id="time" type="time" value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })} />
+                    <Label htmlFor="endTime">End Time</Label>
+                    <Input id="endTime" type="time" value={formData.endTime} onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} />
                   </div>
                 </div>
                 <div className="grid gap-2">
@@ -288,7 +296,7 @@ export default function GamesPage() {
                       <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1.5">
                           <Clock className="h-4 w-4 text-primary" />
-                          {game.time}
+                          {game.startTime} - {game.endTime}
                         </div>
                         <div className="flex items-center gap-1.5">
                           <MapPin className="h-4 w-4 text-primary" />
@@ -353,14 +361,18 @@ export default function GamesPage() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-date">Date</Label>
+                <Input id="edit-date" type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
+              </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-date">Date</Label>
-                  <Input id="edit-date" type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
+                  <Label htmlFor="edit-startTime">Start Time</Label>
+                  <Input id="edit-startTime" type="time" value={formData.startTime} onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-time">Time</Label>
-                  <Input id="edit-time" type="time" value={formData.time} onChange={(e) => setFormData({ ...formData, time: e.target.value })} />
+                  <Label htmlFor="edit-endTime">End Time</Label>
+                  <Input id="edit-endTime" type="time" value={formData.endTime} onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} />
                 </div>
               </div>
               <div className="grid gap-2">

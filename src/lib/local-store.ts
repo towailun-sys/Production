@@ -16,13 +16,12 @@ const defaultPlayers: Player[] = [
   { id: "8", name: "Rodri", email: "rodri@squadflow.com", preferredPositions: ["MF"], team: "A" },
 ];
 
-// Using February 2025 dates for testing the "Current Month" dashboard view
 const defaultGames: Game[] = [
-  { id: "1", date: "2025-02-10", time: "19:00", location: "Central Sports Complex", type: "League", opponent: "Blue Arrows FC" },
-  { id: "2", date: "2025-02-15", time: "18:30", location: "Community Field A", type: "Training" },
-  { id: "3", date: "2025-02-22", time: "20:00", location: "Stadium Main Pitch", type: "League", opponent: "Legends United" },
-  { id: "4", date: "2025-02-28", time: "19:30", location: "Power League North", type: "Internal" },
-  { id: "5", date: "2025-03-05", time: "19:00", location: "Away Grounds", type: "Friendly", opponent: "Old Boys FC" },
+  { id: "1", date: "2025-02-10", startTime: "19:00", endTime: "21:00", location: "Central Sports Complex", type: "League", opponent: "Blue Arrows FC" },
+  { id: "2", date: "2025-02-15", startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training" },
+  { id: "3", date: "2025-02-22", startTime: "20:00", endTime: "22:00", location: "Stadium Main Pitch", type: "League", opponent: "Legends United" },
+  { id: "4", date: "2025-02-28", startTime: "19:30", endTime: "21:30", location: "Power League North", type: "Internal", opponent: "N/A" },
+  { id: "5", date: "2025-03-05", startTime: "19:00", endTime: "20:30", location: "Away Grounds", type: "Friendly", opponent: "Old Boys FC" },
 ];
 
 export const getStoredPlayers = (): Player[] => {
@@ -48,7 +47,18 @@ export const saveStoredPlayers = (players: Player[]) => {
 export const getStoredGames = (): Game[] => {
   if (typeof window === 'undefined') return defaultGames;
   const stored = localStorage.getItem(GAMES_KEY);
-  return stored ? JSON.parse(stored) : defaultGames;
+  if (!stored) return defaultGames;
+  
+  try {
+    const games = JSON.parse(stored) as any[];
+    return games.map(g => ({
+      ...g,
+      startTime: g.startTime || g.time || "00:00",
+      endTime: g.endTime || g.time || "00:00"
+    }));
+  } catch (e) {
+    return defaultGames;
+  }
 };
 
 export const saveStoredGames = (games: Game[]) => {

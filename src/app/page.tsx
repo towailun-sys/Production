@@ -97,7 +97,7 @@ export default function DashboardPage() {
                                 </Badge>
                                 <span className="text-sm font-bold text-muted-foreground flex items-center gap-1">
                                   <Clock className="h-3.5 w-3.5" />
-                                  {game.time}
+                                  {game.startTime} - {game.endTime}
                                 </span>
                               </div>
                               

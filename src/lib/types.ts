@@ -16,7 +16,8 @@ export type GameType = 'Training' | 'League' | 'Friendly' | 'Internal';
 export interface Game {
   id: string;
   date: string;
-  time: string;
+  startTime: string;
+  endTime: string;
   location: string;
   type: GameType;
   opponent?: string;

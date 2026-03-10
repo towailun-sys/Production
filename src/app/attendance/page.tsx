@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -24,7 +25,6 @@ export default function AttendancePage() {
   const [isLoaded, setIsLoaded] = useState(false);
   const { toast } = useToast();
 
-  // For this local simulation, we'll assume current user ID is "currentUser"
   const currentUserId = "currentUser";
 
   useEffect(() => {
@@ -129,8 +129,8 @@ export default function AttendancePage() {
                           <Clock className="h-5 w-5 text-primary" />
                         </div>
                         <div>
-                          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Kickoff</p>
-                          <p className="font-medium text-foreground">{game.time}</p>
+                          <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground/60">Time Window</p>
+                          <p className="font-medium text-foreground">{game.startTime} - {game.endTime}</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-3 text-muted-foreground">
