@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -20,7 +21,8 @@ import {
   Check,
   X,
   Crown,
-  Shirt
+  Shirt,
+  Banknote
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, Attendance, AttendanceStatus, Team } from "@/lib/types";
@@ -296,10 +298,10 @@ export default function DashboardPage() {
     const in10Days = new Date(Date.now() + 86400000 * 10).toISOString().split('T')[0];
 
     const sampleGames = [
-      { id: "seed-g1", date: today, startTime: "19:00", endTime: "21:00", location: "Central Sports Complex", type: "League", team: "team-a", opponent: "Blue Arrows FC", coach: "Sir Alex", kitColors: "Home 1: Pink/Grey", additionalDetails: "Please arrive 30 mins early for warm up." },
-      { id: "seed-g2", date: in3Days, startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", opponent: "N/A", coach: "Pep G", kitColors: "Home 2: New White / New White", additionalDetails: "Tactics session." },
-      { id: "seed-g3", date: in7Days, startTime: "20:00", endTime: "22:00", location: "South Pitch 4", type: "Friendly", team: "team-b", opponent: "Red Devils", coach: "Klopp", kitColors: "Away 1: Black/Black", additionalDetails: "Friendly against rivals." },
-      { id: "seed-g4", date: in10Days, startTime: "19:00", endTime: "21:00", location: "Camp 3 Training Ground", type: "Internal", team: "team-camp3", opponent: "N/A", coach: "Mou", kitColors: "Away 2: White/White", additionalDetails: "Internal practice match." },
+      { id: "seed-g1", date: today, startTime: "19:00", endTime: "21:00", location: "Central Sports Complex", type: "League", team: "team-a", opponent: "Blue Arrows FC", coach: "Sir Alex", fee: "$100", kitColors: "Home 1: Pink/Grey", additionalDetails: "Please arrive 30 mins early for warm up." },
+      { id: "seed-g2", date: in3Days, startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", opponent: "N/A", coach: "Pep G", fee: "Free", kitColors: "Home 2: New White / New White", additionalDetails: "Tactics session." },
+      { id: "seed-g3", date: in7Days, startTime: "20:00", endTime: "22:00", location: "South Pitch 4", type: "Friendly", team: "team-b", opponent: "Red Devils", coach: "Klopp", fee: "$80", kitColors: "Away 1: Black/Black", additionalDetails: "Friendly against rivals." },
+      { id: "seed-g4", date: in10Days, startTime: "19:00", endTime: "21:00", location: "Camp 3 Training Ground", type: "Internal", team: "team-camp3", opponent: "N/A", coach: "Mou", fee: "Split by 14", kitColors: "Away 2: White/White", additionalDetails: "Internal practice match." },
     ];
 
     sampleGames.forEach(g => {
@@ -435,6 +437,12 @@ export default function DashboardPage() {
                                 <span className="text-[10px] md:text-xs font-bold text-muted-foreground flex items-center gap-1.5">
                                   <UserRound className="h-3.5 w-3.5 text-primary" />
                                   {game.coach}
+                                </span>
+                              )}
+                              {game.fee && (
+                                <span className="text-[10px] md:text-xs font-bold text-muted-foreground flex items-center gap-1.5">
+                                  <Banknote className="h-3.5 w-3.5 text-primary" />
+                                  {game.fee}
                                 </span>
                               )}
                               {game.kitColors && (

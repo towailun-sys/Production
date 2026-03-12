@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -47,6 +48,7 @@ import {
   Users,
   Info,
   UserRound,
+  Banknote,
   Calendar as CalendarIcon
 } from "lucide-react";
 import { Game, GameType, Player, Team } from "@/lib/types";
@@ -102,6 +104,7 @@ export default function GamesPage() {
     location: string;
     opponent: string;
     coach: string;
+    fee: string;
     kitColors: string;
     additionalDetails: string;
   }>({
@@ -113,6 +116,7 @@ export default function GamesPage() {
     location: "",
     opponent: "",
     coach: "",
+    fee: "",
     kitColors: "TBD",
     additionalDetails: "",
   });
@@ -134,6 +138,7 @@ export default function GamesPage() {
       location: "", 
       opponent: "", 
       coach: "",
+      fee: "",
       kitColors: "TBD",
       additionalDetails: "",
     });
@@ -166,6 +171,7 @@ export default function GamesPage() {
       location: formData.location,
       opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || "TBD"),
       coach: formData.coach || "",
+      fee: formData.fee || "",
       kitColors: formData.kitColors || "TBD",
       additionalDetails: formData.additionalDetails || "",
     };
@@ -197,6 +203,7 @@ export default function GamesPage() {
       location: game.location,
       opponent: (game.opponent === "N/A" || !game.opponent) ? "" : game.opponent,
       coach: game.coach || "",
+      fee: game.fee || "",
       kitColors: game.kitColors || "TBD",
       additionalDetails: game.additionalDetails || "",
     });
@@ -223,6 +230,7 @@ export default function GamesPage() {
       location: formData.location, 
       opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || "TBD"),
       coach: formData.coach || "",
+      fee: formData.fee || "",
       kitColors: formData.kitColors || "TBD",
       additionalDetails: formData.additionalDetails || "",
     };
@@ -384,6 +392,10 @@ export default function GamesPage() {
                     </div>
                   </div>
                   <div className="grid gap-2">
+                    <Label htmlFor="fee" className="text-xs uppercase tracking-wider">{dict.games.dialog.fee}</Label>
+                    <Input id="fee" placeholder="e.g. $100 or Split by all" className="h-11" value={formData.fee} onChange={(e) => setFormData({ ...formData, fee: e.target.value })} />
+                  </div>
+                  <div className="grid gap-2">
                     <Label htmlFor="kitColors" className="text-xs uppercase tracking-wider">{dict.games.dialog.kit}</Label>
                     <Select 
                       value={formData.kitColors}
@@ -484,6 +496,12 @@ export default function GamesPage() {
                           <div className="flex items-center gap-2">
                             <UserRound className="h-4 w-4 text-primary shrink-0" />
                             {game.coach}
+                          </div>
+                        )}
+                        {game.fee && (
+                          <div className="flex items-center gap-2">
+                            <Banknote className="h-4 w-4 text-primary shrink-0" />
+                            {game.fee}
                           </div>
                         )}
                         {game.kitColors && (
@@ -615,6 +633,10 @@ export default function GamesPage() {
                   <Label htmlFor="edit-coach" className="text-xs uppercase tracking-wider">{dict.games.dialog.coach}</Label>
                   <Input id="edit-coach" placeholder="Coach Name" className="h-11" value={formData.coach} onChange={(e) => setFormData({ ...formData, coach: e.target.value })} />
                 </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-fee" className="text-xs uppercase tracking-wider">{dict.games.dialog.fee}</Label>
+                <Input id="edit-fee" placeholder="e.g. $100 or Split by all" className="h-11" value={formData.fee} onChange={(e) => setFormData({ ...formData, fee: e.target.value })} />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-kitColors" className="text-xs uppercase tracking-wider">{dict.games.dialog.kit}</Label>

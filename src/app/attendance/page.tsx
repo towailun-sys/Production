@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useSearchParams } from "next/navigation";
@@ -20,7 +21,8 @@ import {
   Info,
   CalendarCheck,
   Shirt,
-  UserRound
+  UserRound,
+  Banknote
 } from "lucide-react";
 import { Game, AttendanceStatus, Player, Attendance, Team } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -218,6 +220,9 @@ export default function AttendancePage() {
               <span className="flex items-center gap-2 font-medium"><MapPin className="h-4 w-4 text-primary shrink-0" /> {specificGame.location}</span>
               {specificGame.coach && (
                 <span className="flex items-center gap-2 font-medium"><UserRound className="h-4 w-4 text-primary shrink-0" /> {specificGame.coach}</span>
+              )}
+              {specificGame.fee && (
+                <span className="flex items-center gap-2 font-medium"><Banknote className="h-4 w-4 text-primary shrink-0" /> {specificGame.fee}</span>
               )}
             </div>
             {specificGame.additionalDetails && (
@@ -536,16 +541,14 @@ function AttendanceCard({
               </div>
             </div>
           )}
-          {game.kitColors && (
+          {game.fee && (
             <div className="flex items-center gap-4 text-muted-foreground">
               <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
-                <Shirt className={cn("h-5 w-5", KIT_COLORS[game.kitColors] || "text-primary")} />
+                <Banknote className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.games.dialog.kit}</p>
-                <p className={cn("font-bold text-sm", KIT_COLORS[game.kitColors] || "text-foreground")}>
-                  {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
-                </p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.attendance.feeLabel}</p>
+                <p className="font-bold text-foreground text-sm">{game.fee}</p>
               </div>
             </div>
           )}

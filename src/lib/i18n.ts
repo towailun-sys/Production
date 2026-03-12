@@ -1,3 +1,4 @@
+
 /**
  * Centralized Dictionaries for UI Strings
  */
@@ -144,6 +145,7 @@ const baseDict = {
       location: "Location",
       opponent: "Opponent",
       coach: "Coach",
+      fee: "Fee",
       kit: "Kit Selection",
       details: "Additional Details",
       create: "Create Event",
@@ -162,6 +164,7 @@ const baseDict = {
     dateLabel: "Date",
     timeLabel: "Time Window",
     locationLabel: "Location",
+    feeLabel: "Fee",
     detailsLabel: "Details",
     attendingQuestion: "Are you attending?",
     confirmationRequired: "Confirmation Required",
@@ -311,6 +314,7 @@ const zhDict: typeof baseDict = {
       location: "地點",
       opponent: "對手",
       coach: "教練",
+      fee: "費用",
       kit: "球衣顏色",
       details: "額外詳情",
       create: "創建活動",
@@ -329,6 +333,7 @@ const zhDict: typeof baseDict = {
     dateLabel: "日期",
     timeLabel: "時間",
     locationLabel: "地點",
+    feeLabel: "費用",
     detailsLabel: "詳情",
     attendingQuestion: "你會出席嗎？",
     confirmationRequired: "請確認出席情況",

@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Team": {
@@ -138,6 +139,10 @@
         "coach": {
           "type": "string",
           "description": "The name of the coach for this game."
+        },
+        "fee": {
+          "type": "string",
+          "description": "The fee associated with the game."
         },
         "additionalDetails": {
           "type": "string",
