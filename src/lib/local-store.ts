@@ -17,10 +17,10 @@ const defaultPlayers: Player[] = [
 ];
 
 const defaultGames: Game[] = [
-  { id: "1", date: "2025-02-10", startTime: "19:00", endTime: "21:00", location: "Central Sports Complex", type: "League", team: "team-a", opponent: "Blue Arrows FC", kitColors: "Home 1: Pink/Grey" },
-  { id: "2", date: "2025-02-15", startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", kitColors: "Home 2: New White / New White" },
-  { id: "3", date: "2025-02-22", startTime: "20:00", endTime: "22:00", location: "Stadium Main Pitch", type: "League", team: "team-b", opponent: "Legends United", kitColors: "Away 1: Black/Black" },
-  { id: "4", date: "2025-02-28", startTime: "19:30", endTime: "21:30", location: "Power League North", type: "Internal", team: "All", opponent: "N/A", kitColors: "Away 2: White/White" },
+  { id: "1", date: "2025-02-10", startTime: "19:00", endTime: "21:00", location: "Central Sports Complex", type: "League", team: "team-a", opponent: "Blue Arrows FC", kitColors: "kit-home-1" },
+  { id: "2", date: "2025-02-15", startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", kitColors: "kit-home-1" },
+  { id: "3", date: "2025-02-22", startTime: "20:00", endTime: "22:00", location: "Stadium Main Pitch", type: "League", team: "team-b", opponent: "Legends United", kitColors: "kit-away-1" },
+  { id: "4", date: "2025-02-28", startTime: "19:30", endTime: "21:30", location: "Power League North", type: "Internal", team: "All", opponent: "N/A", kitColors: "kit-away-1" },
 ];
 
 export const getStoredPlayers = (): Player[] => {
@@ -56,7 +56,7 @@ export const getStoredGames = (): Game[] => {
       ...g,
       startTime: g.startTime || g.time || "00:00",
       endTime: g.endTime || g.time || "00:00",
-      kitColors: g.kitColors || "TBD"
+      kitColors: g.kitColors || ""
     }));
   } catch (e) {
     return defaultGames;

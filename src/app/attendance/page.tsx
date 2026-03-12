@@ -52,11 +52,33 @@ import Image from "next/image";
 function KitBadge({ kitId, isAlternative = false }: { kitId: string, isAlternative?: boolean }) {
   const firestore = useFirestore();
   const { dict, language } = useTranslation();
-  const kitRef = useMemoFirebase(() => doc(firestore, "kits", kitId), [firestore, kitId]);
+  
+  // Guard against legacy IDs that contain slashes which would break Firestore path segments
+  const kitRef = useMemoFirebase(() => {
+    if (!kitId || kitId.includes('/')) return null;
+    return doc(firestore, "kits", kitId);
+  }, [firestore, kitId]);
+  
   const { data: kit, isLoading } = useDoc<Kit>(kitRef);
 
   if (isLoading) return <div className="h-4 w-16 animate-pulse bg-muted rounded" />;
-  if (!kit) return <span className="text-[10px] font-bold text-muted-foreground">{dict.common.tbd}</span>;
+  
+  if (!kit) {
+    // If it's legacy data (contains a slash or not found), show the ID as text if it looks like a description
+    if (kitId && kitId.length > 0) {
+      return (
+        <Badge 
+          variant="outline" 
+          className="text-[10px] font-bold flex items-center gap-1.5 opacity-60 py-1"
+        >
+          <Shirt className="h-3.5 w-3.5" />
+          {isAlternative && <span className="text-[9px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>}
+          {kitId}
+        </Badge>
+      );
+    }
+    return <span className="text-[10px] font-bold text-muted-foreground">{dict.common.tbd}</span>;
+  }
 
   const kitName = language === 'zh' ? kit.nameZh || kit.name : kit.name;
 
