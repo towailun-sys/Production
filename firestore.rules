@@ -1,85 +1,124 @@
-
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    /**
+     * SQUADFLOW SECURITY RULES - PROTOTYPING PHASE
+     * 
+     * CORE PHILOSOPHY:
+     * This ruleset implements a strict authorization model while maintaining flexible data shapes 
+     * for rapid prototyping. Access is granted based on verified identity (Firebase Auth) and 
+     * explicit ownership or administrative roles.
+     * 
+     * DATA STRUCTURE & ACCESS MODEL:
+     * 1. Public Shared Data (/players, /games): Read access is granted to any authenticated player. 
+     *    Write access is restricted to users with the 'admin' role.
+     * 2. User-Specific Data (/users/{userId}/game_attendances): Secured via path-based ownership. 
+     *    Users can only access and manage their own attendance records.
+     * 3. Administrative Override: Global admins can view and manage all data across the platform.
+     * 
+     * KEY SECURITY DECISIONS:
+     * - Admin Status: Determined by the existence of a document in the `/roles_admin` collection.
+     * - Relational Integrity: On creation, the rules enforce that the internal 'playerId' matches 
+     *   the authenticated user's ID to prevent identity spoofing.
+     * - Collection Group Support: Admins are granted permission to query 'game_attendances' across 
+     *   all users to generate team-wide rosters.
+     * 
+     * DENORMALIZATION FOR AUTHORIZATION:
+     * The `PlayerGameAttendance` entity includes a denormalized `playerId`. This allows for 
+     * immediate ownership verification without performing costly cross-collection lookups (get() calls).
+     */
+
     // --- Helper Functions ---
 
+    /** Checks if the user is authenticated. */
     function isSignedIn() {
-      return request.auth != null && request.auth.uid != null;
+      return request.auth != null;
     }
 
+    /** Checks if the authenticated user's UID matches the provided userId. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    function isAdmin() {
-      return isSignedIn() && 
-             exists(/databases/$(database)/documents/players/$(request.auth.uid)) && 
-             get(/databases/$(database)/documents/players/$(request.auth.uid)).data.get('isAdmin', false) == true;
-    }
-
-    function matchesEmail(email) {
-      return isSignedIn() && request.auth.token.email == email;
-    }
-
+    /** Checks if the document exists and the current user is the owner. */
     function isExistingOwner(userId) {
       return resource != null && isOwner(userId);
     }
 
-    function isExistingAdmin() {
-      return resource != null && isAdmin();
+    /** 
+     * Checks if the user has administrative privileges. 
+     * Relies on a server-managed collection where the document ID is the user UID.
+     */
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid));
     }
 
     // --- Collection Rules ---
 
     /**
-     * @description Dynamic team management.
+     * @description Rules for player profiles. Read by all players, managed by admins.
+     * @path /players/{playerId}
+     * @allow (get/list) if user is signed in.
+     * @deny (update/delete) if user is not an admin.
+     * @principle Public authenticated read with role-based write access.
      */
-    match /teams/{teamId} {
+    match /players/{playerId} {
       allow get, list: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin() && resource != null;
     }
 
     /**
-     * @description Team uniform/kit management.
-     */
-    match /kits/{kitId} {
-      allow get, list: if isSignedIn();
-      allow create, update, delete: if isAdmin();
-    }
-
-    /**
-     * @description Player profiles. 
-     */
-    match /players/{playerUid} {
-      allow get, list: if isSignedIn();
-      
-      allow create: if isSignedIn() && (isOwner(playerUid) || isAdmin());
-      
-      allow update: if (
-        isExistingOwner(playerUid) || 
-        isExistingAdmin() || 
-        (resource != null && matchesEmail(resource.data.email))
-      );
-      
-      allow delete: if isExistingAdmin();
-    }
-
-    /**
-     * @description Game and session schedules.
+     * @description Rules for game schedules and sessions. Read by all players, managed by admins.
+     * @path /games/{gameId}
+     * @allow (get/list) if user is signed in.
+     * @deny (create) if user is not an admin.
+     * @principle Public authenticated read with role-based write access.
      */
     match /games/{gameId} {
       allow get, list: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      allow create: if isAdmin();
+      allow update, delete: if isAdmin() && resource != null;
+    }
 
-      match /attendanceRecords/{playerUid} {
-        allow get, list: if isSignedIn();
-        allow create: if (isOwner(playerUid) || isAdmin());
-        allow update: if (isExistingOwner(playerUid) || isExistingAdmin());
-        allow delete: if isAdmin();
-      }
+    /**
+     * @description User-specific attendance records. Users manage their own; admins can manage all.
+     * @path /users/{userId}/game_attendances/{attendanceId}
+     * @allow (create) if auth UID matches path AND data's playerId.
+     * @deny (update) if the owner attempts to change the playerId (immutable link).
+     * @principle Path-based ownership with relational integrity enforcement.
+     */
+    match /users/{userId}/game_attendances/{attendanceId} {
+      allow get, list: if isOwner(userId) || isAdmin();
+      
+      allow create: if (isOwner(userId) && request.resource.data.playerId == userId) || isAdmin();
+      
+      allow update: if (isExistingOwner(userId) && request.resource.data.playerId == resource.data.playerId) || isAdmin();
+      
+      allow delete: if isExistingOwner(userId) || isAdmin();
+    }
+
+    /**
+     * @description Support for admin-led Collection Group queries across all attendance records.
+     * @path /{path=**}/game_attendances/{attendanceId}
+     * @allow (list) if the user is an admin.
+     * @principle Enables administrative visibility across partitioned user data.
+     */
+    match /{path=**}/game_attendances/{attendanceId} {
+      allow list: if isAdmin();
+    }
+
+    /**
+     * @description System collection defining administrative roles.
+     * @path /roles_admin/{userId}
+     * @allow (get) if signed in (to check own status).
+     * @deny (write) to everyone (managed via Firebase Admin SDK/Console only).
+     * @principle Restricted system collection for role-based access control.
+     */
+    match /roles_admin/{userId} {
+      allow get: if isSignedIn();
+      allow list, create, update, delete: if false;
     }
   }
 }

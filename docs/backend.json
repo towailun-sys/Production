@@ -1,77 +1,14 @@
-
 {
   "entities": {
-    "Team": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Team",
-      "type": "object",
-      "description": "Represents a squad or team division within the club.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the team."
-        },
-        "name": {
-          "type": "string",
-          "description": "Team name in English (e.g., Team A)."
-        },
-        "nameZh": {
-          "type": "string",
-          "description": "Team name in Chinese (e.g., 隊伍A)."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "nameZh"
-      ]
-    },
-    "Kit": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Kit",
-      "type": "object",
-      "description": "Represents a team uniform/kit.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the kit."
-        },
-        "name": {
-          "type": "string",
-          "description": "Kit name (e.g., Home 1)."
-        },
-        "nameZh": {
-          "type": "string",
-          "description": "Kit name in Chinese."
-        },
-        "color": {
-          "type": "string",
-          "description": "Kit color description (e.g., Pink / Grey)."
-        },
-        "colorZh": {
-          "type": "string",
-          "description": "Kit color description in Chinese."
-        },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL or Data URI to the kit reference image."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "imageUrl"
-      ]
-    },
     "Player": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Player",
       "type": "object",
-      "description": "Represents a football player within the SquadFlow application.",
+      "description": "Represents a football player within the SquadFlow app, storing their personal and playing information.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the Player entity (Firebase Auth UID)."
+          "description": "Unique identifier for the Player entity."
         },
         "name": {
           "type": "string",
@@ -79,153 +16,75 @@
         },
         "nickname": {
           "type": "string",
-          "description": "A common or preferred nickname for the player."
+          "description": "A preferred or common nickname for the player."
         },
-        "number": {
-          "type": "integer",
-          "description": "The player's squad or jersey number (Optional)."
-        },
-        "email": {
+        "preferredPosition": {
           "type": "string",
-          "description": "The player's email address."
-        },
-        "mobileNumber": {
-          "type": "string",
-          "description": "The player's mobile contact number."
-        },
-        "preferredPositions": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "enum": ["GK", "DF", "MF", "FW"]
-          },
-          "description": "The player's preferred positions on the field."
-        },
-        "teams": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          },
-          "description": "The IDs of the teams the player belongs to."
-        },
-        "status": {
-          "type": "string",
-          "enum": ["Active", "Injured", "Not Available", "Pending for Club Fee", "Trial"],
-          "description": "The current status of the player."
-        },
-        "isAdmin": {
-          "type": "boolean",
-          "description": "Whether the player has administrative privileges."
-        },
-        "isCaptain": {
-          "type": "boolean",
-          "description": "Whether the player is designated as a team captain."
+          "description": "The player's preferred playing position on the field (e.g., 'Forward', 'Midfielder', 'Defender', 'Goalkeeper')."
         }
       },
       "required": [
         "id",
         "name",
-        "teams",
-        "status"
+        "preferredPosition"
       ]
     },
     "Game": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Game",
       "type": "object",
-      "description": "Represents a scheduled football game or training session.",
+      "description": "Represents a scheduled football game or training session, including its details.",
       "properties": {
         "id": {
           "type": "string",
           "description": "Unique identifier for the Game entity."
         },
-        "date": {
+        "dateTime": {
           "type": "string",
-          "description": "The date when the game is scheduled to take take place.",
-          "format": "date"
-        },
-        "startTime": {
-          "type": "string",
-          "description": "The start time of the event."
-        },
-        "endTime": {
-          "type": "string",
-          "description": "The end time of the event."
+          "description": "The date and time when the game is scheduled to take place.",
+          "format": "date-time"
         },
         "location": {
           "type": "string",
-          "description": "The physical location or address where the game will be played."
+          "description": "The name or address of the football pitch or venue where the game will be played."
         },
         "type": {
           "type": "string",
-          "enum": ["Training", "League", "Friendly", "Internal"],
-          "description": "The type of game."
-        },
-        "team": {
-          "type": "string",
-          "description": "The ID of the team this fixture is for, or 'All'."
-        },
-        "opponent": {
-          "type": "string",
-          "description": "The name of the opposing team (if applicable)."
-        },
-        "kitColors": {
-          "type": "string",
-          "description": "The ID of the primary kit assigned for this game."
-        },
-        "alternativeKitColors": {
-          "type": "string",
-          "description": "The ID of the alternative kit assigned for this game."
-        },
-        "coach": {
-          "type": "string",
-          "description": "The name of the coach for this game."
-        },
-        "fee": {
-          "type": "string",
-          "description": "The fee associated with the game."
-        },
-        "additionalDetails": {
-          "type": "string",
-          "description": "Optional extra notes for the game."
+          "description": "The type of game (e.g., 'Training', 'League Game', 'Friendly Game', 'Internal Game')."
         }
       },
       "required": [
         "id",
-        "date",
-        "startTime",
-        "endTime",
+        "dateTime",
         "location",
-        "type",
-        "team"
+        "type"
       ]
     },
     "PlayerGameAttendance": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "PlayerGameAttendance",
       "type": "object",
-      "description": "Records a player's attendance status for a specific game.",
+      "description": "Represents a player's attendance status for a specific game, forming a many-to-many relationship between Player and Game.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the PlayerGameAttendance entity (matches playerUid)."
+          "description": "Unique identifier for the PlayerGameAttendance entity (the attendance record itself)."
         },
         "playerId": {
           "type": "string",
-          "description": "Reference to the Player attending the game."
+          "description": "Reference to the Player entity. (Relationship: Player 1:N PlayerGameAttendance)"
         },
         "gameId": {
           "type": "string",
-          "description": "Reference to the Game for which attendance is recorded."
+          "description": "Reference to the Game entity. (Relationship: Game 1:N PlayerGameAttendance)"
         },
-        "status": {
-          "type": "string",
-          "enum": ["Confirmed", "Declined", "Pending"],
-          "description": "The attendance status."
+        "isAttending": {
+          "type": "boolean",
+          "description": "Indicates whether the player has confirmed their attendance (true) or declined/not responded (false) for the game."
         },
-        "lastUpdated": {
+        "attendanceDate": {
           "type": "string",
-          "description": "Timestamp indicating when the status was last updated.",
+          "description": "The date and time when the player's attendance status was last updated.",
           "format": "date-time"
         }
       },
@@ -233,46 +92,33 @@
         "id",
         "playerId",
         "gameId",
-        "status",
-        "lastUpdated"
+        "isAttending",
+        "attendanceDate"
       ]
     }
   },
   "auth": {
     "providers": [
-      "google.com"
+      "password",
+      "anonymous"
     ]
   },
   "firestore": {
     "structure": [
       {
-        "path": "/teams/{teamId}",
-        "definition": {
-          "entityName": "Team",
-          "schema": {
-            "$ref": "#/backend/entities/Team"
-          },
-          "description": "Stores dynamic team types/divisions."
-        }
-      },
-      {
-        "path": "/kits/{kitId}",
-        "definition": {
-          "entityName": "Kit",
-          "schema": {
-            "$ref": "#/backend/entities/Kit"
-          },
-          "description": "Stores team kit details and images."
-        }
-      },
-      {
-        "path": "/players/{playerUid}",
+        "path": "/players/{playerId}",
         "definition": {
           "entityName": "Player",
           "schema": {
             "$ref": "#/backend/entities/Player"
           },
-          "description": "Stores individual player profiles."
+          "description": "Collection storing individual player profiles. Managed by team administrators, viewable by all authenticated players. Authorization is based on global admin roles for writes and authentication for reads.",
+          "params": [
+            {
+              "name": "playerId",
+              "description": "The unique identifier of the player."
+            }
+          ]
         }
       },
       {
@@ -282,19 +128,36 @@
           "schema": {
             "$ref": "#/backend/entities/Game"
           },
-          "description": "Stores details for scheduled games."
+          "description": "Collection storing scheduled game and training session details. Managed by team administrators, viewable by all authenticated players. Authorization is based on global admin roles for writes and authentication for reads.",
+          "params": [
+            {
+              "name": "gameId",
+              "description": "The unique identifier of the game or session."
+            }
+          ]
         }
       },
       {
-        "path": "/games/{gameId}/attendanceRecords/{playerUid}",
+        "path": "/users/{userId}/game_attendances/{attendanceId}",
         "definition": {
           "entityName": "PlayerGameAttendance",
           "schema": {
             "$ref": "#/backend/entities/PlayerGameAttendance"
           },
-          "description": "Records an individual player's attendance status for a specific game."
+          "description": "Subcollection storing a specific player's attendance records for various games. Each document includes denormalized 'playerId' and 'gameId' fields to ensure Authorization Independence. Players can manage their own records (create, update), while team administrators can view all records via collection group queries or manage any record. The 'userId' in the path must match 'request.auth.uid' for player access.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user (player) who owns this attendance record, matching 'request.auth.uid'."
+            },
+            {
+              "name": "attendanceId",
+              "description": "The unique identifier for this specific player's attendance record for a game."
+            }
+          ]
         }
       }
-    ]
+    ],
+    "reasoning": "The Firestore structure for SquadFlow is designed prioritizing Authorization Independence, Structural Segregation, and robust Access Modeling to ensure security, scalability, and debuggability. \n\n**Authorization Independence via Denormalization:**\n-   For the `/players` and `/games` collections, documents are top-level. Authorization is handled by checking global administrator roles (`isAdmin()`) for write operations and authenticated status for read operations. No `get()` calls are required within these rules, ensuring atomic operations and simplicity.\n-   For `/users/{userId}/game_attendances/{attendanceId}`, Authorization Independence is achieved by explicitly denormalizing critical authorization context within each `PlayerGameAttendance` document. Each attendance record includes `playerId` and `gameId`. The path structure itself (`/users/{userId}/...`) binds the document to the owner. During `create` and `update` operations, rules will verify that `request.auth.uid` matches `userId` in the path AND that `request.resource.data.playerId` matches `userId`. This makes ownership explicit and prevents `get()` calls to verify who a player is, simplifying rules and enabling atomic writes (e.g., a player confirming attendance doesn't need to read their own player profile first).\n\n**Support for QAPs (Query as Authorization Predicates):**\n-   **Structural Segregation:** Each collection holds documents with a homogeneous security posture.\n    -   `/players` contains all player profiles, accessible by authenticated users and manageable by administrators.\n    -   `/games` contains all game schedules, accessible by authenticated users and manageable by administrators.\n    -   `/users/{userId}/game_attendances` contains attendance records specifically for the user identified by `userId` in the path.\n-   **Player Attendance Confirmation (User-specific QAPs):** Players can view and manage their own attendance records. The path `/users/{request.auth.uid}/game_attendances` directly enforces that a player can only query and modify their own data. This means `list` operations for players are inherently filtered by their UID, making security rules straightforward: `allow list: if request.auth.uid == userId;`.\n-   **Team Attendance Dashboard (Admin QAPs):** For the team management dashboard, administrators will perform a **Collection Group Query** over all `game_attendances` subcollections. This query will be filtered by `gameId` to retrieve all attendance records for a specific game. The corresponding security rule would grant `list` access if the user is an administrator (`isAdmin()`). This approach is efficient and robust, allowing administrators to easily visualize attendance across all players for any given game without violating security principles or performance. Global administrator roles are managed in a dedicated, server-side-managed collection (e.g., `/roles_admin/{uid}`) where the existence of a document with the user's UID signifies admin status, enabling simple `exists()` checks in rules."
   }
 }
