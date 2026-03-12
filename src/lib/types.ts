@@ -1,8 +1,12 @@
 
 export type PlayerPosition = 'GK' | 'DF' | 'MF' | 'FW';
-export type TeamType = 'A' | 'B';
-export type GameTeamScope = 'A' | 'B' | 'All';
 export type PlayerStatus = 'Active' | 'Injured' | 'Not Available' | 'Pending for Club Fee';
+
+export interface Team {
+  id: string;
+  name: string;
+  nameZh: string;
+}
 
 export interface Player {
   id: string;
@@ -12,11 +16,11 @@ export interface Player {
   email?: string;
   mobileNumber?: string;
   preferredPositions: PlayerPosition[];
-  team: TeamType;
+  team: string; // References Team.id
   status: PlayerStatus;
   isAdmin?: boolean;
   isCaptain?: boolean;
-  isLinked?: boolean; // New field to track if profile is claimed by an Auth user
+  isLinked?: boolean;
 }
 
 export type GameType = 'Training' | 'League' | 'Friendly' | 'Internal';
@@ -28,7 +32,7 @@ export interface Game {
   endTime: string;
   location: string;
   type: GameType;
-  team: GameTeamScope;
+  team: string; // References Team.id or 'All'
   opponent?: string;
   kitColors?: string;
   additionalDetails?: string;

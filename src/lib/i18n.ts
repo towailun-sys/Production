@@ -17,8 +17,6 @@ const baseDict = {
     linked: "Linked",
     team: "Team",
     teams: {
-      A: "Team A",
-      B: "Team B",
       All: "For all Team"
     },
     admin: "Admin",
@@ -93,12 +91,13 @@ const baseDict = {
     myGame: "My Game",
     otherTeam: "Other Team",
     fullAccess: "Full Access View",
-    teamView: (team: string) => `Team ${team} View`
+    teamView: (team: string) => `${team} View`
   },
   players: {
     title: "Player Management",
     subtitle: "Manage your squad and link Google accounts.",
     addPlayer: "Add Player",
+    manageTeams: "Manage Teams",
     searchPlaceholder: "Search players...",
     tableHeader: {
       number: "#",
@@ -122,6 +121,13 @@ const baseDict = {
       preferredPositions: "Preferred Positions",
       save: "Save Player Profile",
       update: "Update Player"
+    },
+    teams: {
+      title: "Manage Squad Teams",
+      nameEn: "Name (English)",
+      nameZh: "Name (Chinese)",
+      add: "Add Team",
+      noTeams: "No teams defined yet."
     }
   },
   games: {
@@ -177,8 +183,6 @@ const zhDict: typeof baseDict = {
     linked: "已連結",
     team: "隊伍",
     teams: {
-      A: "隊伍A",
-      B: "隊伍B",
       All: "全部隊伍"
     },
     admin: "管理員",
@@ -253,12 +257,13 @@ const zhDict: typeof baseDict = {
     myGame: "我的比賽",
     otherTeam: "其他隊伍",
     fullAccess: "管理員全視角",
-    teamView: (team: string) => `${team} 隊視角`
+    teamView: (team: string) => `${team} 視角`
   },
   players: {
     title: "球員管理",
     subtitle: "管理球員名單並連結 Google 帳號。",
     addPlayer: "新增球員",
+    manageTeams: "管理隊伍",
     searchPlaceholder: "搜尋球員...",
     tableHeader: {
       number: "#",
@@ -282,6 +287,13 @@ const zhDict: typeof baseDict = {
       preferredPositions: "偏好位置",
       save: "儲存球員資料",
       update: "更新球員"
+    },
+    teams: {
+      title: "管理球隊分隊",
+      nameEn: "名稱 (英文)",
+      nameZh: "名稱 (中文)",
+      add: "新增隊伍",
+      noTeams: "尚未定義任何隊伍。"
     }
   },
   games: {

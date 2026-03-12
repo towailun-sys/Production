@@ -1,52 +1,31 @@
-rules_version = '2';
 
-/**
- * SquadFlow Security Rules
- * 
- * Core Philosophy:
- * This ruleset implements a hybrid security model combining strict user ownership with
- * administrative role-based access control (RBAC). It ensures that while the application
- * remains flexible during prototyping, the core identity and relational integrity are 
- * never compromised.
- * 
- * Data Structure:
- * - /players/{playerUid}: User profiles where document ID matches the Firebase Auth UID.
- * - /games/{gameId}: Scheduled events accessible to all authenticated players.
- * - /games/{gameId}/attendanceRecords/{playerUid}: Subcollection for tracking event 
- *   participation, keyed by the player's UID for rapid lookups and ownership validation.
- */
+rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
 
     // --- Helper Functions ---
 
-    /** @description Checks if the request is made by an authenticated user. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** @description Checks if the authenticated user matches the provided userId. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** @description Checks if the authenticated user has administrative privileges. */
     function isAdmin() {
       return isSignedIn() && get(/databases/$(database)/documents/players/$(request.auth.uid)).data.isAdmin == true;
     }
 
-    /** @description Checks if the authenticated user's email matches the document's email. */
     function matchesEmail(email) {
       return isSignedIn() && request.auth.token.email == email;
     }
 
-    /** @description Combined check for ownership and document existence for updates/deletes. */
     function isExistingOwner(userId) {
       return resource != null && isOwner(userId);
     }
 
-    /** @description Combined check for admin privileges and document existence. */
     function isExistingAdmin() {
       return resource != null && isAdmin();
     }
@@ -54,10 +33,15 @@ service cloud.firestore {
     // --- Collection Rules ---
 
     /**
+     * @description Dynamic team management.
+     */
+    match /teams/{teamId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isSignedIn() && isAdmin();
+    }
+
+    /**
      * @description Player profiles. 
-     * - Owners manage their own.
-     * - Admins manage all.
-     * - Users can manage/delete profiles that match their email (for claiming placeholders).
      */
     match /players/{playerUid} {
       allow get, list: if isSignedIn();
@@ -74,16 +58,13 @@ service cloud.firestore {
     }
 
     /**
-     * @description Game and session schedules. Read-only for players; Admin-only writes.
+     * @description Game and session schedules.
      */
     match /games/{gameId} {
       allow get, list: if isSignedIn();
       allow create: if isSignedIn() && isAdmin();
       allow update, delete: if isExistingAdmin();
 
-      /**
-       * @description Individual player attendance for a game.
-       */
       match /attendanceRecords/{playerUid} {
         allow get, list: if isSignedIn();
         allow create: if (isOwner(playerUid) || isAdmin()) && request.resource.data.playerId == playerUid && request.resource.data.gameId == gameId;

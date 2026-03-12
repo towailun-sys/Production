@@ -47,7 +47,7 @@ import {
   Users,
   Info
 } from "lucide-react";
-import { Game, GameType, GameTeamScope, Player } from "@/lib/types";
+import { Game, GameType, Player, Team } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
@@ -73,7 +73,7 @@ export default function GamesPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
-  const { dict } = useTranslation();
+  const { dict, language } = useTranslation();
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -85,9 +85,12 @@ export default function GamesPage() {
   }, [firestore, user, isUserLoading]);
   const { data: currentPlayer } = useDoc<Player>(playerRef);
 
+  const teamsQuery = useMemoFirebase(() => collection(firestore, "teams"), [firestore]);
+  const { data: teams } = useCollection<Team>(teamsQuery);
+
   const [formData, setFormData] = useState<{
     type: GameType;
-    team: GameTeamScope;
+    team: string;
     date: string;
     startTime: string;
     endTime: string;
@@ -133,11 +136,11 @@ export default function GamesPage() {
   };
 
   const handleAddGame = () => {
-    if (!formData.date || !formData.startTime || !formData.endTime || !formData.location) {
+    if (!formData.date || !formData.startTime || !formData.endTime || !formData.location || !formData.team) {
       toast({
         variant: "destructive",
         title: "Missing Information",
-        description: "Please fill in date, start time, end time, and location.",
+        description: "Please fill in all required fields.",
       });
       return;
     }
@@ -171,7 +174,6 @@ export default function GamesPage() {
     resetForm();
     toast({
       title: "Event Scheduled",
-      description: "The new event is being added to the calendar.",
     });
   };
 
@@ -195,12 +197,7 @@ export default function GamesPage() {
   };
 
   const handleUpdateGame = () => {
-    if (!editingGame || !formData.date || !formData.startTime || !formData.endTime || !formData.location) {
-      toast({
-        variant: "destructive",
-        title: "Missing Information",
-        description: "Please fill in date, start time, end time, and location.",
-      });
+    if (!editingGame || !formData.date || !formData.startTime || !formData.endTime || !formData.location || !formData.team) {
       return;
     }
 
@@ -233,24 +230,25 @@ export default function GamesPage() {
     resetForm();
     toast({
       title: "Event Updated",
-      description: "Changes to the event are being saved.",
     });
   };
 
   const handleDeleteGame = (id: string) => {
     const gameRef = doc(firestore, "games", id);
-    deleteDoc(gameRef)
-      .catch(async (error) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: gameRef.path,
-          operation: 'delete'
-        } satisfies SecurityRuleContext));
-      });
-
-    toast({
-      title: "Event Deleted",
-      description: "The event is being removed from the schedule.",
+    deleteDoc(gameRef).catch(error => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: gameRef.path,
+        operation: 'delete'
+      } satisfies SecurityRuleContext));
     });
+    toast({ title: "Event Deleted" });
+  };
+
+  const getTeamLabel = (teamId: string) => {
+    if (teamId === 'All') return dict.common.teams.All;
+    const team = teams?.find(t => t.id === teamId);
+    if (!team) return teamId;
+    return language === 'zh' ? team.nameZh : team.name;
   };
 
   if (isUserLoading) {
@@ -323,15 +321,18 @@ export default function GamesPage() {
                       <Label htmlFor="team">{dict.games.dialog.team}</Label>
                       <Select 
                         value={formData.team}
-                        onValueChange={(val: GameTeamScope) => setFormData({ ...formData, team: val })}
+                        onValueChange={(val) => setFormData({ ...formData, team: val })}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="Select team" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="A">{dict.common.teams.A}</SelectItem>
-                          <SelectItem value="B">{dict.common.teams.B}</SelectItem>
                           <SelectItem value="All">{dict.common.teams.All}</SelectItem>
+                          {teams?.map(t => (
+                            <SelectItem key={t.id} value={t.id}>
+                              {language === 'zh' ? t.nameZh : t.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
@@ -437,17 +438,9 @@ export default function GamesPage() {
                         )}>
                           {dict.common.gameTypes[game.type] || game.type}
                         </Badge>
-                        <Badge 
-                          variant="secondary" 
-                          className={cn(
-                            "border-none flex gap-1 items-center font-bold",
-                            game.team === 'A' ? "bg-primary text-white" : 
-                            game.team === 'B' ? "bg-indigo-600 text-white" : 
-                            "bg-muted text-muted-foreground"
-                          )}
-                        >
+                        <Badge variant="secondary" className="border-none flex gap-1 items-center font-bold bg-primary text-white">
                           <Users className="h-3 w-3" />
-                          {dict.common.teams[game.team]}
+                          {getTeamLabel(game.team)}
                         </Badge>
                       </div>
                       <h3 className="text-xl font-headline font-bold">
@@ -542,15 +535,18 @@ export default function GamesPage() {
                   <Label htmlFor="edit-team">{dict.games.dialog.team}</Label>
                   <Select 
                     value={formData.team}
-                    onValueChange={(val: GameTeamScope) => setFormData({ ...formData, team: val })}
+                    onValueChange={(val) => setFormData({ ...formData, team: val })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Select team" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="A">{dict.common.teams.A}</SelectItem>
-                      <SelectItem value="B">{dict.common.teams.B}</SelectItem>
                       <SelectItem value="All">{dict.common.teams.All}</SelectItem>
+                      {teams?.map(t => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {language === 'zh' ? t.nameZh : t.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>

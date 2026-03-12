@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -27,7 +28,6 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { 
   Select, 
   SelectContent, 
@@ -53,9 +53,11 @@ import {
   Crown,
   UserCog,
   ShieldAlert,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Settings2,
+  Plus
 } from "lucide-react";
-import { Player, PlayerPosition, TeamType, PlayerStatus } from "@/lib/types";
+import { Player, PlayerPosition, PlayerStatus, Team } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -77,11 +79,12 @@ export default function PlayersPage() {
   const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
-  const { dict } = useTranslation();
+  const { dict, language } = useTranslation();
 
   const [search, setSearch] = useState("");
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isTeamsOpen, setIsTeamsOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
 
   const POSITIONS: { value: PlayerPosition; label: string }[] = [
@@ -103,6 +106,9 @@ export default function PlayersPage() {
     return doc(firestore, "players", user.uid);
   }, [firestore, user, isUserLoading]);
   const { data: currentPlayer } = useDoc<Player>(playerRef);
+
+  const teamsQuery = useMemoFirebase(() => collection(firestore, "teams"), [firestore]);
+  const { data: teams } = useCollection<Team>(teamsQuery);
   
   const [formData, setFormData] = useState<{
     id: string;
@@ -112,7 +118,7 @@ export default function PlayersPage() {
     email: string;
     mobileNumber: string;
     preferredPositions: PlayerPosition[];
-    team: TeamType;
+    team: string;
     status: PlayerStatus;
     isAdmin: boolean;
     isCaptain: boolean;
@@ -125,7 +131,7 @@ export default function PlayersPage() {
     email: "",
     mobileNumber: "",
     preferredPositions: [],
-    team: "A",
+    team: "",
     status: "Active",
     isAdmin: false,
     isCaptain: false,
@@ -159,11 +165,11 @@ export default function PlayersPage() {
   };
 
   const handleAddPlayer = () => {
-    if (!formData.name) {
+    if (!formData.name || !formData.team) {
       toast({
         variant: "destructive",
-        title: "Missing Name",
-        description: "Player name is required.",
+        title: "Missing Information",
+        description: "Name and Team are required.",
       });
       return;
     }
@@ -213,7 +219,7 @@ export default function PlayersPage() {
       email: player.email || "",
       mobileNumber: player.mobileNumber || "",
       preferredPositions: player.preferredPositions || [],
-      team: player.team || "A",
+      team: player.team || "",
       status: player.status || "Active",
       isAdmin: player.isAdmin || false,
       isCaptain: player.isCaptain || false,
@@ -226,7 +232,7 @@ export default function PlayersPage() {
   };
 
   const handleUpdatePlayer = () => {
-    if (!editingPlayer || !formData.name) return;
+    if (!editingPlayer || !formData.name || !formData.team) return;
 
     const playerRef = doc(firestore, "players", editingPlayer.id);
     const updateData = {
@@ -310,7 +316,7 @@ export default function PlayersPage() {
       email: "",
       mobileNumber: "",
       preferredPositions: [],
-      team: "A",
+      team: "",
       status: "Active",
       isAdmin: false,
       isCaptain: false,
@@ -340,6 +346,12 @@ export default function PlayersPage() {
 
   const getStatusConfig = (status: PlayerStatus) => {
     return STATUS_OPTIONS.find(s => s.value === status) || STATUS_OPTIONS[0];
+  };
+
+  const getTeamName = (teamId: string) => {
+    const team = teams?.find(t => t.id === teamId);
+    if (!team) return teamId;
+    return language === 'zh' ? team.nameZh : team.name;
   };
 
   if (isUserLoading) {
@@ -377,170 +389,188 @@ export default function PlayersPage() {
           </div>
           
           {currentPlayer?.isAdmin && (
-            <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if(!open) resetForm(); }}>
-              <DialogTrigger asChild>
-                <Button className="bg-accent hover:bg-accent/90 gap-2 font-bold">
-                  <UserPlus className="h-4 w-4" />
-                  {dict.players.addPlayer}
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle className="font-headline text-xl">{dict.players.dialog.addTitle}</DialogTitle>
-                </DialogHeader>
-                <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="grid gap-2">
-                      <Label htmlFor="name">{dict.players.dialog.fullName}</Label>
-                      <Input 
-                        id="name" 
-                        placeholder="John Doe" 
-                        value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      />
+            <div className="flex gap-2">
+              <Dialog open={isTeamsOpen} onOpenChange={setIsTeamsOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="gap-2 font-bold border-primary text-primary hover:bg-primary/5">
+                    <Settings2 className="h-4 w-4" />
+                    {dict.players.manageTeams}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>{dict.players.teams.title}</DialogTitle>
+                  </DialogHeader>
+                  <TeamManagementUI />
+                </DialogContent>
+              </Dialog>
+
+              <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if(!open) resetForm(); }}>
+                <DialogTrigger asChild>
+                  <Button className="bg-accent hover:bg-accent/90 gap-2 font-bold">
+                    <UserPlus className="h-4 w-4" />
+                    {dict.players.addPlayer}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle className="font-headline text-xl">{dict.players.dialog.addTitle}</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="name">{dict.players.dialog.fullName}</Label>
+                        <Input 
+                          id="name" 
+                          placeholder="John Doe" 
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="number">{dict.players.dialog.number}</Label>
+                        <Input 
+                          id="number" 
+                          type="number"
+                          placeholder="7" 
+                          value={formData.number}
+                          onChange={(e) => setFormData({ ...formData, number: e.target.value })}
+                        />
+                      </div>
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="number">{dict.players.dialog.number}</Label>
+                      <Label htmlFor="nickname">{dict.players.dialog.nickname}</Label>
                       <Input 
-                        id="number" 
-                        type="number"
-                        placeholder="7" 
-                        value={formData.number}
-                        onChange={(e) => setFormData({ ...formData, number: e.target.value })}
+                        id="nickname" 
+                        placeholder="The Rock" 
+                        value={formData.nickname}
+                        onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
                       />
                     </div>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="nickname">{dict.players.dialog.nickname}</Label>
-                    <Input 
-                      id="nickname" 
-                      placeholder="The Rock" 
-                      value={formData.nickname}
-                      onChange={(e) => setFormData({ ...formData, nickname: e.target.value })}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">{dict.players.dialog.email}</Label>
-                    <Input 
-                      id="email" 
-                      type="email"
-                      placeholder="john.doe@example.com" 
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="mobileNumber">{dict.players.dialog.mobile}</Label>
-                    <div className="relative">
-                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <div className="grid gap-2">
+                      <Label htmlFor="email">{dict.players.dialog.email}</Label>
                       <Input 
-                        id="mobileNumber" 
-                        placeholder="012-3456789" 
-                        className="pl-9"
-                        value={formData.mobileNumber}
-                        onChange={(e) => setFormData({ ...formData, mobileNumber: e.target.value })}
+                        id="email" 
+                        type="email"
+                        placeholder="john.doe@example.com" 
+                        value={formData.email}
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       />
                     </div>
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="id" className="flex items-center gap-2">
-                      {dict.players.dialog.userId}
-                      <Fingerprint className="h-3.5 w-3.5 text-muted-foreground" />
-                    </Label>
-                    <Input 
-                      id="id" 
-                      placeholder="UID" 
-                      value={formData.id}
-                      onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                    />
-                  </div>
-                  <div className="flex items-center space-x-4 p-3 border rounded-lg bg-muted/30">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="isCaptain" 
-                        checked={formData.isCaptain}
-                        onCheckedChange={(val) => setFormData({ ...formData, isCaptain: val as boolean })}
-                      />
-                      <Label htmlFor="isCaptain" className="font-bold flex items-center gap-1.5 cursor-pointer">
-                        <Crown className="h-4 w-4 text-accent" />
-                        {dict.players.dialog.captain}
+                    <div className="grid gap-2">
+                      <Label htmlFor="mobileNumber">{dict.players.dialog.mobile}</Label>
+                      <div className="relative">
+                        <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input 
+                          id="mobileNumber" 
+                          placeholder="012-3456789" 
+                          className="pl-9"
+                          value={formData.mobileNumber}
+                          onChange={(e) => setFormData({ ...formData, mobileNumber: e.target.value })}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="id" className="flex items-center gap-2">
+                        {dict.players.dialog.userId}
+                        <Fingerprint className="h-3.5 w-3.5 text-muted-foreground" />
                       </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox 
-                        id="isAdmin" 
-                        checked={formData.isAdmin}
-                        onCheckedChange={(val) => setFormData({ ...formData, isAdmin: val as boolean })}
+                      <Input 
+                        id="id" 
+                        placeholder="UID" 
+                        value={formData.id}
+                        onChange={(e) => setFormData({ ...formData, id: e.target.value })}
                       />
-                      <Label htmlFor="isAdmin" className="font-bold flex items-center gap-1.5 cursor-pointer">
-                        <ShieldCheck className="h-4 w-4 text-primary" />
-                        {dict.players.dialog.admin}
-                      </Label>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
+                    <div className="flex items-center space-x-4 p-3 border rounded-lg bg-muted/30">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="isCaptain" 
+                          checked={formData.isCaptain}
+                          onCheckedChange={(val) => setFormData({ ...formData, isCaptain: val as boolean })}
+                        />
+                        <Label htmlFor="isCaptain" className="font-bold flex items-center gap-1.5 cursor-pointer">
+                          <Crown className="h-4 w-4 text-accent" />
+                          {dict.players.dialog.captain}
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id="isAdmin" 
+                          checked={formData.isAdmin}
+                          onCheckedChange={(val) => setFormData({ ...formData, isAdmin: val as boolean })}
+                        />
+                        <Label htmlFor="isAdmin" className="font-bold flex items-center gap-1.5 cursor-pointer">
+                          <ShieldCheck className="h-4 w-4 text-primary" />
+                          {dict.players.dialog.admin}
+                        </Label>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="team">{dict.common.team}</Label>
+                        <Select 
+                          value={formData.team} 
+                          onValueChange={(val) => setFormData({ ...formData, team: val })}
+                        >
+                          <SelectTrigger id="team">
+                            <SelectValue placeholder="Select team" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {teams?.map((team) => (
+                              <SelectItem key={team.id} value={team.id}>
+                                {language === 'zh' ? team.nameZh : team.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="status">{dict.common.statusLabel}</Label>
+                        <Select 
+                          value={formData.status} 
+                          onValueChange={(val: PlayerStatus) => setFormData({ ...formData, status: val })}
+                        >
+                          <SelectTrigger id="status">
+                            <SelectValue placeholder="Select status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {STATUS_OPTIONS.map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                     <div className="grid gap-2">
-                      <Label>{dict.common.team}</Label>
-                      <RadioGroup 
-                        value={formData.team} 
-                        onValueChange={(val: TeamType) => setFormData({ ...formData, team: val })}
-                        className="flex gap-4 p-2"
-                      >
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="A" id="team-a" />
-                          <Label htmlFor="team-a" className="font-bold text-primary">{dict.common.teams.A}</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="B" id="team-b" />
-                          <Label htmlFor="team-b" className="font-bold text-indigo-600">{dict.common.teams.B}</Label>
-                        </div>
-                      </RadioGroup>
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="status">{dict.common.statusLabel}</Label>
-                      <Select 
-                        value={formData.status} 
-                        onValueChange={(val: PlayerStatus) => setFormData({ ...formData, status: val })}
-                      >
-                        <SelectTrigger id="status">
-                          <SelectValue placeholder="Select status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {STATUS_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Label>{dict.players.dialog.preferredPositions}</Label>
+                      <div className="grid grid-cols-2 gap-3 p-3 border rounded-md bg-muted/20">
+                        {POSITIONS.map((pos) => (
+                          <div key={pos.value} className="flex items-center space-x-2">
+                            <Checkbox 
+                              id={`pos-${pos.value}`} 
+                              checked={formData.preferredPositions.includes(pos.value)}
+                              onCheckedChange={() => handlePositionToggle(pos.value)}
+                            />
+                            <label
+                              htmlFor={`pos-${pos.value}`}
+                              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                            >
+                              {pos.label}
+                            </label>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                  <div className="grid gap-2">
-                    <Label>{dict.players.dialog.preferredPositions}</Label>
-                    <div className="grid grid-cols-2 gap-3 p-3 border rounded-md bg-muted/20">
-                      {POSITIONS.map((pos) => (
-                        <div key={pos.value} className="flex items-center space-x-2">
-                          <Checkbox 
-                            id={`pos-${pos.value}`} 
-                            checked={formData.preferredPositions.includes(pos.value)}
-                            onCheckedChange={() => handlePositionToggle(pos.value)}
-                          />
-                          <label
-                            htmlFor={`pos-${pos.value}`}
-                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                          >
-                            {pos.label}
-                          </label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button onClick={handleAddPlayer} className="bg-primary w-full font-bold">{dict.players.dialog.save}</Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                  <DialogFooter>
+                    <Button onClick={handleAddPlayer} className="bg-primary w-full font-bold">{dict.players.dialog.save}</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
           )}
         </div>
 
@@ -627,21 +657,22 @@ export default function PlayersPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label>{dict.common.team}</Label>
-                  <RadioGroup 
+                  <Label htmlFor="edit-team">{dict.common.team}</Label>
+                  <Select 
                     value={formData.team} 
-                    onValueChange={(val: TeamType) => setFormData({ ...formData, team: val })}
-                    className="flex gap-4 p-2"
+                    onValueChange={(val) => setFormData({ ...formData, team: val })}
                   >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="A" id="edit-team-a" />
-                      <Label htmlFor="edit-team-a" className="font-bold text-primary">{dict.common.teams.A}</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="B" id="edit-team-b" />
-                      <Label htmlFor="edit-team-b" className="font-bold text-indigo-600">{dict.common.teams.B}</Label>
-                    </div>
-                  </RadioGroup>
+                    <SelectTrigger id="edit-team">
+                      <SelectValue placeholder="Select team" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teams?.map((team) => (
+                        <SelectItem key={team.id} value={team.id}>
+                          {language === 'zh' ? team.nameZh : team.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-status">{dict.common.statusLabel}</Label>
@@ -783,11 +814,8 @@ export default function PlayersPage() {
                             </div>
                           </TableCell>
                           <TableCell className="text-center">
-                            <Badge className={cn(
-                              "font-bold",
-                              player.team === 'A' ? "bg-primary" : "bg-indigo-600"
-                            )}>
-                              {dict.common.teams[player.team as 'A' | 'B']}
+                            <Badge className="font-bold bg-primary text-white">
+                              {getTeamName(player.team)}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -842,6 +870,92 @@ export default function PlayersPage() {
           </CardContent>
         </Card>
       </main>
+    </div>
+  );
+}
+
+function TeamManagementUI() {
+  const firestore = useFirestore();
+  const { dict, language } = useTranslation();
+  const teamsQuery = useMemoFirebase(() => collection(firestore, "teams"), [firestore]);
+  const { data: teams } = useCollection<Team>(teamsQuery);
+  const { toast } = useToast();
+
+  const [newTeam, setNewTeam] = useState({ name: "", nameZh: "" });
+
+  const handleAddTeam = () => {
+    if (!newTeam.name || !newTeam.nameZh) return;
+    const id = doc(collection(firestore, "teams")).id;
+    const teamRef = doc(firestore, "teams", id);
+    const teamData = { id, ...newTeam };
+
+    setDoc(teamRef, teamData).catch(error => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: teamRef.path,
+        operation: 'create',
+        requestResourceData: teamData
+      } satisfies SecurityRuleContext));
+    });
+
+    setNewTeam({ name: "", nameZh: "" });
+    toast({ title: "Team Added" });
+  };
+
+  const handleDeleteTeam = (id: string) => {
+    const teamRef = doc(firestore, "teams", id);
+    deleteDoc(teamRef).catch(error => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: teamRef.path,
+        operation: 'delete'
+      } satisfies SecurityRuleContext));
+    });
+    toast({ title: "Team Deleted" });
+  };
+
+  return (
+    <div className="space-y-4 py-4">
+      <div className="grid gap-4 p-4 border rounded-lg bg-muted/20">
+        <div className="grid gap-2">
+          <Label>{dict.players.teams.nameEn}</Label>
+          <Input 
+            placeholder="Team A" 
+            value={newTeam.name} 
+            onChange={(e) => setNewTeam({ ...newTeam, name: e.target.value })} 
+          />
+        </div>
+        <div className="grid gap-2">
+          <Label>{dict.players.teams.nameZh}</Label>
+          <Input 
+            placeholder="隊伍A" 
+            value={newTeam.nameZh} 
+            onChange={(e) => setNewTeam({ ...newTeam, nameZh: e.target.value })} 
+          />
+        </div>
+        <Button onClick={handleAddTeam} className="w-full gap-2 font-bold">
+          <Plus className="h-4 w-4" />
+          {dict.players.teams.add}
+        </Button>
+      </div>
+
+      <div className="divide-y border rounded-lg overflow-hidden">
+        {teams?.length === 0 ? (
+          <div className="p-8 text-center text-muted-foreground italic text-sm">
+            {dict.players.teams.noTeams}
+          </div>
+        ) : (
+          teams?.map((team) => (
+            <div key={team.id} className="p-3 flex items-center justify-between bg-white hover:bg-muted/10 transition-colors">
+              <div>
+                <div className="font-bold text-sm">{team.name}</div>
+                <div className="text-xs text-muted-foreground">{team.nameZh}</div>
+              </div>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteTeam(team.id)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }

@@ -30,7 +30,7 @@ import {
   Link as LinkIcon
 } from "lucide-react";
 import Link from "next/link";
-import { Game, Player, Attendance, AttendanceStatus } from "@/lib/types";
+import { Game, Player, Attendance, AttendanceStatus, Team } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, query, orderBy, limit, where, doc, setDoc, deleteDoc } from "firebase/firestore";
@@ -84,7 +84,6 @@ function UserAttendanceToggle({ gameId, userId }: { gameId: string, userId: stri
 
     toast({
       title: status === 'Confirmed' ? "You're in!" : "Status updated",
-      description: `Your attendance is now ${status}.`,
     });
   };
 
@@ -149,19 +148,11 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
           <Badge 
             key={p.id} 
             variant="secondary" 
-            className={cn(
-              "text-[9px] py-0 px-2 h-5 font-bold gap-1",
-              p.team === 'A' ? "bg-primary/10 text-primary border-primary/20" : "bg-indigo-100 text-indigo-700 border-indigo-200"
-            )}
+            className="text-[9px] py-0 px-2 h-5 font-bold gap-1 bg-primary/10 text-primary border-primary/20"
           >
             {p.isCaptain && <Crown className="h-2.5 w-2.5 text-accent" />}
             {p.number && <span className="mr-0.5 opacity-60">#{p.number}</span>}
             {p.nickname || p.name}
-            {p.preferredPositions && p.preferredPositions.length > 0 && (
-              <span className="ml-1 opacity-60 font-normal">
-                ({p.preferredPositions.map(pos => dict.common.positions[pos.toLowerCase() as keyof typeof dict.common.positions] || pos).join('/')})
-              </span>
-            )}
           </Badge>
         ))}
       </div>
@@ -191,6 +182,9 @@ export default function DashboardPage() {
   }, [firestore, user, currentPlayer, isUserLoading]);
   const { data: matchedProfiles } = useCollection<Player>(emailMatchQuery);
   const preEnteredProfile = matchedProfiles?.find(p => p.id !== user?.uid);
+
+  const teamsQuery = useMemoFirebase(() => collection(firestore, "teams"), [firestore]);
+  const { data: teams } = useCollection<Team>(teamsQuery);
 
   const gamesQuery = useMemoFirebase(() => {
     if (isUserLoading || !user) return null;
@@ -228,15 +222,8 @@ export default function DashboardPage() {
     setDoc(newDocRef, claimData)
       .then(() => {
         const oldDocRef = doc(firestore, "players", preEnteredProfile.id);
-        deleteDoc(oldDocRef)
-          .catch((err) => {
-            console.error("Cleanup of placeholder failed:", err);
-          });
-
-        toast({
-          title: "Profile Claimed!",
-          description: `Welcome to the squad, ${preEnteredProfile.nickname || preEnteredProfile.name}.`,
-        });
+        deleteDoc(oldDocRef);
+        toast({ title: "Profile Claimed!" });
       })
       .catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -252,10 +239,7 @@ export default function DashboardPage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast({
-      title: "ID Copied",
-      description: "Your User ID has been copied to clipboard.",
-    });
+    toast({ title: "ID Copied" });
   };
 
   const handleClaimAdmin = () => {
@@ -275,7 +259,7 @@ export default function DashboardPage() {
         name: user.displayName || "Admin User",
         email: user.email || "",
         status: "Active",
-        team: "A",
+        team: "default",
         preferredPositions: ["MF", "FW"],
         number: 10
       });
@@ -283,10 +267,7 @@ export default function DashboardPage() {
 
     setDoc(adminRef, adminData, { merge: true })
       .then(() => {
-        toast({
-          title: "Admin Rights Granted",
-          description: "You now have administrative access.",
-        });
+        toast({ title: "Admin Rights Granted" });
       })
       .catch(async (error) => {
         errorEmitter.emit('permission-error', new FirestorePermissionError({
@@ -304,78 +285,62 @@ export default function DashboardPage() {
     if (!user || !currentPlayer) return;
     const newAdminStatus = !currentPlayer.isAdmin;
     const playerRef = doc(firestore, "players", user.uid);
-    
-    const updateData = { id: user.uid, isAdmin: newAdminStatus };
-
-    setDoc(playerRef, updateData, { merge: true })
-      .catch(async (error) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: playerRef.path,
-          operation: 'write',
-          requestResourceData: updateData
-        } satisfies SecurityRuleContext));
-      });
-
-    toast({
-      title: newAdminStatus ? "Admin Mode" : "Player Mode",
-      description: newAdminStatus ? "You can now manage the full squad." : "Administrative tools are now hidden.",
-    });
+    setDoc(playerRef, { id: user.uid, isAdmin: newAdminStatus }, { merge: true });
+    toast({ title: newAdminStatus ? "Admin Mode" : "Player Mode" });
   };
 
   const handleSeedData = () => {
     if (!user || !currentPlayer?.isAdmin) return;
     setIsSeeding(true);
     
+    const sampleTeams = [
+      { id: "team-a", name: "Team A", nameZh: "隊伍A" },
+      { id: "team-b", name: "Team B", nameZh: "隊伍B" }
+    ];
+
+    sampleTeams.forEach(t => {
+      setDoc(doc(firestore, "teams", t.id), t);
+    });
+
     const sampleGames = [
-      { id: "seed-g1", date: new Date().toISOString().split('T')[0], startTime: "19:00", endTime: "21:00", location: "Central Sports Complex", type: "League", team: "A", opponent: "Blue Arrows FC", kitColors: "Home 1: Pink/Grey", additionalDetails: "Please arrive 30 mins early for warm up." },
+      { id: "seed-g1", date: new Date().toISOString().split('T')[0], startTime: "19:00", endTime: "21:00", location: "Central Sports Complex", type: "League", team: "team-a", opponent: "Blue Arrows FC", kitColors: "Home 1: Pink/Grey", additionalDetails: "Please arrive 30 mins early for warm up." },
       { id: "seed-g2", date: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0], startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", opponent: "N/A", kitColors: "Home 2: New White / New White", additionalDetails: "Tactics session." },
-      { id: "seed-g3", date: new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0], startTime: "20:00", endTime: "22:00", location: "Power League North", type: "Internal", team: "B", opponent: "N/A", kitColors: "Away 1: Black/Black", additionalDetails: "Internal squad selection match." },
     ];
 
     sampleGames.forEach(g => {
-      const gRef = doc(firestore, "games", g.id);
-      setDoc(gRef, g).catch(async (error) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: gRef.path,
-          operation: 'create',
-          requestResourceData: g
-        } satisfies SecurityRuleContext));
-      });
+      setDoc(doc(firestore, "games", g.id), g);
     });
 
-    toast({
-      title: "Seeding Initiated",
-      description: "Sample fixtures are being added to the database.",
-    });
+    toast({ title: "Seeding Initiated" });
     setIsSeeding(false);
   };
 
   const formatGameDate = (dateStr: string) => {
     const date = new Date(dateStr);
     if (language === 'zh') {
-      const month = date.getMonth() + 1;
-      const day = date.getDate();
       const weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
-      const weekday = weekdays[date.getDay()];
-      return `${month}月${day}日 ${weekday}`;
+      return `${date.getMonth() + 1}月${date.getDate()}日 ${weekdays[date.getDay()]}`;
     }
     return date.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' });
   };
 
+  const getTeamName = (teamId: string) => {
+    if (teamId === 'All') return dict.common.teams.All;
+    const team = teams?.find(t => t.id === teamId);
+    if (!team) return teamId;
+    return language === 'zh' ? team.nameZh : team.name;
+  };
+
   if (isUserLoading || (user && isProfileLoading)) {
     return (
-      <div className="min-h-screen bg-background pb-12">
-        <MainNav />
-        <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-          <div className="text-muted-foreground font-medium">{dict.common.loading}</div>
-        </main>
+      <div className="min-h-screen bg-background pb-12 flex flex-col items-center justify-center">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+        <div className="text-muted-foreground font-medium">{dict.common.loading}</div>
       </div>
     );
   }
 
   const welcomeName = currentPlayer?.nickname || currentPlayer?.name || user?.displayName || "Player";
-
   const filteredGames = upcomingGames?.filter(game => {
     if (currentPlayer?.isAdmin) return true;
     if (!currentPlayer) return false;
@@ -391,44 +356,22 @@ export default function DashboardPage() {
             <h1 className="text-3xl md:text-4xl font-headline mb-2">
               {user ? (language === 'zh' ? `${dict.dashboard.welcome}，${welcomeName}！` : `${dict.dashboard.welcome}, ${welcomeName}!`) : dict.nav.dashboard}
             </h1>
-            <div className="text-muted-foreground font-medium">
-              {dict.dashboard.subtitle}
-            </div>
+            <div className="text-muted-foreground font-medium">{dict.dashboard.subtitle}</div>
           </div>
           <div className="flex flex-wrap gap-2">
             {currentPlayer?.isAdmin && (
               <>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  disabled={isSeeding}
-                  className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold"
-                  onClick={handleSeedData}
-                >
-                  {isSeeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
-                  {dict.dashboard.seedData}
+                <Button variant="outline" size="sm" className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold" onClick={handleSeedData}>
+                  <Database className="mr-2 h-4 w-4" /> {dict.dashboard.seedData}
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="border-dashed border-destructive text-destructive hover:bg-destructive/5 font-bold"
-                  onClick={handleToggleAdminRole}
-                >
-                  <UserRound className="mr-2 h-4 w-4" />
-                  {dict.dashboard.testAsPlayer}
+                <Button variant="outline" size="sm" className="border-dashed border-destructive text-destructive hover:bg-destructive/5 font-bold" onClick={handleToggleAdminRole}>
+                  <UserRound className="mr-2 h-4 w-4" /> {dict.dashboard.testAsPlayer}
                 </Button>
               </>
             )}
             {user && (!currentPlayer || !currentPlayer.isAdmin) && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                disabled={isClaimingAdmin}
-                className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold"
-                onClick={handleClaimAdmin}
-              >
-                {isClaimingAdmin ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-4 w-4" />}
-                {dict.dashboard.claimAdmin}
+              <Button variant="outline" size="sm" className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold" onClick={handleClaimAdmin}>
+                <ShieldCheck className="mr-2 h-4 w-4" /> {dict.dashboard.claimAdmin}
               </Button>
             )}
           </div>
@@ -436,70 +379,21 @@ export default function DashboardPage() {
 
         {!user ? (
           <div className="flex flex-col items-center justify-center py-20 text-center bg-muted/20 rounded-3xl border border-dashed border-primary/20">
-            <div className="bg-primary/10 p-4 rounded-full mb-4">
-              <Lock className="h-8 w-8 text-primary" />
-            </div>
+            <Lock className="h-8 w-8 text-primary mb-4" />
             <h2 className="text-2xl font-headline mb-2">{dict.attendance.signinRequired}</h2>
-            <div className="text-muted-foreground max-sm mb-6">
-              {dict.attendance.signinDesc}
-            </div>
+            <div className="text-muted-foreground max-sm">{dict.attendance.signinDesc}</div>
           </div>
         ) : (
           <div className="grid gap-8 lg:grid-cols-4">
             <div className="lg:col-span-3 space-y-8">
-              {!currentPlayer && preEnteredProfile ? (
-                <Card className="border-primary border-2 bg-primary/5 shadow-xl animate-in zoom-in-95 duration-500">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-primary">
-                      <Sparkles className="h-6 w-6" />
-                      {dict.dashboard.claimProfileTitle}
-                    </CardTitle>
-                  </CardHeader>
+              {!currentPlayer && preEnteredProfile && (
+                <Card className="border-primary border-2 bg-primary/5 shadow-xl">
+                  <CardHeader><CardTitle className="flex items-center gap-2 text-primary"><Sparkles className="h-6 w-6" />{dict.dashboard.claimProfileTitle}</CardTitle></CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="text-foreground font-medium">
-                      {dict.dashboard.claimProfileDesc(preEnteredProfile.name, preEnteredProfile.email || "")}
-                    </div>
+                    <div className="text-foreground font-medium">{dict.dashboard.claimProfileDesc(preEnteredProfile.name, preEnteredProfile.email || "")}</div>
                     <div className="p-4 bg-white rounded-lg border flex items-center justify-between">
-                      <div>
-                        <div className="text-sm font-bold flex items-center gap-2">
-                          {preEnteredProfile.isCaptain && <Crown className="h-4 w-4 text-accent" />}
-                          {preEnteredProfile.name} {preEnteredProfile.nickname && `"${preEnteredProfile.nickname}"`} {preEnteredProfile.number && <Badge variant="outline" className="ml-1">#{preEnteredProfile.number}</Badge>}
-                        </div>
-                        <div className="text-xs text-muted-foreground">{dict.common.teams[preEnteredProfile.team as 'A' | 'B']} • {dict.common.statusTypes[preEnteredProfile.status.toLowerCase().replace(/\s+/g, '') as keyof typeof dict.common.statusTypes] || preEnteredProfile.status}</div>
-                      </div>
-                      <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-primary hover:bg-primary/90 gap-2 font-bold">
-                        {isLinking ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserCheck className="h-4 w-4" />}
-                        {dict.dashboard.claimProfileBtn}
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : !currentPlayer && (
-                <Card className="border-amber-200 bg-amber-50 shadow-md">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-amber-800">
-                      <UserCheck className="h-6 w-6" />
-                      {dict.dashboard.pendingProfileTitle}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="text-amber-700">
-                      {dict.dashboard.pendingProfileDesc}
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-white/50 border border-amber-200 rounded-lg">
-                      <div className="flex items-center gap-2 overflow-hidden">
-                        <Fingerprint className="h-4 w-4 text-amber-600 shrink-0" />
-                        <code className="text-xs font-mono text-amber-900 truncate">{user.uid}</code>
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 gap-1.5 text-amber-700 hover:bg-amber-100 font-bold"
-                        onClick={() => copyToClipboard(user.uid)}
-                      >
-                        <Copy className="h-3.5 w-3.5" />
-                        {dict.dashboard.copyId}
-                      </Button>
+                      <div><div className="font-bold">{preEnteredProfile.name}</div><div className="text-xs text-muted-foreground">{getTeamName(preEnteredProfile.team)}</div></div>
+                      <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-primary hover:bg-primary/90 gap-2 font-bold">{dict.dashboard.claimProfileBtn}</Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -508,121 +402,38 @@ export default function DashboardPage() {
               <section>
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-2xl font-headline flex items-center gap-2">
-                    <Calendar className="h-6 w-6 text-primary" />
-                    {dict.nav.dashboard}
+                    <Calendar className="h-6 w-6 text-primary" />{dict.nav.dashboard}
                     {currentPlayer && (
                       <Badge variant="outline" className="ml-2 bg-primary/10 text-primary border-primary/20 font-bold">
-                        {currentPlayer.isAdmin ? dict.dashboard.fullAccess : dict.dashboard.teamView(dict.common.teams[currentPlayer.team])}
+                        {currentPlayer.isAdmin ? dict.dashboard.fullAccess : dict.dashboard.teamView(getTeamName(currentPlayer.team))}
                       </Badge>
                     )}
                   </h2>
-                  <Link href="/games">
-                    <Button variant="ghost" size="sm" className="text-primary gap-1 font-bold">
-                      {dict.dashboard.fullSchedule} <ArrowRight className="h-4 w-4" />
-                    </Button>
-                  </Link>
+                  <Link href="/games"><Button variant="ghost" size="sm" className="text-primary gap-1 font-bold">{dict.dashboard.fullSchedule} <ArrowRight className="h-4 w-4" /></Button></Link>
                 </div>
 
                 <div className="grid gap-6">
-                  {isGamesLoading ? (
-                    Array.from({ length: 3 }).map((_, i) => (
-                      <Card key={i} className="h-40 animate-pulse bg-muted/50" />
-                    ))
-                  ) : filteredGames.length === 0 ? (
-                    <Card className="p-12 text-center border-dashed border-2">
-                      <div className="text-muted-foreground">{dict.dashboard.noGames}</div>
-                    </Card>
-                  ) : (
+                  {isGamesLoading ? <Loader2 className="animate-spin" /> : filteredGames.length === 0 ? <Card className="p-12 text-center border-dashed border-2 text-muted-foreground">{dict.dashboard.noGames}</Card> : (
                     filteredGames.map((game) => (
-                      <Card key={game.id} className="border-none shadow-md hover:shadow-lg transition-all overflow-hidden border-l-4 border-primary">
-                        <CardContent className="p-0">
-                          <div className="flex flex-col md:flex-row">
-                            <div className="p-6 flex-1">
-                              <div className="flex items-center gap-3 mb-4">
-                                <Badge 
-                                  variant="outline" 
-                                  className={cn(
-                                    "text-xs font-bold uppercase border-none text-white",
-                                    game.team === 'A' ? "bg-primary" : 
-                                    game.team === 'B' ? "bg-indigo-600" : 
-                                    "bg-muted text-muted-foreground"
-                                  )}
-                                >
-                                  {dict.common.teams[game.team]}
-                                </Badge>
-                                <span className="text-sm font-bold text-muted-foreground flex items-center gap-1">
-                                  <Clock className="h-3.5 w-3.5" />
-                                  {game.startTime} - {game.endTime}
-                                </span>
-                              </div>
-                              
-                              <h3 className="text-xl font-headline mb-4">
-                                {game.type === 'Training' || game.type === 'Internal' 
-                                  ? dict.common.gameTypes[game.type] 
-                                  : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
-                              </h3>
-
-                              <div className="grid gap-2 text-sm text-muted-foreground">
-                                <div className="flex items-center gap-2">
-                                  <Calendar className="h-4 w-4 text-primary" />
-                                  {formatGameDate(game.date)}
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <MapPin className="h-4 w-4 text-primary" />
-                                  {game.location}
-                                </div>
-                                {game.kitColors && (
-                                  <div className={cn("flex items-center gap-2 font-bold", getKitColorClass(game.kitColors))}>
-                                    <Shirt className="h-4 w-4" />
-                                    {dict.games.dialog.kit}: {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
-                                  </div>
-                                )}
-                                {game.additionalDetails && (
-                                  <div className="flex items-start gap-2 text-xs italic mt-1 bg-muted/30 p-2 rounded">
-                                    <Info className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />
-                                    <span className="truncate">{game.additionalDetails}</span>
-                                  </div>
-                                )}
-                              </div>
-
-                              <GameAttendancePreview gameId={game.id} allPlayers={players || []} userId={user?.uid} />
+                      <Card key={game.id} className="border-none shadow-md overflow-hidden border-l-4 border-primary">
+                        <CardContent className="p-0 flex flex-col md:flex-row">
+                          <div className="p-6 flex-1">
+                            <div className="flex items-center gap-3 mb-4">
+                              <Badge className="text-xs font-bold uppercase bg-primary text-white">{getTeamName(game.team)}</Badge>
+                              <span className="text-sm font-bold text-muted-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{game.startTime} - {game.endTime}</span>
                             </div>
-
-                            <div className="bg-muted/30 p-6 md:w-80 border-t md:border-t-0 md:border-l flex flex-col justify-between">
-                              <div>
-                                <div className="flex items-center justify-between mb-4">
-                                  <div className="text-sm font-bold uppercase tracking-wider text-muted-foreground">{dict.dashboard.availability}</div>
-                                  {currentPlayer && (
-                                    <Badge 
-                                      variant="outline" 
-                                      className={cn(
-                                        "border-none text-white font-bold",
-                                        game.team === 'All' ? "bg-primary" : 
-                                        currentPlayer.team === game.team ? "bg-emerald-600" : "bg-muted text-muted-foreground"
-                                      )}
-                                    >
-                                      {currentPlayer.team === game.team || game.team === 'All' ? dict.dashboard.myGame : dict.dashboard.otherTeam}
-                                    </Badge>
-                                  )}
-                                </div>
-                                {currentPlayer ? (
-                                  <UserAttendanceToggle gameId={game.id} userId={user.uid} />
-                                ) : (
-                                  <div className="text-xs italic text-muted-foreground mb-4">
-                                    Sign in and link profile to register.
-                                  </div>
-                                )}
-                              </div>
-
-                              <div className="flex flex-col gap-2 mt-4">
-                                <Link href={`/attendance?gameId=${game.id}`} className="w-full">
-                                  <Button variant="outline" size="sm" className="w-full text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white gap-2">
-                                    <Users className="h-3 w-3" />
-                                    {currentPlayer?.isAdmin ? dict.dashboard.manageRoster : dict.dashboard.viewRoster}
-                                  </Button>
-                                </Link>
-                              </div>
+                            <h3 className="text-xl font-headline mb-4">
+                              {game.type === 'Training' || game.type === 'Internal' ? dict.common.gameTypes[game.type] : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
+                            </h3>
+                            <div className="grid gap-2 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-primary" />{formatGameDate(game.date)}</div>
+                              <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" />{game.location}</div>
                             </div>
+                            <GameAttendancePreview gameId={game.id} allPlayers={players || []} userId={user?.uid} />
+                          </div>
+                          <div className="bg-muted/30 p-6 md:w-80 border-t md:border-t-0 md:border-l flex flex-col justify-between">
+                            <UserAttendanceToggle gameId={game.id} userId={user.uid} />
+                            <Link href={`/attendance?gameId=${game.id}`} className="mt-4"><Button variant="outline" size="sm" className="w-full text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white gap-2">{dict.dashboard.viewRoster}</Button></Link>
                           </div>
                         </CardContent>
                       </Card>
@@ -634,93 +445,18 @@ export default function DashboardPage() {
 
             <div className="space-y-8">
               <Card className="border-primary/10 shadow-lg bg-primary/5">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Trophy className="h-5 w-5 text-primary" />
-                    {dict.dashboard.teammates}
-                  </CardTitle>
-                </CardHeader>
+                <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Trophy className="h-5 w-5 text-primary" />{dict.dashboard.teammates}</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                   <div className="divide-y max-h-[400px] overflow-auto pr-2">
                     {players?.map((p) => (
                       <div key={p.id} className="py-2 flex items-center gap-2">
-                        <div className="relative shrink-0">
-                          <div className={cn(
-                            "h-8 w-8 rounded-full text-[10px] flex items-center justify-center font-bold",
-                            p.team === 'A' ? "bg-primary/20 text-primary" : "bg-indigo-100 text-indigo-700"
-                          )}>
-                            {p.number || p.name[0]}
-                          </div>
-                          {p.isCaptain && (
-                            <div className="absolute -top-1 -right-1 bg-accent text-accent-foreground rounded-full p-0.5 shadow-xs">
-                              <Crown className="h-2.5 w-2.5" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex flex-col min-w-0">
-                          <div className="text-xs font-bold truncate flex flex-wrap items-center gap-1.5">
-                            {p.nickname || p.name}
-                            {p.isAdmin && <ShieldCheck className="h-2.5 w-2.5 text-primary" />}
-                            {p.isLinked && (
-                              <span className="inline-flex items-center gap-0.5 text-emerald-600 font-bold text-[9px] bg-emerald-50 px-1 rounded">
-                                <LinkIcon className="h-3 w-3" />
-                                {dict.common.linked}
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-[10px] text-muted-foreground truncate">{dict.common.statusTypes[p.status.toLowerCase().replace(/\s+/g, '') as keyof typeof dict.common.statusTypes] || p.status}</span>
-                        </div>
-                        {p.team && (
-                          <Badge 
-                            variant="outline" 
-                            className={cn(
-                              "ml-auto text-[8px] h-4 px-1 shrink-0 font-bold border-none text-white",
-                              p.team === 'A' ? "bg-primary" : "bg-indigo-600"
-                            )}
-                          >
-                            {p.team}
-                          </Badge>
-                        )}
+                        <div className="h-8 w-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-[10px]">{p.number || p.name[0]}</div>
+                        <div className="flex-1 text-xs font-bold truncate">{p.nickname || p.name}</div>
+                        <Badge variant="outline" className="text-[8px] h-4 px-1 bg-primary text-white border-none">{getTeamName(p.team)}</Badge>
                       </div>
                     ))}
-                    {(!players || players.length === 0) && (
-                      <div className="text-xs text-muted-foreground italic py-4">No teammates assigned yet.</div>
-                    )}
                   </div>
-                  <div className="pt-4 border-t">
-                    <Link href="/players">
-                      <Button className="w-full bg-primary hover:bg-primary/90 shadow-md text-white font-bold">
-                        {currentPlayer?.isAdmin ? dict.dashboard.managePlayers : dict.dashboard.viewPlayers}
-                      </Button>
-                    </Link>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-none shadow-md">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Info className="h-5 w-5 text-primary" />
-                    {dict.dashboard.quickInfo}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="text-sm text-muted-foreground space-y-4">
-                  <div>{dict.dashboard.quickInfoDesc}</div>
-                  <div className="p-3 bg-muted/40 rounded-lg">
-                    <div className="font-bold text-foreground mb-2 text-xs">{dict.dashboard.roles}</div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Crown className="h-3 w-3 text-accent" />
-                      <span className="text-accent font-bold text-[10px]">{dict.common.captain}</span>
-                    </div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <ShieldCheck className="h-3 w-3 text-primary" />
-                      <span className="text-primary font-bold text-[10px]">{dict.common.admin}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <LinkIcon className="h-3 w-3 text-emerald-500" />
-                      <span className="text-emerald-600 font-bold text-[10px]">{dict.common.linked}</span>
-                    </div>
-                  </div>
+                  <Link href="/players"><Button className="w-full bg-primary font-bold">{dict.dashboard.viewPlayers}</Button></Link>
                 </CardContent>
               </Card>
             </div>

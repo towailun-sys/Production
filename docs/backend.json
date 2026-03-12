@@ -1,6 +1,31 @@
 
 {
   "entities": {
+    "Team": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Team",
+      "type": "object",
+      "description": "Represents a squad or team division within the club.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the team."
+        },
+        "name": {
+          "type": "string",
+          "description": "Team name in English (e.g., Team A)."
+        },
+        "nameZh": {
+          "type": "string",
+          "description": "Team name in Chinese (e.g., 隊伍A)."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "nameZh"
+      ]
+    },
     "Player": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Player",
@@ -41,8 +66,7 @@
         },
         "team": {
           "type": "string",
-          "enum": ["A", "B"],
-          "description": "The squad the player belongs to."
+          "description": "The ID of the team the player belongs to."
         },
         "status": {
           "type": "string",
@@ -99,8 +123,7 @@
         },
         "team": {
           "type": "string",
-          "enum": ["A", "B", "All"],
-          "description": "The team this fixture is for (Team A, Team B, or All)."
+          "description": "The ID of the team this fixture is for, or 'All'."
         },
         "opponent": {
           "type": "string",
@@ -170,6 +193,22 @@
   },
   "firestore": {
     "structure": [
+      {
+        "path": "/teams/{teamId}",
+        "definition": {
+          "entityName": "Team",
+          "schema": {
+            "$ref": "#/backend/entities/Team"
+          },
+          "description": "Stores dynamic team types/divisions.",
+          "params": [
+            {
+              "name": "teamId",
+              "description": "Unique team ID."
+            }
+          ]
+        }
+      },
       {
         "path": "/players/{playerUid}",
         "definition": {
