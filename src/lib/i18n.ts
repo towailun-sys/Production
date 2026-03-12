@@ -131,23 +131,46 @@ const baseDict = {
       noTeams: "No teams defined yet."
     }
   },
+  games: {
+    title: "賽程表",
+    subtitle: "規劃並管理即將舉行的賽事。",
+    scheduleGame: "安排比賽",
+    dialog: {
+      addTitle: "安排新活動",
+      editTitle: "編輯活動",
+      type: "活動類型",
+      team: "分配隊伍",
+      date: "日期",
+      start: "開始時間",
+      end: "結束時間",
+      location: "地點",
+      opponent: "對手",
+      coach: "教練",
+      fee: "費用",
+      kit: "首選球衣",
+      alternativeKit: "後備球衣",
+      details: "額外詳情",
+      create: "創建活動",
+      update: "儲存更改"
+    }
+  },
   attendance: {
-    title: "My Attendance",
-    subtitle: "Confirm your availability for upcoming games and training.",
-    rosterTitle: "Squad Roster",
-    backToSchedule: "Back to Schedule",
-    myStatus: "My Status",
-    currently: "Currently",
-    signinRequired: "Sign in required",
-    signinDesc: "Please sign in with your Google account to manage your availability for upcoming team events.",
-    dateLabel: "Date",
-    timeLabel: "Time Window",
-    locationLabel: "Location",
-    feeLabel: "Fee",
-    detailsLabel: "Details",
-    attendingQuestion: "Are you attending?",
-    confirmationRequired: "Confirmation Required",
-    viewFullRoster: "View Full Squad Roster"
+    title: "我出席的",
+    subtitle: "確認你出席即將舉行的比賽和訓練。",
+    rosterTitle: "球員名單",
+    backToSchedule: "返回賽程",
+    myStatus: "我的狀態",
+    currently: "目前",
+    signinRequired: "請先登入",
+    signinDesc: "請使用你的 Google 帳號登入，以管理你出席球隊活動的情況。",
+    dateLabel: "日期",
+    timeLabel: "時間",
+    locationLabel: "地點",
+    feeLabel: "費用",
+    detailsLabel: "詳情",
+    attendingQuestion: "你會出席嗎？",
+    confirmationRequired: "請確認出席情況",
+    viewFullRoster: "查看完整隊員名單"
   }
 };
 
@@ -179,7 +202,7 @@ const zhDict: typeof baseDict = {
       injured: "受傷",
       notAvailable: "退役/離隊",
       feePending: "有欠款",
-      trial: "試訓"
+      trial: "試腳"
     },
     gameTypes: {
       Training: "訓練",
