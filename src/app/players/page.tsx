@@ -236,7 +236,7 @@ export default function PlayersPage() {
     setEditingPlayer(player);
     setFormData({
       id: player.id || "",
-      name: player.name,
+      name: player.name || "",
       nickname: player.nickname || "",
       number: (player.number !== undefined && player.number !== null) ? player.number.toString() : "",
       email: player.email || "",
@@ -255,7 +255,14 @@ export default function PlayersPage() {
   };
 
   const handleUpdatePlayer = () => {
-    if (!editingPlayer || !formData.name || formData.teams.length === 0) return;
+    if (!editingPlayer || !formData.name || formData.teams.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Validation Error",
+        description: "Name and at least one Team are required.",
+      });
+      return;
+    }
 
     const playerRef = doc(firestore, "players", editingPlayer.id);
     const updateData = {
@@ -282,9 +289,9 @@ export default function PlayersPage() {
         } satisfies SecurityRuleContext));
       });
 
-    resetForm();
     setIsEditOpen(false);
     setEditingPlayer(null);
+    resetForm();
     toast({
       title: "Updating Player",
       description: "Squad information has been updated.",

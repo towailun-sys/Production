@@ -34,7 +34,7 @@ service cloud.firestore {
       allow get, list: if isSignedIn();
       allow create: if isSignedIn() && (request.auth.uid == playerId || isAdmin());
       allow update: if isOwner(playerId) || isAdmin();
-      allow delete: if isAdmin() || (isSignedIn() && request.auth.token.email == resource.data.email);
+      allow delete: if isAdmin() || (isSignedIn() && (resource.data.email == request.auth.token.email || resource.data.id == request.auth.uid));
     }
 
     // Teams: Public read for signed-in members, managed by admins.

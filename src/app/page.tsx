@@ -379,7 +379,6 @@ export default function DashboardPage() {
     setDoc(newDocRef, claimData)
       .then(() => {
         // After successfully creating the new document, delete the old one.
-        // The updated security rules allow this deletion if the email matches.
         deleteDoc(oldDocRef).catch((error) => {
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: oldDocRef.path,
