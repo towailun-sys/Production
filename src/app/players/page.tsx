@@ -626,7 +626,7 @@ export default function PlayersPage() {
                     type="number"
                     placeholder="Optional"
                     value={formData.number}
-                    onChange={(e) => setFormData({ ...formData, number: e.target.value })}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
               </div>
@@ -1029,7 +1029,7 @@ function KitManagementUI() {
   const { data: kits } = useCollection<Kit>(kitsQuery);
   const { toast } = useToast();
 
-  const [kitForm, setKitForm] = useState<Partial<Kit>>({ name: "", nameZh: "", imageUrl: "", colorClass: "text-primary" });
+  const [kitForm, setKitForm] = useState<Partial<Kit>>({ name: "", nameZh: "", color: "", colorZh: "", imageUrl: "", colorClass: "text-primary" });
   const [editingKitId, setEditingKitId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -1085,7 +1085,7 @@ function KitManagementUI() {
       } satisfies SecurityRuleContext));
     });
 
-    setKitForm({ name: "", nameZh: "", imageUrl: "", colorClass: "text-primary" });
+    setKitForm({ name: "", nameZh: "", color: "", colorZh: "", imageUrl: "", colorClass: "text-primary" });
     setEditingKitId(null);
     toast({ title: editingKitId ? "Kit Updated" : "Kit Added" });
   };
@@ -1094,6 +1094,8 @@ function KitManagementUI() {
     setKitForm({
       name: kit.name,
       nameZh: kit.nameZh || "",
+      color: kit.color || "",
+      colorZh: kit.colorZh || "",
       imageUrl: kit.imageUrl,
       colorClass: kit.colorClass || "text-primary"
     });
@@ -1101,7 +1103,7 @@ function KitManagementUI() {
   };
 
   const cancelEdit = () => {
-    setKitForm({ name: "", nameZh: "", imageUrl: "", colorClass: "text-primary" });
+    setKitForm({ name: "", nameZh: "", color: "", colorZh: "", imageUrl: "", colorClass: "text-primary" });
     setEditingKitId(null);
   };
 
@@ -1145,6 +1147,25 @@ function KitManagementUI() {
               placeholder="主場一" 
               value={kitForm.nameZh} 
               onChange={(e) => setKitForm({ ...kitForm, nameZh: e.target.value })} 
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-1.5">
+            <Label className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">{dict.players.kits.colorEn}</Label>
+            <Input 
+              placeholder="Pink/Grey" 
+              value={kitForm.color} 
+              onChange={(e) => setKitForm({ ...kitForm, color: e.target.value })} 
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">{dict.players.kits.colorZh}</Label>
+            <Input 
+              placeholder="粉紅/灰" 
+              value={kitForm.colorZh} 
+              onChange={(e) => setKitForm({ ...kitForm, colorZh: e.target.value })} 
             />
           </div>
         </div>
@@ -1211,6 +1232,8 @@ function KitManagementUI() {
                 <div>
                   <div className={cn("font-bold text-sm", kit.colorClass)}>
                     {language === 'zh' ? kit.nameZh || kit.name : kit.name}
+                    {language === 'zh' && kit.colorZh && <span className="opacity-70 font-normal ml-1">({kit.colorZh})</span>}
+                    {language === 'en' && kit.color && <span className="opacity-70 font-normal ml-1">({kit.color})</span>}
                   </div>
                   <div className="text-[9px] text-muted-foreground font-bold flex items-center gap-1 uppercase tracking-tighter">
                     <ImageIcon className="h-3 w-3" /> Image Uploaded

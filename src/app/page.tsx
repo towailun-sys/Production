@@ -74,6 +74,7 @@ function KitBadge({ kitId, isAlternative = false }: { kitId: string, isAlternati
   }
 
   const kitName = language === 'zh' ? kit.nameZh || kit.name : kit.name;
+  const kitColor = language === 'zh' ? kit.colorZh || kit.color : kit.color;
 
   return (
     <Popover>
@@ -88,6 +89,7 @@ function KitBadge({ kitId, isAlternative = false }: { kitId: string, isAlternati
           <Shirt className="h-3.5 w-3.5" />
           {isAlternative && <span className="text-[9px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>}
           {kitName}
+          {kitColor && <span className="opacity-80 font-normal ml-0.5">({kitColor})</span>}
         </Badge>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-3 shadow-xl rounded-xl">
@@ -375,8 +377,8 @@ export default function DashboardPage() {
     });
 
     const sampleKits = [
-      { id: "kit-home-1", name: "Home 1: Pink/Grey", nameZh: "主場一: 粉紅/灰", imageUrl: "https://picsum.photos/seed/kit1/600/800", colorClass: "text-pink-500" },
-      { id: "kit-away-1", name: "Away 1: Black/Black", nameZh: "客場一: 全黑", imageUrl: "https://picsum.photos/seed/kit2/600/800", colorClass: "text-slate-900" },
+      { id: "kit-home-1", name: "Home 1", nameZh: "主場一", color: "Pink/Grey", colorZh: "粉紅/灰", imageUrl: "https://picsum.photos/seed/kit1/600/800", colorClass: "text-pink-500" },
+      { id: "kit-away-1", name: "Away 1", nameZh: "客場一", color: "Black/Black", colorZh: "全黑", imageUrl: "https://picsum.photos/seed/kit2/600/800", colorClass: "text-slate-900" },
     ];
 
     sampleKits.forEach(k => {

@@ -12,6 +12,8 @@ export interface Kit {
   id: string;
   name: string;
   nameZh?: string;
+  color?: string;
+  colorZh?: string;
   imageUrl: string;
   colorClass?: string;
 }

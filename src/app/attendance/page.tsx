@@ -81,6 +81,7 @@ function KitBadge({ kitId, isAlternative = false }: { kitId: string, isAlternati
   }
 
   const kitName = language === 'zh' ? kit.nameZh || kit.name : kit.name;
+  const kitColor = language === 'zh' ? kit.colorZh || kit.color : kit.color;
 
   return (
     <Popover>
@@ -95,6 +96,7 @@ function KitBadge({ kitId, isAlternative = false }: { kitId: string, isAlternati
           <Shirt className="h-3.5 w-3.5" />
           {isAlternative && <span className="text-[9px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>}
           {kitName}
+          {kitColor && <span className="opacity-80 font-normal ml-0.5">({kitColor})</span>}
         </Badge>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-3 shadow-2xl rounded-xl">

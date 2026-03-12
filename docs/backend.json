@@ -38,15 +38,23 @@
         },
         "name": {
           "type": "string",
-          "description": "Kit name (e.g., Home 1: Pink/Grey)."
+          "description": "Kit name (e.g., Home 1)."
         },
         "nameZh": {
           "type": "string",
           "description": "Kit name in Chinese."
         },
+        "color": {
+          "type": "string",
+          "description": "Kit color description (e.g., Pink/Grey)."
+        },
+        "colorZh": {
+          "type": "string",
+          "description": "Kit color description in Chinese."
+        },
         "imageUrl": {
           "type": "string",
-          "description": "URL to the kit reference image."
+          "description": "URL or Data URI to the kit reference image."
         },
         "colorClass": {
           "type": "string",
