@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -120,19 +119,18 @@ export function MainNav() {
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-white/20 bg-white/10 group-hover:border-accent transition-colors">
+            <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-white/20 bg-white/10 group-hover:border-accent transition-colors flex items-center justify-center">
               <Image 
                 src="/logo.png" 
-                alt="HHFC Logo" 
+                alt="Club Logo" 
                 fill 
                 className="object-cover"
                 onError={(e) => {
-                  // Fallback if image doesn't exist yet
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
                 }}
               />
-              <div className="flex h-full w-full items-center justify-center font-headline font-bold text-accent text-lg">
+              <div className="font-headline font-bold text-accent text-lg">
                 H
               </div>
             </div>
@@ -141,7 +139,7 @@ export function MainNav() {
             </span>
           </Link>
 
-          {/* Desktop Navigation - Only render if mounted to avoid hydration issues */}
+          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
             {mounted && routes.map((route) => (
               <Link

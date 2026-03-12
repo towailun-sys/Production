@@ -1,4 +1,3 @@
-
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -6,7 +5,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { LanguageProvider } from '@/components/language-provider';
 
 export const metadata: Metadata = {
-  title: 'Happy Hour Football Club | Professional Team Management',
+  title: '歡樂時光足球會 | Happy Hour Football Club',
   description: 'Manage your football team, games, and player attendance with ease.',
 };
 

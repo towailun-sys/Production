@@ -1,4 +1,3 @@
-
 /**
  * Centralized Dictionaries for UI Strings
  */
@@ -224,8 +223,8 @@ const zhDict: typeof baseDict = {
     }
   },
   nav: {
-    title: "Happy Hour 足球會",
-    dashboard: "可供出席的場次",
+    title: "歡樂時光足球會",
+    dashboard: "賽程",
     attendance: "我出席的",
     players: "陣容",
     games: "場次",
