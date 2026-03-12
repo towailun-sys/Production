@@ -189,7 +189,7 @@ export default function AttendancePage() {
           </Link>
           
           <header className="mb-8">
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex flex-wrap items-center gap-3 mb-3">
               <Badge 
                 variant="outline"
                 className={cn(
@@ -209,25 +209,25 @@ export default function AttendancePage() {
                 </Badge>
               )}
             </div>
-            <h1 className="text-2xl md:text-3xl font-headline leading-tight">
+            <h1 className="text-2xl md:text-3xl font-headline leading-tight mb-4">
               {specificGame.type === 'Training' || specificGame.type === 'Internal' 
                 ? dict.common.gameTypes[specificGame.type] 
                 : `${dict.common.matchVs} ${specificGame.opponent || dict.common.tbd}`}
             </h1>
-            <div className="flex flex-wrap gap-x-6 gap-y-3 mt-5 text-muted-foreground text-xs md:text-sm">
+            <div className="flex flex-wrap gap-x-6 gap-y-3 text-muted-foreground text-xs md:text-sm">
               <span className="flex items-center gap-2 font-medium"><Calendar className="h-4 w-4 text-primary shrink-0" /> {formatGameDate(specificGame.date)}</span>
               <span className="flex items-center gap-2 font-medium"><Clock className="h-4 w-4 text-primary shrink-0" /> {specificGame.startTime} - {specificGame.endTime}</span>
               <span className="flex items-center gap-2 font-medium"><MapPin className="h-4 w-4 text-primary shrink-0" /> {specificGame.location}</span>
               {specificGame.coach && (
                 <span className="flex items-center gap-2 font-medium"><UserRound className="h-4 w-4 text-primary shrink-0" /> {specificGame.coach}</span>
               )}
-              {specificGame.fee && (
-                <span className="flex items-start gap-2 font-medium">
-                  <Banknote className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                  <span className="whitespace-pre-wrap">{specificGame.fee}</span>
-                </span>
-              )}
             </div>
+            {specificGame.fee && (
+              <div className="mt-4 flex items-start gap-2 text-primary font-bold text-xs md:text-sm">
+                <Banknote className="h-4 w-4 shrink-0 mt-0.5" />
+                <span className="whitespace-pre-wrap">{specificGame.fee}</span>
+              </div>
+            )}
             {specificGame.additionalDetails && (
               <div className="mt-6 p-4 bg-muted/20 border-l-4 border-primary/40 rounded-xl max-w-2xl shadow-sm">
                 <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground mb-2 uppercase tracking-widest">
@@ -504,67 +504,69 @@ function AttendanceCard({
             : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-6 px-6 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 flex-1">
-          <div className="flex items-center gap-4 text-muted-foreground">
-            <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
-              <Calendar className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.attendance.dateLabel}</p>
-              <p className="font-bold text-foreground text-sm">{formatGameDate(game.date)}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 text-muted-foreground">
-            <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
-              <Clock className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.attendance.timeLabel}</p>
-              <p className="font-bold text-foreground text-sm">{game.startTime} - {game.endTime}</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4 text-muted-foreground">
-            <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
-              <MapPin className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.attendance.locationLabel}</p>
-              <p className="font-bold text-foreground text-sm">{game.location}</p>
-            </div>
-          </div>
-          {game.coach && (
+      <CardContent className="pt-6 px-6 pb-6 space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 flex-1">
             <div className="flex items-center gap-4 text-muted-foreground">
               <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
-                <UserRound className="h-5 w-5 text-primary" />
+                <Calendar className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.games.dialog.coach}</p>
-                <p className="font-bold text-foreground text-sm">{game.coach}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.attendance.dateLabel}</p>
+                <p className="font-bold text-foreground text-sm">{formatGameDate(game.date)}</p>
               </div>
             </div>
-          )}
-          {game.fee && (
             <div className="flex items-center gap-4 text-muted-foreground">
               <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
-                <Banknote className="h-5 w-5 text-primary" />
+                <Clock className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.attendance.feeLabel}</p>
-                <p className="font-bold text-foreground text-sm whitespace-pre-wrap">{game.fee}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.attendance.timeLabel}</p>
+                <p className="font-bold text-foreground text-sm">{game.startTime} - {game.endTime}</p>
               </div>
             </div>
-          )}
+            <div className="flex items-center gap-4 text-muted-foreground">
+              <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
+                <MapPin className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.attendance.locationLabel}</p>
+                <p className="font-bold text-foreground text-sm">{game.location}</p>
+              </div>
+            </div>
+            {game.coach && (
+              <div className="flex items-center gap-4 text-muted-foreground">
+                <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
+                  <UserRound className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.games.dialog.coach}</p>
+                  <p className="font-bold text-foreground text-sm">{game.coach}</p>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="shrink-0">
+            <Button variant="outline" className="font-bold border-primary text-primary hover:bg-primary/5 gap-2 w-full md:w-auto" asChild>
+              <Link href={`/attendance?gameId=${game.id}`}>
+                {dict.attendance.viewFullRoster}
+                <ChevronLeft className="h-4 w-4 rotate-180" />
+              </Link>
+            </Button>
+          </div>
         </div>
 
-        <div className="shrink-0">
-          <Button variant="outline" className="font-bold border-primary text-primary hover:bg-primary/5 gap-2" asChild>
-            <Link href={`/attendance?gameId=${game.id}`}>
-              {dict.attendance.viewFullRoster}
-              <ChevronLeft className="h-4 w-4 rotate-180" />
-            </Link>
-          </Button>
-        </div>
+        {game.fee && (
+          <div className="flex items-start gap-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
+            <div className="bg-primary/10 p-2 rounded-full shrink-0">
+              <Banknote className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1.5">{dict.attendance.feeLabel}</p>
+              <p className="font-bold text-primary text-sm whitespace-pre-wrap">{game.fee}</p>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );

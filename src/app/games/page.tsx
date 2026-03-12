@@ -455,7 +455,7 @@ export default function GamesPage() {
             games.map((game) => (
               <Card key={game.id} className="border-none shadow-md hover:shadow-lg transition-all border-l-4 border-primary rounded-2xl overflow-hidden">
                 <CardContent className="p-5 md:p-6">
-                  <div className="flex flex-col md:flex-row md:items-center gap-6">
+                  <div className="flex flex-col md:flex-row md:items-start gap-6">
                     <div className="flex flex-row md:flex-col items-center justify-center bg-muted/30 p-4 md:p-5 rounded-2xl min-w-[100px] border gap-3 md:gap-1">
                       <span className="text-[10px] md:text-sm font-bold uppercase tracking-widest text-muted-foreground">
                         {new Date(game.date).toLocaleString('default', { month: 'short' })}
@@ -468,55 +468,59 @@ export default function GamesPage() {
                       </span>
                     </div>
 
-                    <div className="flex-1 space-y-3">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant="outline" className={cn(
-                          "font-bold px-2 py-0.5 border-none text-[10px] uppercase tracking-wider",
-                          game.type === 'League' ? "bg-primary text-white" : 
-                          game.type === 'Training' ? "bg-accent text-white" :
-                          game.type === 'Internal' ? "bg-indigo-600 text-white" :
-                          "bg-muted text-foreground"
-                        )}>
-                          {dict.common.gameTypes[game.type] || game.type}
-                        </Badge>
-                        <Badge variant="secondary" className="border-none flex gap-1.5 items-center font-bold bg-primary text-white px-2.5 py-0.5 text-[10px]">
-                          <Users className="h-3 w-3" />
-                          {getTeamLabel(game.team)}
-                        </Badge>
-                      </div>
-                      <h3 className="text-lg md:text-xl font-headline font-bold leading-tight">
-                        {game.type === 'Training' || game.type === 'Internal' 
-                          ? dict.common.gameTypes[game.type] 
-                          : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
-                      </h3>
-                      <div className="flex flex-wrap gap-x-6 gap-y-3 text-xs md:text-sm text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4 text-primary shrink-0" />
-                          {game.startTime} - {game.endTime}
+                    <div className="flex-1 space-y-4">
+                      <div className="space-y-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Badge variant="outline" className={cn(
+                            "font-bold px-2 py-0.5 border-none text-[10px] uppercase tracking-wider",
+                            game.type === 'League' ? "bg-primary text-white" : 
+                            game.type === 'Training' ? "bg-accent text-white" :
+                            game.type === 'Internal' ? "bg-indigo-600 text-white" :
+                            "bg-muted text-foreground"
+                          )}>
+                            {dict.common.gameTypes[game.type] || game.type}
+                          </Badge>
+                          <Badge variant="secondary" className="border-none flex gap-1.5 items-center font-bold bg-primary text-white px-2.5 py-0.5 text-[10px]">
+                            <Users className="h-3 w-3" />
+                            {getTeamLabel(game.team)}
+                          </Badge>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 text-primary shrink-0" />
-                          {game.location}
-                        </div>
-                        {game.coach && (
+                        <h3 className="text-lg md:text-xl font-headline font-bold leading-tight">
+                          {game.type === 'Training' || game.type === 'Internal' 
+                            ? dict.common.gameTypes[game.type] 
+                            : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
+                        </h3>
+                        <div className="flex flex-wrap gap-x-6 gap-y-3 text-xs md:text-sm text-muted-foreground">
                           <div className="flex items-center gap-2">
-                            <UserRound className="h-4 w-4 text-primary shrink-0" />
-                            {game.coach}
+                            <Clock className="h-4 w-4 text-primary shrink-0" />
+                            {game.startTime} - {game.endTime}
                           </div>
-                        )}
-                        {game.fee && (
-                          <div className="flex items-start gap-2">
-                            <Banknote className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                            <span className="whitespace-pre-wrap">{game.fee}</span>
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4 text-primary shrink-0" />
+                            {game.location}
                           </div>
-                        )}
-                        {game.kitColors && (
-                          <div className={cn("flex items-center gap-2 font-bold", getKitColorClass(game.kitColors))}>
-                            <Shirt className="h-4 w-4 shrink-0" />
-                            {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
-                          </div>
-                        )}
+                          {game.coach && (
+                            <div className="flex items-center gap-2">
+                              <UserRound className="h-4 w-4 text-primary shrink-0" />
+                              {game.coach}
+                            </div>
+                          )}
+                          {game.kitColors && (
+                            <div className={cn("flex items-center gap-2 font-bold", getKitColorClass(game.kitColors))}>
+                              <Shirt className="h-4 w-4 shrink-0" />
+                              {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
+                            </div>
+                          )}
+                        </div>
                       </div>
+
+                      {game.fee && (
+                        <div className="flex items-start gap-2 text-[12px] text-primary font-bold bg-primary/5 p-3 rounded-xl border border-primary/10">
+                          <Banknote className="h-4 w-4 shrink-0 mt-0.5" />
+                          <span className="whitespace-pre-wrap">{game.fee}</span>
+                        </div>
+                      )}
+
                       {game.additionalDetails && (
                         <div className="flex items-start gap-2 text-[11px] text-muted-foreground mt-3 bg-muted/20 p-3 rounded-xl border border-dashed">
                           <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
