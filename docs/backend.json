@@ -73,7 +73,7 @@
         },
         "status": {
           "type": "string",
-          "enum": ["Active", "Injured", "Not Available", "Pending for Club Fee"],
+          "enum": ["Active", "Injured", "Not Available", "Pending for Club Fee", "Trial"],
           "description": "The current status of the player."
         },
         "isAdmin": {

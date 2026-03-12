@@ -1,6 +1,6 @@
 
 export type PlayerPosition = 'GK' | 'DF' | 'MF' | 'FW';
-export type PlayerStatus = 'Active' | 'Injured' | 'Not Available' | 'Pending for Club Fee';
+export type PlayerStatus = 'Active' | 'Injured' | 'Not Available' | 'Pending for Club Fee' | 'Trial';
 
 export interface Team {
   id: string;

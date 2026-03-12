@@ -59,7 +59,8 @@ import {
   Mail,
   Smartphone,
   MoreVertical,
-  Users
+  Users,
+  UserSearch
 } from "lucide-react";
 import { Player, PlayerPosition, PlayerStatus, Team } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -103,6 +104,7 @@ export default function PlayersPage() {
     { value: "Injured", label: dict.common.statusTypes.injured, icon: HeartPulse, color: "text-rose-600 bg-rose-50 border-rose-200" },
     { value: "Not Available", label: dict.common.statusTypes.notAvailable, icon: Ban, color: "text-slate-600 bg-slate-50 border-slate-200" },
     { value: "Pending for Club Fee", label: dict.common.statusTypes.feePending, icon: CreditCard, color: "text-amber-600 bg-amber-50 border-amber-200" },
+    { value: "Trial", label: dict.common.statusTypes.trial, icon: UserSearch, color: "text-indigo-600 bg-indigo-50 border-indigo-200" },
   ];
 
   const playerRef = useMemoFirebase(() => {

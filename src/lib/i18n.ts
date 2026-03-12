@@ -30,7 +30,8 @@ const baseDict = {
       active: "Active",
       injured: "Injured",
       notAvailable: "Not Available",
-      feePending: "Fee Pending"
+      feePending: "Fee Pending",
+      trial: "Trial"
     },
     gameTypes: {
       Training: "Training",
@@ -130,29 +131,6 @@ const baseDict = {
       noTeams: "No teams defined yet."
     }
   },
-  games: {
-    title: "Game Schedule",
-    subtitle: "Plan and manage upcoming fixtures.",
-    scheduleGame: "Schedule Game",
-    dialog: {
-      addTitle: "Schedule New Event",
-      editTitle: "Edit Event",
-      type: "Event Type",
-      team: "Assign Team",
-      date: "Date",
-      start: "Start Time",
-      end: "End Time",
-      location: "Location",
-      opponent: "Opponent",
-      coach: "Coach",
-      fee: "Fee",
-      kit: "Primary Kit",
-      alternativeKit: "Alternative Kit",
-      details: "Additional Details",
-      create: "Create Event",
-      update: "Save Changes"
-    }
-  },
   attendance: {
     title: "My Attendance",
     subtitle: "Confirm your availability for upcoming games and training.",
@@ -200,7 +178,8 @@ const zhDict: typeof baseDict = {
       active: "現役",
       injured: "受傷",
       notAvailable: "退役/離隊",
-      feePending: "有欠款"
+      feePending: "有欠款",
+      trial: "試訓"
     },
     gameTypes: {
       Training: "訓練",
