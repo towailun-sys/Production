@@ -1029,7 +1029,8 @@ function KitManagementUI() {
   const { data: kits } = useCollection<Kit>(kitsQuery);
   const { toast } = useToast();
 
-  const [newKit, setNewKit] = useState<Partial<Kit>>({ name: "", nameZh: "", imageUrl: "", colorClass: "text-primary" });
+  const [kitForm, setKitForm] = useState<Partial<Kit>>({ name: "", nameZh: "", imageUrl: "", colorClass: "text-primary" });
+  const [editingKitId, setEditingKitId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1048,7 +1049,7 @@ function KitManagementUI() {
     setIsUploading(true);
     const reader = new FileReader();
     reader.onloadend = () => {
-      setNewKit(prev => ({ ...prev, imageUrl: reader.result as string }));
+      setKitForm(prev => ({ ...prev, imageUrl: reader.result as string }));
       setIsUploading(false);
     };
     reader.onerror = () => {
@@ -1062,8 +1063,8 @@ function KitManagementUI() {
     reader.readAsDataURL(file);
   };
 
-  const handleAddKit = () => {
-    if (!newKit.name || !newKit.imageUrl) {
+  const handleSaveKit = () => {
+    if (!kitForm.name || !kitForm.imageUrl) {
       toast({
         variant: "destructive",
         title: "Input Required",
@@ -1071,20 +1072,37 @@ function KitManagementUI() {
       });
       return;
     }
-    const id = doc(collection(firestore, "kits")).id;
-    const kitRef = doc(firestore, "kits", id);
-    const kitData = { id, ...newKit };
 
-    setDoc(kitRef, kitData).catch(error => {
+    const id = editingKitId || doc(collection(firestore, "kits")).id;
+    const kitRef = doc(firestore, "kits", id);
+    const kitData = { ...kitForm, id };
+
+    setDoc(kitRef, kitData, { merge: true }).catch(error => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: kitRef.path,
-        operation: 'create',
+        operation: editingKitId ? 'update' : 'create',
         requestResourceData: kitData
       } satisfies SecurityRuleContext));
     });
 
-    setNewKit({ name: "", nameZh: "", imageUrl: "", colorClass: "text-primary" });
-    toast({ title: "Kit Added" });
+    setKitForm({ name: "", nameZh: "", imageUrl: "", colorClass: "text-primary" });
+    setEditingKitId(null);
+    toast({ title: editingKitId ? "Kit Updated" : "Kit Added" });
+  };
+
+  const handleEditClick = (kit: Kit) => {
+    setKitForm({
+      name: kit.name,
+      nameZh: kit.nameZh || "",
+      imageUrl: kit.imageUrl,
+      colorClass: kit.colorClass || "text-primary"
+    });
+    setEditingKitId(kit.id);
+  };
+
+  const cancelEdit = () => {
+    setKitForm({ name: "", nameZh: "", imageUrl: "", colorClass: "text-primary" });
+    setEditingKitId(null);
   };
 
   const handleDeleteKit = (id: string) => {
@@ -1095,27 +1113,38 @@ function KitManagementUI() {
         operation: 'delete'
       } satisfies SecurityRuleContext));
     });
+    if (editingKitId === id) cancelEdit();
     toast({ title: "Kit Deleted" });
   };
 
   return (
     <div className="space-y-6 py-4">
       <div className="grid gap-4 p-4 border rounded-2xl bg-muted/20">
+        <div className="flex items-center justify-between mb-2">
+           <h3 className="text-sm font-bold uppercase tracking-widest text-primary">
+             {editingKitId ? dict.common.edit : dict.players.kits.add}
+           </h3>
+           {editingKitId && (
+             <Button variant="ghost" size="sm" onClick={cancelEdit} className="h-7 text-[10px] font-bold">
+               {dict.common.cancel}
+             </Button>
+           )}
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="grid gap-1.5">
             <Label className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">{dict.players.kits.nameEn}</Label>
             <Input 
               placeholder="Home 1" 
-              value={newKit.name} 
-              onChange={(e) => setNewKit({ ...newKit, name: e.target.value })} 
+              value={kitForm.name} 
+              onChange={(e) => setKitForm({ ...kitForm, name: e.target.value })} 
             />
           </div>
           <div className="grid gap-1.5">
             <Label className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">{dict.players.kits.nameZh}</Label>
             <Input 
               placeholder="主場一" 
-              value={newKit.nameZh} 
-              onChange={(e) => setNewKit({ ...newKit, nameZh: e.target.value })} 
+              value={kitForm.nameZh} 
+              onChange={(e) => setKitForm({ ...kitForm, nameZh: e.target.value })} 
             />
           </div>
         </div>
@@ -1123,14 +1152,14 @@ function KitManagementUI() {
         <div className="grid gap-2">
           <Label className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Uniform Image</Label>
           <div className="flex flex-col gap-3">
-            {newKit.imageUrl ? (
+            {kitForm.imageUrl ? (
               <div className="relative aspect-[4/5] w-full max-w-[180px] mx-auto rounded-xl overflow-hidden border-2 border-primary shadow-lg bg-white">
-                <Image src={newKit.imageUrl} alt="Preview" fill className="object-cover" />
+                <Image src={kitForm.imageUrl} alt="Preview" fill className="object-cover" />
                 <Button 
                   size="icon" 
                   variant="destructive" 
                   className="absolute top-2 right-2 h-7 w-7 rounded-full opacity-90 hover:opacity-100"
-                  onClick={() => setNewKit(prev => ({ ...prev, imageUrl: "" }))}
+                  onClick={() => setKitForm(prev => ({ ...prev, imageUrl: "" }))}
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -1157,13 +1186,13 @@ function KitManagementUI() {
           <Label className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">{dict.players.kits.colorClass}</Label>
           <Input 
             placeholder="text-pink-500" 
-            value={newKit.colorClass} 
-            onChange={(e) => setNewKit({ ...newKit, colorClass: e.target.value })} 
+            value={kitForm.colorClass} 
+            onChange={(e) => setKitForm({ ...kitForm, colorClass: e.target.value })} 
           />
         </div>
-        <Button onClick={handleAddKit} size="sm" className="w-full gap-2 font-bold bg-primary h-11 shadow-sm mt-2" disabled={isUploading || !newKit.imageUrl}>
-          <Plus className="h-4 w-4" />
-          {dict.players.kits.add}
+        <Button onClick={handleSaveKit} size="sm" className="w-full gap-2 font-bold bg-primary h-11 shadow-sm mt-2" disabled={isUploading || !kitForm.imageUrl}>
+          {editingKitId ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          {editingKitId ? dict.players.dialog.update : dict.players.kits.add}
         </Button>
       </div>
 
@@ -1186,9 +1215,14 @@ function KitManagementUI() {
                   </div>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:bg-destructive/10 rounded-full" onClick={() => handleDeleteKit(kit.id)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-primary/10 rounded-full" onClick={() => handleEditClick(kit)}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-destructive/10 rounded-full" onClick={() => handleDeleteKit(kit.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           ))
         )}
