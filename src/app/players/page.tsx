@@ -191,8 +191,8 @@ export default function PlayersPage() {
     if (!formData.name || formData.teams.length === 0) {
       toast({
         variant: "destructive",
-        title: "Missing Information",
-        description: "Name and at least one Team are required.",
+        title: dict.players.toasts.missingInfo,
+        description: dict.players.toasts.missingInfoDesc,
       });
       return;
     }
@@ -227,8 +227,8 @@ export default function PlayersPage() {
     resetForm();
     setIsAddOpen(false);
     toast({
-      title: "Saving Player",
-      description: "The profile is being saved to the squad list.",
+      title: dict.players.toasts.saving,
+      description: dict.players.toasts.savingDesc,
     });
   };
 
@@ -258,8 +258,8 @@ export default function PlayersPage() {
     if (!editingPlayer || !formData.name || formData.teams.length === 0) {
       toast({
         variant: "destructive",
-        title: "Validation Error",
-        description: "Name and at least one Team are required.",
+        title: dict.players.toasts.missingInfo,
+        description: dict.players.toasts.missingInfoDesc,
       });
       return;
     }
@@ -293,8 +293,8 @@ export default function PlayersPage() {
     setEditingPlayer(null);
     resetForm();
     toast({
-      title: "Updating Player",
-      description: "Squad information has been updated.",
+      title: dict.players.toasts.updating,
+      description: dict.players.toasts.updatingDesc,
     });
   };
 
@@ -309,8 +309,8 @@ export default function PlayersPage() {
       });
 
     toast({
-      title: "Removing Player",
-      description: "The player is being removed from the squad list.",
+      title: dict.players.toasts.removing,
+      description: dict.players.toasts.removingDesc,
     });
   };
 
@@ -319,7 +319,7 @@ export default function PlayersPage() {
     const newAdminStatus = !player.isAdmin;
     setDoc(playerRef, { isAdmin: newAdminStatus }, { merge: true });
     toast({
-      title: newAdminStatus ? dict.players.promoteAdmin : dict.players.revokeAdmin,
+      title: newAdminStatus ? dict.players.toasts.adminPromoted : dict.players.toasts.adminRevoked,
     });
   };
 

@@ -120,6 +120,18 @@ const baseDict = {
       save: "Save Player Profile",
       update: "Update Player"
     },
+    toasts: {
+      missingInfo: "Missing Information",
+      missingInfoDesc: "Name and at least one Team are required.",
+      saving: "Saving Player",
+      savingDesc: "The profile is being saved to the squad list.",
+      updating: "Updating Player",
+      updatingDesc: "Squad information has been updated.",
+      removing: "Removing Player",
+      removingDesc: "The player is being removed from the squad list.",
+      adminPromoted: "Promoted to Administrator",
+      adminRevoked: "Administrator role revoked"
+    },
     teams: {
       title: "Manage Squad Teams",
       nameEn: "Name (English)",
@@ -301,6 +313,18 @@ const zhDict: typeof baseDict = {
       preferredPositions: "偏好位置",
       save: "儲存球員資料",
       update: "更新球員"
+    },
+    toasts: {
+      missingInfo: "資料缺失",
+      missingInfoDesc: "姓名和至少一個隊伍是必填項。",
+      saving: "正在儲存球員",
+      savingDesc: "球員資料正在儲存到名單中。",
+      updating: "正在更新球員",
+      updatingDesc: "球員資料已成功更新。",
+      removing: "正在移除球員",
+      removingDesc: "球員已從名單中移除。",
+      adminPromoted: "已升級為管理員",
+      adminRevoked: "管理員權限已撤銷"
     },
     teams: {
       title: "管理球隊分隊",
