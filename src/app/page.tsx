@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import React, { useState, Fragment } from "react";
 import { MainNav } from "@/components/layout/main-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,52 @@ import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/e
 import { useTranslation } from "@/components/language-provider";
 import Image from "next/image";
 
+const getColorHex = (name: string) => {
+  const n = name.toLowerCase().trim();
+  const mapping: Record<string, string> = {
+    'pink': '#db2777', '粉紅': '#db2777',
+    'grey': '#6b7280', 'gray': '#6b7280', '灰': '#6b7280',
+    'red': '#ef4444', '紅': '#ef4444',
+    'blue': '#3b82f6', '藍': '#3b82f6',
+    'green': '#22c55e', '綠': '#22c55e',
+    'yellow': '#eab308', '黃': '#eab308',
+    'black': '#000000', '黑': '#000000',
+    'white': '#94a3b8', '白': '#94a3b8',
+    'orange': '#f97316', '橙': '#f97316',
+    'purple': '#a855f7', '紫': '#a855f7',
+    'navy': '#1e3a8a', '深藍': '#1e3a8a',
+    'maroon': '#7f1d1d', '褐': '#7f1d1d',
+    'gold': '#d4af37', '金': '#d4af37',
+    'silver': '#c0c0c0', '銀': '#c0c0c0',
+    'lime': '#84cc16', '青': '#84cc16',
+    'teal': '#14b8a6', '藍綠': '#14b8a6',
+    'cyan': '#06b6d4', '天藍': '#06b6d4',
+    'brown': '#78350f', '啡': '#78350f', '棕': '#78350f'
+  };
+
+  for (const [key, value] of Object.entries(mapping)) {
+    if (n.includes(key)) return value;
+  }
+  return 'inherit';
+};
+
+export function KitColorText({ colorText, className }: { colorText: string | undefined, className?: string }) {
+  if (!colorText) return null;
+  
+  const parts = colorText.split('/').map(p => p.trim());
+  
+  return (
+    <span className={className}>
+      {parts.map((part, i) => (
+        <Fragment key={i}>
+          <span style={{ color: getColorHex(part) }}>{part}</span>
+          {i < parts.length - 1 && <span className="mx-0.5 text-muted-foreground">/</span>}
+        </Fragment>
+      ))}
+    </span>
+  );
+}
+
 export function KitBadge({ kitId, isAlternative = false }: { kitId: string | null | undefined, isAlternative?: boolean }) {
   const firestore = useFirestore();
   const { dict, language } = useTranslation();
@@ -72,13 +118,14 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
             )}
           >
             <Shirt className="h-3.5 w-3.5 shrink-0" />
-            <div className="flex flex-wrap items-center gap-x-1.5 leading-none">
-              {isAlternative && <span className="text-[9px] uppercase tracking-wider opacity-70">ALT:</span>}
-              <span>{kitName}</span>
+            <div className="flex flex-wrap items-center gap-x-1 leading-none">
+              {isAlternative && <span className="text-[9px] uppercase tracking-wider opacity-70 mr-1">ALT:</span>}
+              <span className="mr-1">{kitName}</span>
               {kitColor && (
-                <span className="font-medium opacity-80 text-[9px] md:text-[11px]">
-                  {kitColor}
-                </span>
+                <KitColorText 
+                  colorText={kitColor} 
+                  className="font-bold opacity-100 text-[10px] md:text-[11px] bg-muted/30 px-1.5 py-0.5 rounded" 
+                />
               )}
             </div>
           </Badge>
@@ -90,8 +137,8 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
                 <Shirt className="h-4 w-4" />
                 <span className="text-xs font-bold uppercase tracking-widest">{dict.players.kits.viewImage}</span>
               </div>
-              <Badge variant="outline" className="text-[9px] font-bold">
-                {kitName} {kitColor && `• ${kitColor}`}
+              <Badge variant="outline" className="text-[9px] font-bold h-auto py-1">
+                {kitName} {kitColor && <KitColorText colorText={kitColor} className="ml-1.5 border-l pl-1.5" />}
               </Badge>
             </div>
             <div className="relative aspect-[4/5] w-full rounded-lg overflow-hidden border bg-muted">
@@ -649,4 +696,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

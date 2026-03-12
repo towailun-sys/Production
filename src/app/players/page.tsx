@@ -84,6 +84,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
+import { KitColorText } from "@/app/page";
 
 export default function PlayersPage() {
   const { user, isUserLoading } = useUser();
@@ -1221,10 +1222,11 @@ function KitManagementUI() {
                   <Image src={kit.imageUrl} alt={kit.name} fill className="object-cover" />
                 </div>
                 <div>
-                  <div className="font-bold text-sm text-primary">
+                  <div className="font-bold text-sm text-primary flex items-center gap-1">
                     {language === 'zh' ? kit.nameZh || kit.name : kit.name}
-                    {language === 'zh' && kit.colorZh && <span className="opacity-70 font-normal ml-1">({kit.colorZh})</span>}
-                    {language === 'en' && kit.color && <span className="opacity-70 font-normal ml-1">({kit.color})</span>}
+                    {kit.color && (
+                      <KitColorText colorText={language === 'zh' ? kit.colorZh || kit.color : kit.color} className="font-bold opacity-80" />
+                    )}
                   </div>
                   <div className="text-[9px] text-muted-foreground font-bold flex items-center gap-1 uppercase tracking-tighter">
                     <ImageIcon className="h-3 w-3" /> Image Uploaded

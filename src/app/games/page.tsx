@@ -60,7 +60,7 @@ import Link from "next/link";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useTranslation } from "@/components/language-provider";
-import { KitBadge } from "@/app/page";
+import { KitBadge, KitColorText } from "@/app/page";
 
 export default function GamesPage() {
   const { user, isUserLoading } = useUser();
@@ -418,12 +418,12 @@ export default function GamesPage() {
                             <SelectItem key={k.id} value={k.id}>
                               <div className="flex items-center gap-2">
                                 <Shirt className="h-4 w-4" />
-                                {language === 'zh' ? k.nameZh || k.name : k.name}
-                                {k.color && (
-                                  <span className="opacity-70 ml-1 text-xs">
-                                    {language === 'zh' ? k.colorZh || k.color : k.color}
-                                  </span>
-                                )}
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-bold">{language === 'zh' ? k.nameZh || k.name : k.name}</span>
+                                  {k.color && (
+                                    <KitColorText colorText={language === 'zh' ? k.colorZh || k.color : k.color} className="text-[10px] font-bold" />
+                                  )}
+                                </div>
                               </div>
                             </SelectItem>
                           ))}
@@ -445,12 +445,12 @@ export default function GamesPage() {
                             <SelectItem key={k.id} value={k.id}>
                               <div className="flex items-center gap-2">
                                 <Shirt className="h-4 w-4" />
-                                {language === 'zh' ? k.nameZh || k.name : k.name}
-                                {k.color && (
-                                  <span className="opacity-70 ml-1 text-xs">
-                                    {language === 'zh' ? k.colorZh || k.color : k.color}
-                                  </span>
-                                )}
+                                <div className="flex flex-col">
+                                  <span className="text-sm font-bold">{language === 'zh' ? k.nameZh || k.name : k.name}</span>
+                                  {k.color && (
+                                    <KitColorText colorText={language === 'zh' ? k.colorZh || k.color : k.color} className="text-[10px] font-bold" />
+                                  )}
+                                </div>
                               </div>
                             </SelectItem>
                           ))}
@@ -704,12 +704,12 @@ export default function GamesPage() {
                         <SelectItem key={k.id} value={k.id}>
                           <div className="flex items-center gap-2">
                             <Shirt className="h-4 w-4" />
-                            {language === 'zh' ? k.nameZh || k.name : k.name}
-                            {k.color && (
-                              <span className="opacity-70 ml-1 text-xs">
-                                {language === 'zh' ? k.colorZh || k.color : k.color}
-                              </span>
-                            )}
+                            <div className="flex flex-col">
+                              <span className="text-sm font-bold">{language === 'zh' ? k.nameZh || k.name : k.name}</span>
+                              {k.color && (
+                                <KitColorText colorText={language === 'zh' ? k.colorZh || k.color : k.color} className="text-[10px] font-bold" />
+                              )}
+                            </div>
                           </div>
                         </SelectItem>
                       ))}
@@ -731,12 +731,12 @@ export default function GamesPage() {
                         <SelectItem key={k.id} value={k.id}>
                           <div className="flex items-center gap-2">
                             <Shirt className="h-4 w-4" />
-                            {language === 'zh' ? k.nameZh || k.name : k.name}
-                            {k.color && (
-                              <span className="opacity-70 ml-1 text-xs">
-                                {language === 'zh' ? k.colorZh || k.color : k.color}
-                              </span>
-                            )}
+                            <div className="flex flex-col">
+                              <span className="text-sm font-bold">{language === 'zh' ? k.nameZh || k.name : k.name}</span>
+                              {k.color && (
+                                <KitColorText colorText={language === 'zh' ? k.colorZh || k.color : k.color} className="text-[10px] font-bold" />
+                              )}
+                            </div>
                           </div>
                         </SelectItem>
                       ))}
