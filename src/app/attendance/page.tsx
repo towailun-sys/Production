@@ -172,8 +172,8 @@ export default function AttendancePage() {
         <div className="min-h-screen bg-background">
           <MainNav />
           <main className="container mx-auto px-4 py-20 text-center">
-            <h1 className="text-xl md:text-2xl font-headline">Game not found</h1>
-            <Link href="/games" className="text-primary hover:underline mt-4 inline-block font-bold">Return to Schedule</Link>
+            <h1 className="text-xl md:text-2xl font-headline">Fixture not found</h1>
+            <Link href="/games" className="text-primary hover:underline mt-4 inline-block font-bold">Return to Fixtures</Link>
           </main>
         </div>
       );
@@ -185,7 +185,7 @@ export default function AttendancePage() {
         <main className="container mx-auto px-4 py-6 md:py-8">
           <Link href="/attendance" className="inline-flex items-center text-sm font-bold text-primary hover:underline mb-6">
             <ChevronLeft className="h-4 w-4 mr-1" />
-            {dict.attendance.backToSchedule}
+            {dict.attendance.backToFixtures}
           </Link>
           
           <header className="mb-8">
@@ -292,7 +292,7 @@ function ConfirmedAttendanceList({ games, userId, teams }: { games: Game[], user
       {games.length === 0 ? (
         <Card className="p-16 text-center border-dashed border-2 rounded-2xl flex flex-col items-center gap-4">
           <CalendarCheck className="h-12 w-12 text-muted-foreground/30" />
-          <p className="text-muted-foreground font-medium">No confirmed games found in your schedule.</p>
+          <p className="text-muted-foreground font-medium">No confirmed fixtures found in your list.</p>
         </Card>
       ) : (
         <div className="space-y-6">
