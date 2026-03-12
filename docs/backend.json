@@ -46,7 +46,7 @@
         },
         "number": {
           "type": "integer",
-          "description": "The player's squad or jersey number."
+          "description": "The player's squad or jersey number (Optional)."
         },
         "email": {
           "type": "string",
@@ -104,7 +104,7 @@
         },
         "date": {
           "type": "string",
-          "description": "The date when the game is scheduled to take place.",
+          "description": "The date when the game is scheduled to take take place.",
           "format": "date"
         },
         "startTime": {

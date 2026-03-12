@@ -201,7 +201,7 @@ export default function PlayersPage() {
       id: playerId,
       name: formData.name,
       nickname: formData.nickname || "",
-      number: formData.number ? parseInt(formData.number) : null,
+      number: formData.number !== "" ? parseInt(formData.number) : null,
       email: formData.email || "",
       mobileNumber: formData.mobileNumber || "",
       preferredPositions: formData.preferredPositions,
@@ -235,7 +235,7 @@ export default function PlayersPage() {
       id: player.id || "",
       name: player.name,
       nickname: player.nickname || "",
-      number: player.number?.toString() || "",
+      number: (player.number !== undefined && player.number !== null) ? player.number.toString() : "",
       email: player.email || "",
       mobileNumber: player.mobileNumber || "",
       preferredPositions: player.preferredPositions || [],
@@ -259,7 +259,7 @@ export default function PlayersPage() {
       id: editingPlayer.id,
       name: formData.name,
       nickname: formData.nickname || "",
-      number: formData.number ? parseInt(formData.number) : null,
+      number: formData.number !== "" ? parseInt(formData.number) : null,
       email: formData.email || "",
       mobileNumber: formData.mobileNumber || "",
       preferredPositions: formData.preferredPositions,
@@ -439,7 +439,7 @@ export default function PlayersPage() {
                         <Input 
                           id="number" 
                           type="number"
-                          placeholder="7" 
+                          placeholder="7 (Optional)" 
                           value={formData.number}
                           onChange={(e) => setFormData({ ...formData, number: e.target.value })}
                         />
@@ -603,6 +603,7 @@ export default function PlayersPage() {
                   <Input 
                     id="edit-number" 
                     type="number"
+                    placeholder="Optional"
                     value={formData.number}
                     onChange={(e) => setFormData({ ...formData, number: e.target.value })}
                   />
@@ -776,11 +777,12 @@ export default function PlayersPage() {
                         filteredPlayers.map((player) => {
                           const statusCfg = getStatusConfig(player.status);
                           const StatusIcon = statusCfg.icon;
+                          const hasNumber = player.number !== undefined && player.number !== null;
                           
                           return (
                             <TableRow key={player.id} className="hover:bg-primary/5 border-b transition-colors">
                               <TableCell className="text-center font-headline font-bold text-xl text-primary">
-                                {player.number || <span className="text-muted-foreground text-xs italic opacity-30">-</span>}
+                                {hasNumber ? player.number : <span className="text-muted-foreground text-xs italic opacity-30">-</span>}
                               </TableCell>
                               <TableCell className="font-medium">
                                 <div className="flex items-center gap-4">
@@ -890,6 +892,7 @@ export default function PlayersPage() {
                       {filteredPlayers.map((player) => {
                         const statusCfg = getStatusConfig(player.status);
                         const StatusIcon = statusCfg.icon;
+                        const hasNumber = player.number !== undefined && player.number !== null;
                         
                         return (
                           <div key={player.id} className="bg-white p-5 flex flex-col gap-4 active:bg-primary/5 transition-colors border-b sm:border-r">
@@ -897,7 +900,7 @@ export default function PlayersPage() {
                               <div className="flex items-center gap-4">
                                 <div className="relative">
                                   <div className="h-12 w-12 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-lg border border-primary/5">
-                                    {player.number || player.name[0]}
+                                    {hasNumber ? player.number : player.name[0]}
                                   </div>
                                   {player.isCaptain && (
                                     <div className="absolute -top-1.5 -right-1.5 bg-accent text-accent-foreground rounded-full p-1 shadow-md border-2 border-white">

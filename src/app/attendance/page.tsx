@@ -152,7 +152,7 @@ export default function AttendancePage() {
           </div>
           <h1 className="text-2xl md:text-3xl font-headline mb-4">{dict.attendance.signinRequired}</h1>
           <p className="text-muted-foreground max-w-md mb-8 text-sm md:text-base">
-            {dict.attendance.signinDesc}
+            {dict.attendance.signinRequired}
           </p>
         </main>
       </div>
@@ -402,20 +402,21 @@ function GameRosterList({
         <div className="divide-y">
           {players?.map((player) => {
             const status = getStatus(player.id);
+            const hasNumber = player.number !== undefined && player.number !== null;
             return (
               <div key={player.id} className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors">
                 <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
-                  <div className="relative shrink-0">
+                  <div className="shrink-0">
                     <div className={cn(
-                      "h-10 w-10 md:h-11 md:w-11 rounded-full flex items-center justify-center font-bold bg-primary/10 text-primary border border-primary/5"
+                      "h-10 w-10 md:h-11 md:w-11 rounded-full flex items-center justify-center font-bold bg-primary/10 text-primary border border-primary/5 relative"
                     )}>
-                      {player.number || player.name[0]}
+                      {hasNumber ? player.number : player.name[0]}
+                      {player.isCaptain && (
+                        <div className="absolute -top-1 -right-1 bg-accent text-accent-foreground rounded-full p-0.5 shadow-sm border border-white">
+                          <Crown className="h-3 w-3" />
+                        </div>
+                      )}
                     </div>
-                    {player.isCaptain && (
-                      <div className="absolute -top-1 -right-1 bg-accent text-accent-foreground rounded-full p-0.5 shadow-sm border border-white">
-                        <Crown className="h-3 w-3" />
-                      </div>
-                    )}
                   </div>
                   <div className="overflow-hidden">
                     <div className="font-bold flex items-center gap-2 truncate">

@@ -141,17 +141,20 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
         <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{dict.dashboard.confirmedSquad} ({confirmedPlayers.length})</span>
       </div>
       <div className="flex flex-wrap gap-1.5">
-        {confirmedPlayers.map((p) => (
-          <Badge 
-            key={p.id} 
-            variant="secondary" 
-            className="text-[10px] py-0.5 px-2 h-6 font-bold gap-1 bg-primary/10 text-primary border-primary/20"
-          >
-            {p.isCaptain && <Crown className="h-3 w-3 text-accent" />}
-            {p.number && <span className="mr-0.5 opacity-60">#{p.number}</span>}
-            {p.nickname || p.name}
-          </Badge>
-        ))}
+        {confirmedPlayers.map((p) => {
+          const hasNumber = p.number !== undefined && p.number !== null;
+          return (
+            <Badge 
+              key={p.id} 
+              variant="secondary" 
+              className="text-[10px] py-0.5 px-2 h-6 font-bold gap-1 bg-primary/10 text-primary border-primary/20"
+            >
+              {p.isCaptain && <Crown className="h-3 w-3 text-accent" />}
+              {hasNumber && <span className="mr-0.5 opacity-60">#{p.number}</span>}
+              {p.nickname || p.name}
+            </Badge>
+          );
+        })}
       </div>
     </div>
   );
@@ -306,7 +309,7 @@ export default function DashboardPage() {
     const sampleGames = [
       { id: "seed-g1", date: today, startTime: "19:00", endTime: "21:00", location: "Central Sports Complex, Pitch 1", type: "League", team: "team-a", opponent: "Blue Arrows FC", coach: "Sir Alex", fee: "$100\nPayment via Bank Transfer", kitColors: "Home 1: Pink/Grey", alternativeKitColors: "Away 1: Black/Black", additionalDetails: "Please arrive 30 mins early for warm up." },
       { id: "seed-g2", date: in3Days, startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", opponent: "N/A", coach: "Pep G", fee: "Free", kitColors: "Home 2: New White / New White", alternativeKitColors: "TBD", additionalDetails: "Tactics session." },
-      { id: "seed-g3", date: in7Days, startTime: "20:00", endTime: "22:00", location: "South Pitch 4, Main Stadium", type: "Friendly", team: "team-b", opponent: "Red Devils", coach: "Klopp", fee: "$80 cash on pitch", kitColors: "Away 1: Black/Black", alternativeKitColors: "Away 2: White/White", additionalDetails: "Friendly against rivals." },
+      { id: "seed-g3", date: in7Days, startTime: "20:00", endTime: "22:00", location: "Stadium Main Pitch", type: "Friendly", team: "team-b", opponent: "Red Devils", coach: "Klopp", fee: "$80 cash on pitch", kitColors: "Away 1: Black/Black", alternativeKitColors: "Away 2: White/White", additionalDetails: "Friendly against rivals." },
       { id: "seed-g4", date: in10Days, startTime: "19:00", endTime: "21:00", location: "Camp 3 Training Ground", type: "Internal", team: "team-camp3", opponent: "N/A", coach: "Mou", fee: "Split by 14\nUsually $50-$60", kitColors: "Away 2: White/White", alternativeKitColors: "TBD", additionalDetails: "Internal practice match." },
     ];
 
@@ -319,7 +322,7 @@ export default function DashboardPage() {
       id: user.uid,
       teams: ["team-a", "team-b", "team-camp3"],
       status: "Active",
-      number: currentPlayer?.number || 10
+      number: (currentPlayer?.number !== undefined && currentPlayer?.number !== null) ? currentPlayer.number : 10
     }, { merge: true });
 
     toast({ title: "Seeding Complete", description: "Sample teams and games created. You are now assigned to all teams." });
@@ -392,7 +395,7 @@ export default function DashboardPage() {
           <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-muted/20 rounded-3xl border border-dashed border-primary/20">
             <Lock className="h-10 w-10 text-primary mb-4" />
             <h2 className="text-xl md:text-2xl font-headline mb-2">{dict.attendance.signinRequired}</h2>
-            <div className="text-muted-foreground text-sm max-w-sm">{dict.attendance.signinDesc}</div>
+            <div className="text-muted-foreground text-sm max-w-sm">{dict.attendance.signinRequired}</div>
           </div>
         ) : (
           <div className="grid gap-8 lg:grid-cols-4">
@@ -529,17 +532,22 @@ export default function DashboardPage() {
                 <CardHeader className="pb-3"><CardTitle className="text-lg flex items-center gap-2"><Trophy className="h-5 w-5 text-primary" />{dict.dashboard.teammates}</CardTitle></CardHeader>
                 <CardContent className="space-y-5">
                   <div className="divide-y max-h-[300px] lg:max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
-                    {players?.map((p) => (
-                      <div key={p.id} className="py-2.5 flex items-center gap-3">
-                        <div className="h-8 w-8 shrink-0 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-[11px] border border-primary/10">{p.number || p.name[0]}</div>
-                        <div className="flex-1 text-xs font-bold truncate text-foreground/90">{p.nickname || p.name}</div>
-                        <div className="flex flex-wrap gap-1 justify-end max-w-[40%]">
-                          {p.teams?.map(tId => (
-                            <Badge key={tId} variant="outline" className="text-[8px] h-4 px-1 bg-primary text-white border-none whitespace-nowrap">{getTeamName(tId)}</Badge>
-                          ))}
+                    {players?.map((p) => {
+                      const hasNumber = p.number !== undefined && p.number !== null;
+                      return (
+                        <div key={p.id} className="py-2.5 flex items-center gap-3">
+                          <div className="h-8 w-8 shrink-0 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-[11px] border border-primary/10">
+                            {hasNumber ? p.number : p.name[0]}
+                          </div>
+                          <div className="flex-1 text-xs font-bold truncate text-foreground/90">{p.nickname || p.name}</div>
+                          <div className="flex flex-wrap gap-1 justify-end max-w-[40%]">
+                            {p.teams?.map(tId => (
+                              <Badge key={tId} variant="outline" className="text-[8px] h-4 px-1 bg-primary text-white border-none whitespace-nowrap">{getTeamName(tId)}</Badge>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                   <Link href="/players"><Button className="w-full bg-primary font-bold h-10">{dict.dashboard.viewPlayers}</Button></Link>
                 </CardContent>
