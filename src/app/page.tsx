@@ -287,15 +287,24 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
       <div className="flex flex-wrap gap-1.5">
         {confirmedPlayers.map((p) => {
           const hasNumber = p.number !== undefined && p.number !== null;
+          const positions = p.preferredPositions?.map(pos => dict.common.positions[pos.toLowerCase() as keyof typeof dict.common.positions] || pos).join('/') || null;
+          
           return (
             <Badge 
               key={p.id} 
               variant="secondary" 
-              className="text-[10px] py-0.5 px-2 h-6 font-bold gap-1 bg-primary/10 text-primary border-primary/20"
+              className="text-[10px] py-0.5 px-2 h-auto min-h-6 font-bold gap-1 bg-primary/10 text-primary border-primary/20 flex flex-wrap"
             >
-              {p.isCaptain && <Crown className="h-3 w-3 text-accent" />}
-              {hasNumber && <span className="mr-0.5 opacity-60">#{p.number}</span>}
-              {p.nickname || p.name}
+              <div className="flex items-center gap-1">
+                {p.isCaptain && <Crown className="h-3 w-3 text-accent" />}
+                {hasNumber && <span className="opacity-60">#{p.number}</span>}
+                <span>{p.nickname || p.name}</span>
+              </div>
+              {positions && (
+                <span className="text-[8px] opacity-60 font-normal ml-0.5">
+                  ({positions})
+                </span>
+              )}
             </Badge>
           );
         })}
