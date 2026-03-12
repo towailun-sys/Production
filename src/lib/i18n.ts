@@ -56,7 +56,7 @@ const baseDict = {
     title: "SquadFlow",
     dashboard: "Upcoming Fixture",
     attendance: "My Attendance",
-    players: "Players",
+    players: "Squad",
     games: "Games",
     signIn: "Sign In",
     signOut: "Log Out",
@@ -94,7 +94,7 @@ const baseDict = {
     teamView: (team: string) => `${team} View`
   },
   players: {
-    title: "Player Management",
+    title: "Squad Management",
     subtitle: "Manage your squad and link Google accounts.",
     addPlayer: "Add Player",
     manageTeams: "Manage Teams",
@@ -225,7 +225,7 @@ const zhDict: typeof baseDict = {
     title: "SquadFlow",
     dashboard: "可供出席的場次",
     attendance: "我出席的",
-    players: "球員",
+    players: "陣容",
     games: "場次",
     signIn: "登入",
     signOut: "登出",
