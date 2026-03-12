@@ -792,7 +792,7 @@ export default function PlayersPage() {
                       {filteredPlayers.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={6} className="h-40 text-center text-muted-foreground italic">
-                            No players found matching your search.
+                            {dict.players.noPlayersFound}
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -872,7 +872,7 @@ export default function PlayersPage() {
                                         </Button>
                                       </DropdownMenuTrigger>
                                       <DropdownMenuContent align="end" className="w-56">
-                                        <DropdownMenuLabel className="text-xs uppercase tracking-widest text-muted-foreground">Squad Management</DropdownMenuLabel>
+                                        <DropdownMenuLabel className="text-xs uppercase tracking-widest text-muted-foreground">{dict.players.managementLabel}</DropdownMenuLabel>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem onClick={() => handleEditClick(player)} className="gap-3 py-2.5">
                                           <Pencil className="h-4 w-4" />
@@ -880,9 +880,9 @@ export default function PlayersPage() {
                                         </DropdownMenuItem>
                                         <DropdownMenuItem onClick={() => handleToggleAdminStatus(player)} className="gap-3 py-2.5">
                                           {player.isAdmin ? (
-                                            <><ShieldAlert className="h-4 w-4 text-destructive" /> Revoke Admin Role</>
+                                            <><ShieldAlert className="h-4 w-4 text-destructive" /> {dict.players.revokeAdmin}</>
                                           ) : (
-                                            <><ShieldCheck className="h-4 w-4 text-primary" /> Promote to Admin</>
+                                            <><ShieldCheck className="h-4 w-4 text-primary" /> {dict.players.promoteAdmin}</>
                                           )}
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
@@ -907,7 +907,7 @@ export default function PlayersPage() {
                 <div className="lg:hidden">
                   {filteredPlayers.length === 0 ? (
                     <div className="p-12 text-center text-muted-foreground italic text-sm">
-                      No players found.
+                      {dict.players.noPlayersFound}
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-muted/20">
@@ -955,9 +955,9 @@ export default function PlayersPage() {
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => handleToggleAdminStatus(player)} className="gap-3 py-3">
                                       {player.isAdmin ? (
-                                        <><ShieldAlert className="h-4 w-4 text-destructive" /> Revoke Admin</>
+                                        <><ShieldAlert className="h-4 w-4 text-destructive" /> {dict.players.revokeAdmin}</>
                                       ) : (
-                                        <><ShieldCheck className="h-4 w-4 text-primary" /> Make Admin</>
+                                        <><ShieldCheck className="h-4 w-4 text-primary" /> {dict.players.promoteAdmin}</>
                                       )}
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
