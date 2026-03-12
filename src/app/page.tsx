@@ -76,8 +76,12 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
           >
             <Shirt className="h-3.5 w-3.5" />
             {isAlternative && <span className="text-[9px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>}
-            {kitName}
-            {kitColor && <span className="opacity-80 font-normal ml-1">({kitColor})</span>}
+            <span className="truncate">{kitName}</span>
+            {kitColor && (
+              <span className="opacity-90 font-medium ml-1.5 px-1 rounded bg-primary/5">
+                {kitColor}
+              </span>
+            )}
           </Badge>
         </PopoverTrigger>
         <PopoverContent className="w-64 p-3 shadow-xl rounded-xl">
@@ -87,7 +91,9 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
                 <Shirt className="h-4 w-4" />
                 <span className="text-xs font-bold uppercase tracking-widest">{dict.players.kits.viewImage}</span>
               </div>
-              <Badge variant="outline" className="text-[9px] font-bold">{kitName}</Badge>
+              <Badge variant="outline" className="text-[9px] font-bold">
+                {kitName} {kitColor && `• ${kitColor}`}
+              </Badge>
             </div>
             <div className="relative aspect-[4/5] w-full rounded-lg overflow-hidden border bg-muted">
               {kit.imageUrl ? (

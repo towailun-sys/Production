@@ -419,7 +419,11 @@ export default function GamesPage() {
                               <div className="flex items-center gap-2">
                                 <Shirt className="h-4 w-4" />
                                 {language === 'zh' ? k.nameZh || k.name : k.name}
-                                {k.color && <span className="opacity-70 ml-1">({language === 'zh' ? k.colorZh || k.color : k.color})</span>}
+                                {k.color && (
+                                  <span className="opacity-70 ml-1 text-xs">
+                                    {language === 'zh' ? k.colorZh || k.color : k.color}
+                                  </span>
+                                )}
                               </div>
                             </SelectItem>
                           ))}
@@ -442,7 +446,11 @@ export default function GamesPage() {
                               <div className="flex items-center gap-2">
                                 <Shirt className="h-4 w-4" />
                                 {language === 'zh' ? k.nameZh || k.name : k.name}
-                                {k.color && <span className="opacity-70 ml-1">({language === 'zh' ? k.colorZh || k.color : k.color})</span>}
+                                {k.color && (
+                                  <span className="opacity-70 ml-1 text-xs">
+                                    {language === 'zh' ? k.colorZh || k.color : k.color}
+                                  </span>
+                                )}
                               </div>
                             </SelectItem>
                           ))}
@@ -533,7 +541,7 @@ export default function GamesPage() {
                               {game.coach}
                             </div>
                           )}
-                          <div className="flex flex-wrap gap-4">
+                          <div className="flex flex-wrap gap-3">
                             <KitBadge kitId={game.kitColors} />
                             <KitBadge kitId={game.alternativeKitColors} isAlternative />
                           </div>
@@ -697,7 +705,11 @@ export default function GamesPage() {
                           <div className="flex items-center gap-2">
                             <Shirt className="h-4 w-4" />
                             {language === 'zh' ? k.nameZh || k.name : k.name}
-                            {k.color && <span className="opacity-70 ml-1">({language === 'zh' ? k.colorZh || k.color : k.color})</span>}
+                            {k.color && (
+                              <span className="opacity-70 ml-1 text-xs">
+                                {language === 'zh' ? k.colorZh || k.color : k.color}
+                              </span>
+                            )}
                           </div>
                         </SelectItem>
                       ))}
@@ -720,7 +732,11 @@ export default function GamesPage() {
                           <div className="flex items-center gap-2">
                             <Shirt className="h-4 w-4" />
                             {language === 'zh' ? k.nameZh || k.name : k.name}
-                            {k.color && <span className="opacity-70 ml-1">({language === 'zh' ? k.colorZh || k.color : k.color})</span>}
+                            {k.color && (
+                              <span className="opacity-70 ml-1 text-xs">
+                                {language === 'zh' ? k.colorZh || k.color : k.color}
+                              </span>
+                            )}
                           </div>
                         </SelectItem>
                       ))}
