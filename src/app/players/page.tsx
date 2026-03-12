@@ -63,7 +63,8 @@ import {
   UserSearch,
   Shirt,
   Image as ImageIcon,
-  Upload
+  Upload,
+  X
 } from "lucide-react";
 import { Player, PlayerPosition, PlayerStatus, Team, Kit } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -82,6 +83,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 
 export default function PlayersPage() {
