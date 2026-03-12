@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -83,7 +82,7 @@ function KitBadge({ kitId, isAlternative = false }: { kitId: string, isAlternati
           variant="outline" 
           className={cn(
             "text-[10px] md:text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-muted/50 transition-colors py-1", 
-            "text-muted-foreground"
+            "text-primary border-primary/30"
           )}
         >
           <Shirt className="h-3.5 w-3.5" />

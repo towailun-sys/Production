@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useSearchParams } from "next/navigation";
@@ -90,7 +89,7 @@ function KitBadge({ kitId, isAlternative = false }: { kitId: string, isAlternati
           variant="outline" 
           className={cn(
             "text-[10px] font-bold flex items-center gap-1.5 cursor-pointer hover:bg-muted/10 py-1 transition-colors", 
-            "text-muted-foreground"
+            "text-primary border-primary/30"
           )}
         >
           <Shirt className="h-3.5 w-3.5" />
