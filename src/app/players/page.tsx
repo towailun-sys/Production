@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -1197,6 +1198,20 @@ function KitManagementUI() {
           <Label className="text-xs uppercase">{dict.players.kits.imageUrl}</Label>
           <Input value={formData.imageUrl} onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })} placeholder="https://..." />
         </div>
+        
+        {formData.imageUrl && (
+          <div className="relative aspect-[3/4] w-24 mx-auto rounded-lg overflow-hidden border bg-muted shadow-sm mt-1">
+            <Image 
+              src={formData.imageUrl} 
+              alt="Preview" 
+              fill 
+              className="object-cover" 
+              sizes="100px"
+              onError={() => toast({ variant: "destructive", title: "Image failed to load", description: "Please check the URL." })}
+            />
+          </div>
+        )}
+
         <div className="flex gap-2">
           <Button onClick={handleSaveKit} className="flex-1 font-bold">
             {editingKit ? <Pencil className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
