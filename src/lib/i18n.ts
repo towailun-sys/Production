@@ -137,6 +137,29 @@ const baseDict = {
       viewImage: "View Reference Image"
     }
   },
+  games: {
+    title: "Game Schedule",
+    subtitle: "Plan and manage upcoming fixtures.",
+    scheduleGame: "Schedule Game",
+    dialog: {
+      addTitle: "Schedule New Event",
+      editTitle: "Edit Event",
+      type: "Event Type",
+      team: "Assigned Team",
+      date: "Date",
+      start: "Start Time",
+      end: "End Time",
+      location: "Location",
+      opponent: "Opponent",
+      coach: "Coach",
+      fee: "Fee",
+      kit: "Primary Kit",
+      alternativeKit: "Alternative Kit",
+      details: "Extra Details",
+      create: "Create Event",
+      update: "Save Changes"
+    }
+  },
   attendance: {
     title: "My Attendance",
     subtitle: "Confirm your availability for upcoming games and training sessions.",
