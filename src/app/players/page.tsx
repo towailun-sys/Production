@@ -63,7 +63,6 @@ import {
   UserSearch,
   Shirt,
   Image as ImageIcon,
-  Upload,
   X
 } from "lucide-react";
 import { Player, PlayerPosition, PlayerStatus, Team, Kit } from "@/lib/types";
@@ -1226,12 +1225,6 @@ function KitManagementUI() {
               onChange={handleFileChange}
               className="cursor-pointer file:bg-primary file:text-white file:border-none file:rounded-md file:px-3 file:py-1 file:mr-4 file:font-bold h-11"
             />
-            <div className="flex items-center gap-4">
-              <Separator className="flex-1" />
-              <span className="text-[10px] text-muted-foreground uppercase font-bold">OR URL</span>
-              <Separator className="flex-1" />
-            </div>
-            <Input value={formData.imageUrl.startsWith('data:') ? '' : formData.imageUrl} onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })} placeholder="https://..." />
           </div>
         </div>
         
