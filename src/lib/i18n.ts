@@ -48,7 +48,7 @@ const baseDict = {
   },
   nav: {
     title: "Happy Hour Football Club",
-    dashboard: "Schedule",
+    dashboard: "Upcoming Fixture",
     attendance: "My Attendance",
     players: "Squad",
     games: "Games",
@@ -69,7 +69,7 @@ const baseDict = {
     pendingProfileDesc: "Your account is not yet assigned to a squad. Please provide your User ID to the Team Administrator so they can link your account.",
     copyId: "Copy ID",
     upcomingFixtures: "Upcoming Fixtures",
-    fullSchedule: "Full Schedule",
+    fullSchedule: "Full Fixtures",
     confirmedSquad: "Confirmed Squad",
     noConfirmations: "No confirmations yet.",
     availability: "Availability",
@@ -142,7 +142,7 @@ const baseDict = {
     }
   },
   games: {
-    title: "Game Schedule",
+    title: "Upcoming Fixtures",
     subtitle: "Plan and manage upcoming fixtures.",
     scheduleGame: "Schedule Game",
     manageEvent: "Manage Event",
@@ -169,7 +169,7 @@ const baseDict = {
     title: "My Attendance",
     subtitle: "Confirm your availability for upcoming games and training sessions.",
     rosterTitle: "Squad Roster",
-    backToSchedule: "Back to Schedule",
+    backToSchedule: "Back to Fixtures",
     myStatus: "My Status",
     currently: "Currently",
     signinRequired: "Sign In Required",
