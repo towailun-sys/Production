@@ -12,22 +12,15 @@ import {
   Clock,
   ArrowRight,
   Trophy,
-  Info,
-  Shirt,
   Lock,
   Loader2,
   ShieldCheck,
-  Users,
   Database,
-  UserCheck,
-  Fingerprint,
-  Copy,
+  UserRound,
   Sparkles,
   Check,
   X,
-  UserRound,
-  Crown,
-  Link as LinkIcon
+  Crown
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, Attendance, AttendanceStatus, Team } from "@/lib/types";
@@ -38,18 +31,6 @@ import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useTranslation } from "@/components/language-provider";
-
-const KIT_MAP: Record<string, string> = {
-  "Home 1: Pink/Grey": "text-pink-500",
-  "Home 2: New White / New White": "text-slate-300",
-  "Away 1: Black/Black": "text-slate-950",
-  "Away 2: White/White": "text-slate-300",
-  "TBD": "text-muted-foreground"
-};
-
-const getKitColorClass = (kitLabel: string) => {
-  return KIT_MAP[kitLabel] || "text-muted-foreground";
-};
 
 function UserAttendanceToggle({ gameId, userId }: { gameId: string, userId: string }) {
   const firestore = useFirestore();
@@ -424,7 +405,7 @@ export default function DashboardPage() {
                         <CardContent className="p-0 flex flex-col md:flex-row">
                           <div className="p-5 md:p-6 flex-1">
                             <div className="flex flex-wrap items-center gap-3 mb-4">
-                              <Badge className="text-[10px] md:text-xs font-bold uppercase bg-primary text-white px-2 py-0.5">{getTeamName(game.team)}</Badge>
+                              <Badge className="text-[10px] md:text-xs font-bold bg-primary text-white px-3 py-0.5 border-none">{getTeamName(game.team)}</Badge>
                               <span className="text-xs md:text-sm font-bold text-muted-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{game.startTime} - {game.endTime}</span>
                             </div>
                             <h3 className="text-lg md:text-xl font-headline mb-4 leading-tight">

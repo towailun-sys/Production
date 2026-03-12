@@ -12,7 +12,6 @@ import {
   Clock, 
   MapPin, 
   Calendar,
-  Shirt,
   Lock,
   Users,
   ChevronLeft,
@@ -39,18 +38,6 @@ import {
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useTranslation } from "@/components/language-provider";
-
-const KIT_MAP: Record<string, string> = {
-  "Home 1: Pink/Grey": "text-pink-500",
-  "Home 2: New White / New White": "text-slate-300",
-  "Away 1: Black/Black": "text-slate-950",
-  "Away 2: White/White": "text-slate-300",
-  "TBD": "text-muted-foreground"
-};
-
-const getKitColorClass = (kitLabel: string) => {
-  return KIT_MAP[kitLabel] || "text-muted-foreground";
-};
 
 export default function AttendancePage() {
   const searchParams = useSearchParams();
@@ -201,7 +188,7 @@ export default function AttendancePage() {
                 {getTeamName(specificGame.team)}
               </Badge>
               <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 font-bold border-emerald-200 gap-1.5 py-1">
-                <Check className="h-3 w-3" />
+                <Check className="h-3.5 w-3.5" />
                 {dict.common.confirm}
               </Badge>
             </div>
