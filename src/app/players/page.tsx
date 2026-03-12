@@ -891,7 +891,14 @@ function TeamManagementUI() {
   const [newTeam, setNewTeam] = useState({ name: "", nameZh: "" });
 
   const handleAddTeam = () => {
-    if (!newTeam.name || !newTeam.nameZh) return;
+    if (!newTeam.name || !newTeam.nameZh) {
+      toast({
+        variant: "destructive",
+        title: "Input Required",
+        description: "Please provide both English and Chinese names for the team.",
+      });
+      return;
+    }
     const id = doc(collection(firestore, "teams")).id;
     const teamRef = doc(firestore, "teams", id);
     const teamData = { id, ...newTeam };
@@ -923,7 +930,7 @@ function TeamManagementUI() {
     <div className="space-y-4 py-4">
       <div className="grid gap-4 p-4 border rounded-lg bg-muted/20">
         <div className="grid gap-2">
-          <Label>{dict.players.teams.nameEn}</Label>
+          <Label className="font-bold">{dict.players.teams.nameEn}</Label>
           <Input 
             placeholder="Team A" 
             value={newTeam.name} 
@@ -931,32 +938,32 @@ function TeamManagementUI() {
           />
         </div>
         <div className="grid gap-2">
-          <Label>{dict.players.teams.nameZh}</Label>
+          <Label className="font-bold">{dict.players.teams.nameZh}</Label>
           <Input 
             placeholder="隊伍A" 
             value={newTeam.nameZh} 
             onChange={(e) => setNewTeam({ ...newTeam, nameZh: e.target.value })} 
           />
         </div>
-        <Button onClick={handleAddTeam} className="w-full gap-2 font-bold">
+        <Button onClick={handleAddTeam} className="w-full gap-2 font-bold bg-primary">
           <Plus className="h-4 w-4" />
           {dict.players.teams.add}
         </Button>
       </div>
 
-      <div className="divide-y border rounded-lg overflow-hidden">
+      <div className="divide-y border rounded-lg overflow-hidden bg-white">
         {teams?.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground italic text-sm">
             {dict.players.teams.noTeams}
           </div>
         ) : (
           teams?.map((team) => (
-            <div key={team.id} className="p-3 flex items-center justify-between bg-white hover:bg-muted/10 transition-colors">
+            <div key={team.id} className="p-3 flex items-center justify-between hover:bg-muted/10 transition-colors">
               <div>
-                <div className="font-bold text-sm">{team.name}</div>
-                <div className="text-xs text-muted-foreground">{team.nameZh}</div>
+                <div className="font-bold text-sm text-foreground">{team.name}</div>
+                <div className="text-xs text-muted-foreground font-medium">{team.nameZh}</div>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteTeam(team.id)}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleDeleteTeam(team.id)}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
