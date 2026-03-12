@@ -1,4 +1,3 @@
-
 /**
  * Centralized Dictionaries for UI Strings
  */
@@ -144,11 +143,11 @@ const baseDict = {
   games: {
     title: "Upcoming Fixtures",
     subtitle: "Plan and manage upcoming fixtures.",
-    scheduleGame: "Schedule Game",
+    scheduleGame: "Schedule Upcoming Fixture",
     manageEvent: "Manage Event",
     dialog: {
-      addTitle: "Schedule New Event",
-      editTitle: "Edit Event",
+      addTitle: "Schedule New Upcoming Fixture",
+      editTitle: "Edit Upcoming Fixture",
       type: "Event Type",
       team: "Assigned Team",
       date: "Date",
@@ -161,7 +160,7 @@ const baseDict = {
       kit: "Primary Kit",
       alternativeKit: "Alternative Kit",
       details: "Extra Details",
-      create: "Create Event",
+      create: "Create Upcoming Fixture",
       update: "Save Changes"
     }
   },
@@ -326,11 +325,11 @@ const zhDict: typeof baseDict = {
   games: {
     title: "賽程表",
     subtitle: "規劃並管理即將舉行的賽事。",
-    scheduleGame: "安排比賽",
+    scheduleGame: "安排最近賽程",
     manageEvent: "管理活動",
     dialog: {
-      addTitle: "安排新活動",
-      editTitle: "編輯活動",
+      addTitle: "安排新最近賽程",
+      editTitle: "編輯最近賽程",
       type: "活動類型",
       team: "分配隊伍",
       date: "日期",
@@ -343,7 +342,7 @@ const zhDict: typeof baseDict = {
       kit: "首選球衣",
       alternativeKit: "後備球衣",
       details: "額外詳情",
-      create: "創建活動",
+      create: "創建最近賽程",
       update: "儲存更改"
     }
   },
@@ -351,7 +350,7 @@ const zhDict: typeof baseDict = {
     title: "我出席的",
     subtitle: "確認你出席即將舉行的比賽和訓練。",
     rosterTitle: "球員名單",
-    backToFixtures: "返回賽程",
+    backToFixtures: "返回最近賽程",
     myStatus: "我的狀態",
     currently: "目前",
     signinRequired: "請先登入",

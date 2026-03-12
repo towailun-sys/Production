@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -62,8 +61,6 @@ import {
   Users,
   UserSearch,
   Shirt,
-  Upload,
-  X,
   Image as ImageIcon
 } from "lucide-react";
 import { Player, PlayerPosition, PlayerStatus, Team, Kit } from "@/lib/types";
@@ -315,7 +312,7 @@ export default function PlayersPage() {
     const newAdminStatus = !player.isAdmin;
     setDoc(playerRef, { isAdmin: newAdminStatus }, { merge: true });
     toast({
-      title: newAdminStatus ? "Promoted to Admin" : "Admin Privileges Revoked",
+      title: newAdminStatus ? dict.players.promoteAdmin : dict.players.revokeAdmin,
     });
   };
 

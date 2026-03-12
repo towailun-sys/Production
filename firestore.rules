@@ -14,7 +14,8 @@ service cloud.firestore {
 
     /** 
      * Robust isAdmin check. 
-     * Checks roles_admin collection OR the player's own profile field.
+     * Checks if the user has an admin role in a dedicated collection 
+     * or if their player profile has the isAdmin flag.
      */
     function isAdmin() {
       return isSignedIn() && (
@@ -35,19 +36,19 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Teams: Public read for members, managed by admins.
+    // Teams: Public read for signed-in members, managed by admins.
     match /teams/{teamId} {
       allow get, list: if isSignedIn();
       allow write: if isAdmin();
     }
 
-    // Kits: Public read for members, managed by admins.
+    // Kits: Public read for signed-in members, managed by admins.
     match /kits/{kitId} {
       allow get, list: if isSignedIn();
       allow write: if isAdmin();
     }
 
-    // Games: Public read for members, managed by admins.
+    // Games: Public read for signed-in members, managed by admins.
     match /games/{gameId} {
       allow get, list: if isSignedIn();
       allow write: if isAdmin();
@@ -59,18 +60,18 @@ service cloud.firestore {
       allow write: if isOwner(playerId) || isAdmin();
     }
 
-    // User-centric attendance path.
+    // User-centric attendance path for "My Attendance" view.
     match /users/{userId}/game_attendances/{attendanceId} {
       allow get, list: if isOwner(userId) || isAdmin();
       allow write: if (isOwner(userId) && request.resource.data.playerId == userId) || isAdmin();
     }
 
-    // Support for Collection Group queries on attendance.
+    // Support for Collection Group queries on attendance for admin dashboards.
     match /{path=**}/game_attendances/{attendanceId} {
       allow list: if isAdmin();
     }
 
-    // System roles.
+    // System roles (Read-only for signed-in, managed by service accounts/external).
     match /roles_admin/{userId} {
       allow get: if isSignedIn();
       allow write: if false; 
