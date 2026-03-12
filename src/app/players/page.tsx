@@ -62,6 +62,8 @@ import {
   Users,
   UserSearch,
   Shirt,
+  Upload,
+  X,
   Image as ImageIcon
 } from "lucide-react";
 import { Player, PlayerPosition, PlayerStatus, Team, Kit } from "@/lib/types";
@@ -751,7 +753,7 @@ export default function PlayersPage() {
 
         <Card className="border-none shadow-lg overflow-hidden rounded-2xl">
           <CardHeader className="bg-white border-b py-4 px-6 flex flex-row items-center justify-between gap-4">
-            <div className="relative w-full max-w-sm">
+            <div className="relative w-full max-sm:max-w-none max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
                 placeholder={dict.players.searchPlaceholder}
@@ -1028,13 +1030,44 @@ function KitManagementUI() {
   const { toast } = useToast();
 
   const [newKit, setNewKit] = useState<Partial<Kit>>({ name: "", nameZh: "", imageUrl: "", colorClass: "text-primary" });
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 800000) { // Limit to ~800KB due to Firestore document size limits
+      toast({
+        variant: "destructive",
+        title: "File Too Large",
+        description: "Please select an image smaller than 800KB.",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setNewKit(prev => ({ ...prev, imageUrl: reader.result as string }));
+      setIsUploading(false);
+    };
+    reader.onerror = () => {
+      toast({
+        variant: "destructive",
+        title: "Upload Error",
+        description: "Could not process the selected image.",
+      });
+      setIsUploading(false);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleAddKit = () => {
     if (!newKit.name || !newKit.imageUrl) {
       toast({
         variant: "destructive",
         title: "Input Required",
-        description: "Please provide a name and an image URL.",
+        description: "Please provide a name and upload an image.",
       });
       return;
     }
@@ -1086,14 +1119,40 @@ function KitManagementUI() {
             />
           </div>
         </div>
-        <div className="grid gap-1.5">
-          <Label className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">{dict.players.kits.imageUrl}</Label>
-          <Input 
-            placeholder="https://..." 
-            value={newKit.imageUrl} 
-            onChange={(e) => setNewKit({ ...newKit, imageUrl: e.target.value })} 
-          />
+
+        <div className="grid gap-2">
+          <Label className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">Uniform Image</Label>
+          <div className="flex flex-col gap-3">
+            {newKit.imageUrl ? (
+              <div className="relative aspect-[4/5] w-full max-w-[180px] mx-auto rounded-xl overflow-hidden border-2 border-primary shadow-lg bg-white">
+                <Image src={newKit.imageUrl} alt="Preview" fill className="object-cover" />
+                <Button 
+                  size="icon" 
+                  variant="destructive" 
+                  className="absolute top-2 right-2 h-7 w-7 rounded-full opacity-90 hover:opacity-100"
+                  onClick={() => setNewKit(prev => ({ ...prev, imageUrl: "" }))}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <label 
+                className={cn(
+                  "flex flex-col items-center justify-center aspect-[4/5] w-full max-w-[180px] mx-auto border-2 border-dashed border-muted-foreground/30 rounded-xl cursor-pointer hover:bg-muted/50 transition-all gap-3",
+                  isUploading && "opacity-50 pointer-events-none"
+                )}
+              >
+                {isUploading ? <Loader2 className="h-8 w-8 animate-spin text-primary" /> : <Upload className="h-8 w-8 text-muted-foreground" />}
+                <div className="text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-widest">Select Image</p>
+                  <p className="text-[9px] text-muted-foreground mt-1">MAX 800KB</p>
+                </div>
+                <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+              </label>
+            )}
+          </div>
         </div>
+
         <div className="grid gap-1.5">
           <Label className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">{dict.players.kits.colorClass}</Label>
           <Input 
@@ -1102,7 +1161,7 @@ function KitManagementUI() {
             onChange={(e) => setNewKit({ ...newKit, colorClass: e.target.value })} 
           />
         </div>
-        <Button onClick={handleAddKit} size="sm" className="w-full gap-2 font-bold bg-primary h-10 shadow-sm mt-2">
+        <Button onClick={handleAddKit} size="sm" className="w-full gap-2 font-bold bg-primary h-11 shadow-sm mt-2" disabled={isUploading || !newKit.imageUrl}>
           <Plus className="h-4 w-4" />
           {dict.players.kits.add}
         </Button>
@@ -1117,15 +1176,17 @@ function KitManagementUI() {
           kits?.map((kit) => (
             <div key={kit.id} className="p-3 border rounded-xl flex items-center justify-between bg-white hover:bg-muted/5 transition-colors">
               <div className="flex items-center gap-4">
-                <div className="relative h-12 w-12 rounded-lg overflow-hidden border bg-muted shrink-0">
+                <div className="relative h-12 w-12 rounded-lg overflow-hidden border bg-muted shrink-0 shadow-sm">
                   <Image src={kit.imageUrl} alt={kit.name} fill className="object-cover" />
                 </div>
                 <div>
                   <div className={cn("font-bold text-sm", kit.colorClass)}>{language === 'zh' ? kit.nameZh : kit.name}</div>
-                  <div className="text-[10px] text-muted-foreground font-medium truncate max-w-[150px]">{kit.imageUrl}</div>
+                  <div className="text-[9px] text-muted-foreground font-bold flex items-center gap-1 uppercase tracking-tighter">
+                    <ImageIcon className="h-3 w-3" /> Image Uploaded
+                  </div>
                 </div>
               </div>
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-full" onClick={() => handleDeleteKit(kit.id)}>
+              <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:bg-destructive/10 rounded-full" onClick={() => handleDeleteKit(kit.id)}>
                 <Trash2 className="h-4 w-4" />
               </Button>
             </div>
