@@ -43,6 +43,14 @@ service cloud.firestore {
     }
 
     /**
+     * @description Team uniform/kit management.
+     */
+    match /kits/{kitId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isAdmin();
+    }
+
+    /**
      * @description Player profiles. 
      */
     match /players/{playerUid} {
