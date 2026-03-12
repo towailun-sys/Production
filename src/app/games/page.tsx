@@ -579,7 +579,9 @@ export default function GamesPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48">
-                            <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground px-3">Manage Event</DropdownMenuLabel>
+                            <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground px-3">
+                              {dict.games.manageEvent}
+                            </DropdownMenuLabel>
                             <DropdownMenuItem onSelect={() => handleEditClick(game)} className="gap-3 py-3">
                               <Pencil className="h-4 w-4" />
                               {dict.common.edit}

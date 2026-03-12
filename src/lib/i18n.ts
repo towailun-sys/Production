@@ -47,11 +47,11 @@ const baseDict = {
     }
   },
   nav: {
-    title: "Happy Hour Football Club",
-    dashboard: "Upcoming Fixture",
-    attendance: "My Attendance",
-    players: "Squad",
-    games: "Games",
+    title: "歡樂時光足球會",
+    dashboard: "賽程",
+    attendance: "我出席的",
+    players: "陣容",
+    games: "場次",
     signIn: "Sign In",
     signOut: "Log Out",
     language: "Language"
@@ -145,6 +145,7 @@ const baseDict = {
     title: "Game Schedule",
     subtitle: "Plan and manage upcoming fixtures.",
     scheduleGame: "Schedule Game",
+    manageEvent: "Manage Event",
     dialog: {
       addTitle: "Schedule New Event",
       editTitle: "Edit Event",
@@ -326,6 +327,7 @@ const zhDict: typeof baseDict = {
     title: "賽程表",
     subtitle: "規劃並管理即將舉行的賽事。",
     scheduleGame: "安排比賽",
+    manageEvent: "管理活動",
     dialog: {
       addTitle: "安排新活動",
       editTitle: "編輯活動",
