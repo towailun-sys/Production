@@ -84,7 +84,6 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
-import { KitColorText } from "@/app/page";
 
 export default function PlayersPage() {
   const { user, isUserLoading } = useUser();
@@ -1015,6 +1014,165 @@ export default function PlayersPage() {
           </CardContent>
         </Card>
       </main>
+    </div>
+  );
+}
+
+function TeamManagementUI() {
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  const { dict, language } = useTranslation();
+  const [newName, setNewName] = useState("");
+  const [newNameZh, setNewNameZh] = useState("");
+
+  const teamsQuery = useMemoFirebase(() => collection(firestore, "teams"), [firestore]);
+  const { data: teams } = useCollection<Team>(teamsQuery);
+
+  const handleAddTeam = () => {
+    if (!newName) return;
+    const id = doc(collection(firestore, "teams")).id;
+    const teamData = {
+      id,
+      name: newName,
+      nameZh: newNameZh || newName,
+    };
+    setDoc(doc(firestore, "teams", id), teamData);
+    setNewName("");
+    setNewNameZh("");
+    toast({ title: "Team Added" });
+  };
+
+  const handleDeleteTeam = (id: string) => {
+    deleteDoc(doc(firestore, "teams", id));
+    toast({ title: "Team Deleted" });
+  };
+
+  return (
+    <div className="space-y-6 py-4">
+      <div className="grid gap-4 p-4 border rounded-xl bg-muted/20">
+        <div className="grid gap-2">
+          <Label className="text-xs uppercase">{dict.players.teams.nameEn}</Label>
+          <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Team A" />
+        </div>
+        <div className="grid gap-2">
+          <Label className="text-xs uppercase">{dict.players.teams.nameZh}</Label>
+          <Input value={newNameZh} onChange={(e) => setNewNameZh(e.target.value)} placeholder="隊伍 A" />
+        </div>
+        <Button onClick={handleAddTeam} className="w-full font-bold">
+          <Plus className="h-4 w-4 mr-2" /> {dict.players.teams.add}
+        </Button>
+      </div>
+
+      <div className="space-y-2">
+        {teams?.map((team) => (
+          <div key={team.id} className="flex items-center justify-between p-3 border rounded-lg bg-white shadow-sm">
+            <div className="flex flex-col">
+              <span className="font-bold text-sm">{team.name}</span>
+              <span className="text-xs text-muted-foreground">{team.nameZh}</span>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => handleDeleteTeam(team.id)} className="text-destructive h-8 w-8">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+        {(!teams || teams.length === 0) && (
+          <p className="text-center text-xs text-muted-foreground py-4">{dict.players.teams.noTeams}</p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function KitManagementUI() {
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  const { dict, language } = useTranslation();
+  
+  const [formData, setFormData] = useState({
+    name: "",
+    nameZh: "",
+    color: "",
+    colorZh: "",
+    imageUrl: ""
+  });
+
+  const kitsQuery = useMemoFirebase(() => collection(firestore, "kits"), [firestore]);
+  const { data: kits } = useCollection<Kit>(kitsQuery);
+
+  const handleAddKit = () => {
+    if (!formData.name) return;
+    const id = doc(collection(firestore, "kits")).id;
+    const kitData = {
+      id,
+      ...formData
+    };
+    setDoc(doc(firestore, "kits", id), kitData);
+    setFormData({ name: "", nameZh: "", color: "", colorZh: "", imageUrl: "" });
+    toast({ title: "Kit Added" });
+  };
+
+  const handleDeleteKit = (id: string) => {
+    deleteDoc(doc(firestore, "kits", id));
+    toast({ title: "Kit Deleted" });
+  };
+
+  return (
+    <div className="space-y-6 py-4">
+      <div className="grid gap-4 p-4 border rounded-xl bg-muted/20">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <Label className="text-xs uppercase">{dict.players.kits.nameEn}</Label>
+            <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Home 1" />
+          </div>
+          <div className="grid gap-2">
+            <Label className="text-xs uppercase">{dict.players.kits.nameZh}</Label>
+            <Input value={formData.nameZh} onChange={(e) => setFormData({ ...formData, nameZh: e.target.value })} placeholder="主場 1" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-2">
+            <Label className="text-xs uppercase">{dict.players.kits.colorEn}</Label>
+            <Input value={formData.color} onChange={(e) => setFormData({ ...formData, color: e.target.value })} placeholder="Pink / Grey" />
+          </div>
+          <div className="grid gap-2">
+            <Label className="text-xs uppercase">{dict.players.kits.colorZh}</Label>
+            <Input value={formData.colorZh} onChange={(e) => setFormData({ ...formData, colorZh: e.target.value })} placeholder="粉紅 / 灰" />
+          </div>
+        </div>
+        <div className="grid gap-2">
+          <Label className="text-xs uppercase">{dict.players.kits.imageUrl}</Label>
+          <Input value={formData.imageUrl} onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })} placeholder="https://..." />
+        </div>
+        <Button onClick={handleAddKit} className="w-full font-bold">
+          <Plus className="h-4 w-4 mr-2" /> {dict.players.kits.add}
+        </Button>
+      </div>
+
+      <div className="space-y-3">
+        {kits?.map((kit) => (
+          <div key={kit.id} className="flex items-center gap-4 p-3 border rounded-lg bg-white shadow-sm">
+            <div className="h-12 w-10 shrink-0 relative bg-muted rounded overflow-hidden border">
+              {kit.imageUrl ? (
+                <Image src={kit.imageUrl} alt={kit.name} fill className="object-cover" sizes="40px" />
+              ) : (
+                <ImageIcon className="h-4 w-4 m-auto text-muted-foreground opacity-20" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="font-bold text-sm truncate">{kit.name} <span className="text-xs font-normal text-muted-foreground">({kit.nameZh})</span></div>
+              <div className="text-[10px] text-muted-foreground truncate">
+                {kit.color} / {kit.colorZh}
+              </div>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => handleDeleteKit(kit.id)} className="text-destructive h-8 w-8">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+        ))}
+        {(!kits || kits.length === 0) && (
+          <p className="text-center text-xs text-muted-foreground py-4">{dict.players.kits.noKits}</p>
+        )}
+      </div>
     </div>
   );
 }

@@ -1,3 +1,4 @@
+
 /**
  * Centralized Dictionaries for UI Strings
  */
@@ -92,11 +93,11 @@ const baseDict = {
     addPlayer: "Add Player",
     manageTeams: "Manage Teams",
     manageKits: "Manage Kits",
-    searchPlaceholder: "Search players...",
-    noPlayersFound: "No players found matching your search.",
     managementLabel: "Squad Management",
     promoteAdmin: "Promote to Admin",
     revokeAdmin: "Revoke Admin Role",
+    searchPlaceholder: "Search players...",
+    noPlayersFound: "No players found matching your search.",
     tableHeader: {
       number: "#",
       info: "Player Info",
@@ -274,11 +275,11 @@ const zhDict: typeof baseDict = {
     addPlayer: "新增球員",
     manageTeams: "管理隊伍",
     manageKits: "管理球衣",
-    searchPlaceholder: "搜尋球員...",
-    noPlayersFound: "找不到符合搜尋條件的球員。",
     managementLabel: "球員管理",
     promoteAdmin: "升級為管理員",
     revokeAdmin: "撤銷管理員權限",
+    searchPlaceholder: "搜尋球員...",
+    noPlayersFound: "找不到符合搜尋條件的球員。",
     tableHeader: {
       number: "#",
       info: "球員資料",
