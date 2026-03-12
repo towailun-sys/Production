@@ -19,7 +19,8 @@ import {
   MoreVertical,
   Loader2,
   Crown,
-  Info
+  Info,
+  CalendarCheck
 } from "lucide-react";
 import { Game, AttendanceStatus, Player, Attendance, Team } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -104,7 +105,7 @@ export default function AttendancePage() {
 
     toast({
       title: "Status Updated",
-      description: `Attendance set to ${status === 'Confirmed' ? dict.common.join : status === 'Declined' ? dict.common.decline : dict.common.pending}.`,
+      description: `Attendance set to ${status === 'Confirmed' ? dict.common.confirm : status === 'Declined' ? dict.common.decline : dict.common.pending}.`,
     });
   };
 
@@ -184,7 +185,7 @@ export default function AttendancePage() {
       <div className="min-h-screen bg-background pb-12">
         <MainNav />
         <main className="container mx-auto px-4 py-6 md:py-8">
-          <Link href="/games" className="inline-flex items-center text-sm font-bold text-primary hover:underline mb-6">
+          <Link href="/attendance" className="inline-flex items-center text-sm font-bold text-primary hover:underline mb-6">
             <ChevronLeft className="h-4 w-4 mr-1" />
             {dict.attendance.backToSchedule}
           </Link>
@@ -198,6 +199,10 @@ export default function AttendancePage() {
                 )}
               >
                 {getTeamName(specificGame.team)}
+              </Badge>
+              <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 font-bold border-emerald-200 gap-1.5 py-1">
+                <Check className="h-3 w-3" />
+                {dict.common.confirm}
               </Badge>
             </div>
             <h1 className="text-2xl md:text-3xl font-headline leading-tight">
@@ -223,13 +228,8 @@ export default function AttendancePage() {
             )}
           </header>
 
-          <div className="grid lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 order-2 lg:order-1">
-              <GameRosterList gameId={gameId} teams={teams || []} onStatusChange={handleStatusChange} />
-            </div>
-            <div className="space-y-6 order-1 lg:order-2 lg:sticky lg:top-24 h-fit">
-              <AttendanceCard game={specificGame} userId={user.uid} teams={teams || []} onStatusChange={handleStatusChange} isCondensed />
-            </div>
+          <div className="max-w-4xl">
+            <GameRosterList gameId={gameId} teams={teams || []} onStatusChange={handleStatusChange} />
           </div>
         </main>
       </div>
@@ -245,29 +245,59 @@ export default function AttendancePage() {
           <p className="text-sm md:text-base text-muted-foreground">{dict.attendance.subtitle}</p>
         </header>
 
-        <div className="space-y-8 max-w-4xl">
+        <div className="space-y-6 max-w-4xl">
           {isGamesLoading ? (
-            Array.from({ length: 2 }).map((_, i) => (
-              <Card key={i} className="h-64 animate-pulse bg-muted/50 rounded-2xl" />
+            Array.from({ length: 3 }).map((_, i) => (
+              <Card key={i} className="h-48 animate-pulse bg-muted/50 rounded-2xl" />
             ))
-          ) : !games || games.length === 0 ? (
-            <Card className="p-12 text-center border-dashed border-2 rounded-2xl">
-              <p className="text-muted-foreground">No upcoming events to confirm.</p>
-            </Card>
           ) : (
-            games.map((game) => (
-              <AttendanceCard 
-                key={game.id} 
-                game={game} 
-                userId={user.uid} 
-                teams={teams || []}
-                onStatusChange={handleStatusChange} 
-              />
-            ))
+            <ConfirmedAttendanceList 
+              games={games || []} 
+              userId={user.uid} 
+              teams={teams || []} 
+            />
           )}
         </div>
       </main>
     </div>
+  );
+}
+
+function ConfirmedAttendanceList({ games, userId, teams }: { games: Game[], userId: string, teams: Team[] }) {
+  const { dict } = useTranslation();
+  
+  return (
+    <div className="space-y-6">
+      {games.length === 0 ? (
+        <Card className="p-16 text-center border-dashed border-2 rounded-2xl flex flex-col items-center gap-4">
+          <CalendarCheck className="h-12 w-12 text-muted-foreground/30" />
+          <p className="text-muted-foreground font-medium">No confirmed games found in your schedule.</p>
+        </Card>
+      ) : (
+        <div className="space-y-6">
+          {games.map((game) => (
+            <ConfirmedGameItem key={game.id} game={game} userId={userId} teams={teams} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ConfirmedGameItem({ game, userId, teams }: { game: Game, userId: string, teams: Team[] }) {
+  const firestore = useFirestore();
+  const attendanceRef = useMemoFirebase(() => doc(firestore, "games", game.id, "attendanceRecords", userId), [firestore, game.id, userId]);
+  const { data: attendance, isLoading } = useDoc<Attendance>(attendanceRef);
+
+  if (isLoading) return <Card className="h-48 animate-pulse bg-muted/50 rounded-2xl" />;
+  if (attendance?.status !== 'Confirmed') return null;
+
+  return (
+    <AttendanceCard 
+      game={game} 
+      userId={userId} 
+      teams={teams}
+    />
   );
 }
 
@@ -323,7 +353,7 @@ function GameRosterList({
           {dict.attendance.rosterTitle}
         </CardTitle>
         <div className="flex gap-4 text-sm font-bold">
-          <span className="text-accent flex items-center gap-1"><Check className="h-4 w-4" /> {confirmedCount}</span>
+          <span className="text-emerald-600 flex items-center gap-1"><Check className="h-4 w-4" /> {confirmedCount}</span>
           <span className="text-destructive flex items-center gap-1"><X className="h-4 w-4" /> {declinedCount}</span>
         </div>
       </CardHeader>
@@ -370,7 +400,7 @@ function GameRosterList({
                     variant={status === 'Confirmed' ? 'default' : status === 'Declined' ? 'destructive' : 'outline'}
                     className={cn(
                       "min-w-[80px] md:min-w-[95px] justify-center font-bold text-[10px] md:text-xs py-1",
-                      status === 'Confirmed' && "bg-accent hover:bg-accent",
+                      status === 'Confirmed' && "bg-emerald-500 hover:bg-emerald-500",
                       status === 'Pending' && "border-amber-500 text-amber-600"
                     )}
                   >
@@ -387,7 +417,7 @@ function GameRosterList({
                       <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuLabel className="text-xs uppercase tracking-widest text-muted-foreground">{dict.dashboard.roles}</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Confirmed', player.id)} className="text-accent font-bold py-2.5">
+                        <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Confirmed', player.id)} className="text-emerald-600 font-bold py-2.5">
                           <Check className="mr-2 h-4 w-4" /> {dict.common.confirm}
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Declined', player.id)} className="text-destructive font-bold py-2.5">
@@ -413,22 +443,13 @@ function AttendanceCard({
   game, 
   userId, 
   teams,
-  onStatusChange, 
-  isCondensed = false 
 }: { 
   game: Game, 
   userId: string, 
   teams: Team[],
-  onStatusChange: (id: string, s: AttendanceStatus) => void, 
-  isCondensed?: boolean 
 }) {
-  const firestore = useFirestore();
   const { language, dict } = useTranslation();
-  const attendanceRef = useMemoFirebase(() => doc(firestore, "games", game.id, "attendanceRecords", userId), [firestore, game.id, userId]);
-  const { data: attendance } = useDoc<any>(attendanceRef);
   
-  const currentStatus: AttendanceStatus = attendance?.status || 'Pending';
-
   const getTeamName = (teamId: string) => {
     if (teamId === 'All') return dict.common.teams.All;
     const team = teams.find(t => t.id === teamId);
@@ -448,62 +469,8 @@ function AttendanceCard({
     return date.toLocaleDateString('default', { dateStyle: 'full' });
   };
 
-  if (isCondensed) {
-    return (
-      <Card className="border-none shadow-lg overflow-hidden bg-white rounded-2xl">
-        <CardHeader className="pb-3 pt-5 px-6">
-          <CardTitle className="text-lg flex items-center gap-2">
-            <UserCheck className="h-5 w-5 text-primary" />
-            {dict.attendance.myStatus}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6 px-6 pb-6">
-          <div className="flex items-center justify-between p-3 bg-muted/20 rounded-xl border border-dashed">
-            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{dict.attendance.currently}:</span>
-            <Badge className={cn(
-              "font-bold px-3 py-1 text-[10px] md:text-xs",
-              currentStatus === 'Confirmed' ? "bg-accent" : 
-              currentStatus === 'Declined' ? "bg-destructive" : "bg-amber-500"
-            )}>
-              {currentStatus === 'Confirmed' ? dict.common.confirm : currentStatus === 'Declined' ? dict.common.decline : dict.common.pending}
-            </Badge>
-          </div>
-          <div className="grid gap-3">
-            <Button 
-              size="lg"
-              onClick={() => onStatusChange(game.id, 'Confirmed')}
-              className={cn(
-                "w-full gap-2 transition-all font-bold h-12 shadow-sm",
-                currentStatus === 'Confirmed' ? "bg-accent hover:bg-accent/90" : "bg-white text-foreground border border-input hover:bg-accent/10"
-              )}
-            >
-              <Check className="h-5 w-5" />
-              {dict.common.join}
-            </Button>
-            <Button 
-              size="lg"
-              onClick={() => onStatusChange(game.id, 'Declined')}
-              variant="outline"
-              className={cn(
-                "w-full gap-2 transition-all font-bold h-12",
-                currentStatus === 'Declined' ? "bg-destructive text-white border-destructive hover:bg-destructive/90" : "hover:bg-destructive/10 hover:border-destructive hover:text-destructive"
-              )}
-            >
-              <X className="h-5 w-5" />
-              {dict.common.decline}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
-    <Card className={cn(
-      "border-none shadow-lg overflow-hidden transition-all rounded-2xl",
-      currentStatus === 'Confirmed' ? "ring-2 ring-accent bg-accent/5" : 
-      currentStatus === 'Declined' ? "ring-2 ring-destructive bg-destructive/5" : ""
-    )}>
+    <Card className="border-none shadow-lg overflow-hidden transition-all rounded-2xl ring-2 ring-emerald-500 bg-emerald-50/10">
       <CardHeader className="border-b bg-white/50 pb-5 pt-6 px-6">
         <div className="flex items-center justify-between gap-4">
           <Badge 
@@ -514,20 +481,9 @@ function AttendanceCard({
           >
             {getTeamName(game.team)}
           </Badge>
-          <div className="flex items-center gap-1.5 text-xs font-bold whitespace-nowrap overflow-hidden">
-            {currentStatus === 'Pending' ? (
-              <span className="flex items-center text-amber-600">
-                {dict.attendance.confirmationRequired}
-              </span>
-            ) : (
-              <span className={cn(
-                "flex items-center truncate",
-                currentStatus === 'Confirmed' ? "text-accent" : "text-destructive"
-              )}>
-                {currentStatus === 'Confirmed' ? <Check className="h-3.5 w-3.5 mr-1.5" /> : <X className="h-3.5 w-3.5 mr-1.5" />}
-                {currentStatus === 'Confirmed' ? dict.common.confirm : currentStatus === 'Declined' ? dict.common.decline : dict.common.pending}
-              </span>
-            )}
+          <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600">
+            <Check className="h-3.5 w-3.5" />
+            {dict.common.confirm}
           </div>
         </div>
         <CardTitle className="text-xl md:text-2xl mt-4 font-headline leading-tight">
@@ -536,15 +492,15 @@ function AttendanceCard({
             : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
         </CardTitle>
       </CardHeader>
-      <CardContent className="pt-6 px-6 pb-6 grid gap-8 md:grid-cols-2">
-        <div className="space-y-5">
+      <CardContent className="pt-6 px-6 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 flex-1">
           <div className="flex items-center gap-4 text-muted-foreground">
             <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
               <Calendar className="h-5 w-5 text-primary" />
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.attendance.dateLabel}</p>
-              <p className="font-bold text-foreground text-sm md:text-base">{formatGameDate(game.date)}</p>
+              <p className="font-bold text-foreground text-sm">{formatGameDate(game.date)}</p>
             </div>
           </div>
           <div className="flex items-center gap-4 text-muted-foreground">
@@ -553,7 +509,7 @@ function AttendanceCard({
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.attendance.timeLabel}</p>
-              <p className="font-bold text-foreground text-sm md:text-base">{game.startTime} - {game.endTime}</p>
+              <p className="font-bold text-foreground text-sm">{game.startTime} - {game.endTime}</p>
             </div>
           </div>
           <div className="flex items-center gap-4 text-muted-foreground">
@@ -562,73 +518,20 @@ function AttendanceCard({
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.attendance.locationLabel}</p>
-              <p className="font-bold text-foreground text-sm md:text-base">{game.location}</p>
+              <p className="font-bold text-foreground text-sm">{game.location}</p>
             </div>
           </div>
-          {game.kitColors && (
-            <div className="flex items-center gap-4 text-muted-foreground">
-              <div className="bg-accent/10 p-2.5 rounded-full shrink-0">
-                <Shirt className={cn("h-5 w-5", getKitColorClass(game.kitColors))} />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.games.dialog.kit}</p>
-                <p className={cn("font-bold text-sm md:text-base", getKitColorClass(game.kitColors))}>{dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}</p>
-              </div>
-            </div>
-          )}
         </div>
 
-        <div className="flex flex-col justify-center items-center gap-5 bg-muted/20 p-6 rounded-2xl border border-dashed text-foreground">
-          <div className="font-bold text-center text-sm uppercase tracking-widest opacity-70">{dict.attendance.attendingQuestion}</div>
-          <div className="flex flex-col sm:flex-row w-full gap-3">
-            <Button 
-              onClick={() => onStatusChange(game.id, 'Confirmed')}
-              className={cn(
-                "flex-1 gap-2 transition-all font-bold h-12 text-sm",
-                currentStatus === 'Confirmed' ? "bg-accent scale-[1.02] shadow-md" : "bg-white text-foreground border border-input hover:bg-accent/10 hover:border-accent"
-              )}
-            >
-              <Check className="h-4 w-4" />
-              {dict.common.join}
-            </Button>
-            <Button 
-              onClick={() => onStatusChange(game.id, 'Declined')}
-              variant="outline"
-              className={cn(
-                "flex-1 gap-2 transition-all font-bold h-12 text-sm",
-                currentStatus === 'Declined' ? "bg-destructive text-white border-destructive scale-[1.02] shadow-md" : "bg-white text-foreground border border-input hover:bg-destructive/10 hover:border-destructive"
-              )}
-            >
-              <X className="h-4 w-4" />
-              {dict.common.decline}
-            </Button>
-          </div>
-          <Link href={`/attendance?gameId=${game.id}`} className="text-[11px] text-primary font-bold hover:underline uppercase tracking-wider py-1">
-            {dict.attendance.viewFullRoster}
-          </Link>
+        <div className="shrink-0">
+          <Button variant="outline" className="font-bold border-primary text-primary hover:bg-primary/5 gap-2" asChild>
+            <Link href={`/attendance?gameId=${game.id}`}>
+              {dict.attendance.viewFullRoster}
+              <ChevronLeft className="h-4 w-4 rotate-180" />
+            </Link>
+          </Button>
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-function UserCheck(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-      <circle cx="9" cy="7" r="4" />
-      <polyline points="16 11 18 13 22 9" />
-    </svg>
   );
 }
