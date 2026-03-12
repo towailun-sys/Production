@@ -1192,7 +1192,7 @@ function KitManagementUI() {
         </div>
         <Button onClick={handleSaveKit} size="sm" className="w-full gap-2 font-bold bg-primary h-11 shadow-sm mt-2" disabled={isUploading || !kitForm.imageUrl}>
           {editingKitId ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
-          {editingKitId ? dict.players.dialog.update : dict.players.kits.add}
+          {editingKitId ? dict.players.kits.update : dict.players.kits.add}
         </Button>
       </div>
 

@@ -131,6 +131,7 @@ const baseDict = {
       imageUrl: "Image URL",
       colorClass: "Color (e.g. text-pink-500)",
       add: "Add Kit",
+      update: "Update Kit",
       noKits: "No kits defined yet.",
       viewImage: "View Reference Image"
     }
@@ -306,6 +307,7 @@ const zhDict: typeof baseDict = {
       imageUrl: "圖片網址",
       colorClass: "顏色代碼 (如 text-pink-500)",
       add: "新增球衣",
+      update: "更新球衣",
       noKits: "尚未定義任何球衣。",
       viewImage: "查看參考圖片"
     }
