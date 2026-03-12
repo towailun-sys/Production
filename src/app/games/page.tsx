@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -270,6 +271,7 @@ export default function GamesPage() {
   };
 
   const getKitLabel = (kitId: string) => {
+    if (!kitId || kitId === "none") return dict.common.tbd;
     const kit = kits?.find(k => k.id === kitId);
     if (!kit) return kitId && !kitId.includes('/') ? kitId : dict.common.tbd;
     const name = language === 'zh' ? kit.nameZh || kit.name : kit.name;
@@ -540,13 +542,11 @@ export default function GamesPage() {
                             </div>
                           )}
                           <div className="flex flex-wrap gap-4">
-                            {game.kitColors && (
-                              <div className="flex items-center gap-2 font-bold text-primary">
-                                <Shirt className="h-4 w-4 shrink-0" />
-                                {getKitLabel(game.kitColors)}
-                              </div>
-                            )}
-                            {game.alternativeKitColors && (
+                            <div className="flex items-center gap-2 font-bold text-primary">
+                              <Shirt className="h-4 w-4 shrink-0" />
+                              {getKitLabel(game.kitColors)}
+                            </div>
+                            {game.alternativeKitColors && game.alternativeKitColors !== "none" && (
                               <div className="flex items-center gap-2 font-bold text-muted-foreground opacity-80">
                                 <Shirt className="h-4 w-4 shrink-0" />
                                 <span className="text-[10px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>
@@ -573,7 +573,7 @@ export default function GamesPage() {
                     </div>
 
                     <div className="flex flex-row md:flex-col items-center gap-3 justify-between md:justify-center border-t md:border-none pt-4 md:pt-0">
-                      <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 hover:bg-primary/5 font-bold gap-1.5 h-10 px-4 flex-1 md:flex-none" asChild>
+                      <Button variant="ghost" size="sm" className="text-primary font-bold gap-1.5 h-10 px-4 flex-1 md:flex-none hover:bg-primary/5" asChild>
                         <Link href={`/attendance?gameId=${game.id}`}>
                           {dict.dashboard.viewRoster}
                           <ChevronRight className="h-4 w-4" />
@@ -765,3 +765,4 @@ export default function GamesPage() {
     </div>
   );
 }
+
