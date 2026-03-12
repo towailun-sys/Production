@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useSearchParams } from "next/navigation";
@@ -237,8 +236,8 @@ export default function AttendancePage() {
               )}
             </div>
             {specificGame.additionalDetails && (
-              <div className="mt-6 p-4 bg-muted/20 border-l-4 border-primary/40 rounded-xl max-w-2xl shadow-sm">
-                <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground mb-2 uppercase tracking-widest">
+              <div className="mt-6 p-4 bg-primary/5 border-l-4 border-primary/40 rounded-r-xl max-w-2xl shadow-sm">
+                <div className="flex items-center gap-2 text-[10px] font-bold text-primary mb-2 uppercase tracking-widest">
                   <span className="flex items-center gap-1.5"><Info className="h-3.5 w-3.5" /> {dict.attendance.detailsLabel}</span>
                 </div>
                 <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
@@ -596,6 +595,18 @@ function AttendanceCard({
             <div>
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1.5">{dict.attendance.feeLabel}</p>
               <p className="font-bold text-primary text-sm whitespace-pre-wrap">{game.fee}</p>
+            </div>
+          </div>
+        )}
+
+        {game.additionalDetails && (
+          <div className="flex items-start gap-4 p-4 bg-primary/5 rounded-xl border-l-4 border-primary/40">
+            <div className="bg-primary/10 p-2 rounded-full shrink-0">
+              <Info className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1.5">{dict.attendance.detailsLabel}</p>
+              <p className="font-bold text-foreground text-sm whitespace-pre-wrap leading-relaxed">{game.additionalDetails}</p>
             </div>
           </div>
         )}

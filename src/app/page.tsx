@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -22,7 +21,8 @@ import {
   X,
   Crown,
   Shirt,
-  Banknote
+  Banknote,
+  Info
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, Attendance, AttendanceStatus, Team } from "@/lib/types";
@@ -470,6 +470,15 @@ export default function DashboardPage() {
                               <div className="flex items-start gap-2 text-primary font-bold text-[11px] md:text-xs pt-1">
                                 <Banknote className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                                 <span className="whitespace-pre-wrap leading-normal">{game.fee}</span>
+                              </div>
+                            )}
+
+                            {game.additionalDetails && (
+                              <div className="mt-3 p-3 bg-primary/5 border-l-4 border-primary/30 rounded-r-xl flex items-start gap-3 shadow-sm">
+                                <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                                <div className="text-[11px] md:text-xs text-foreground leading-relaxed whitespace-pre-wrap">
+                                  {game.additionalDetails}
+                                </div>
                               </div>
                             )}
                             
