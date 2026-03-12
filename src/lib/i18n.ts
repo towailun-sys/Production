@@ -1,4 +1,3 @@
-
 /**
  * Centralized Dictionaries for UI Strings
  */
@@ -144,6 +143,7 @@ const baseDict = {
       end: "End Time",
       location: "Location",
       opponent: "Opponent",
+      coach: "Coach",
       kit: "Kit Selection",
       details: "Additional Details",
       create: "Create Event",
@@ -310,6 +310,7 @@ const zhDict: typeof baseDict = {
       end: "結束時間",
       location: "地點",
       opponent: "對手",
+      coach: "教練",
       kit: "球衣顏色",
       details: "額外詳情",
       create: "創建活動",

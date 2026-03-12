@@ -1,4 +1,3 @@
-
 export type PlayerPosition = 'GK' | 'DF' | 'MF' | 'FW';
 export type PlayerStatus = 'Active' | 'Injured' | 'Not Available' | 'Pending for Club Fee';
 
@@ -35,6 +34,7 @@ export interface Game {
   team: string; // References Team.id or 'All'
   opponent?: string;
   kitColors?: string;
+  coach?: string;
   additionalDetails?: string;
 }
 

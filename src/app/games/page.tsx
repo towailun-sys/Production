@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -47,6 +46,7 @@ import {
   Loader2,
   Users,
   Info,
+  UserRound,
   Calendar as CalendarIcon
 } from "lucide-react";
 import { Game, GameType, Player, Team } from "@/lib/types";
@@ -101,6 +101,7 @@ export default function GamesPage() {
     endTime: string;
     location: string;
     opponent: string;
+    coach: string;
     kitColors: string;
     additionalDetails: string;
   }>({
@@ -111,6 +112,7 @@ export default function GamesPage() {
     endTime: "",
     location: "",
     opponent: "",
+    coach: "",
     kitColors: "TBD",
     additionalDetails: "",
   });
@@ -131,6 +133,7 @@ export default function GamesPage() {
       endTime: "", 
       location: "", 
       opponent: "", 
+      coach: "",
       kitColors: "TBD",
       additionalDetails: "",
     });
@@ -162,6 +165,7 @@ export default function GamesPage() {
       endTime: formData.endTime,
       location: formData.location,
       opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || "TBD"),
+      coach: formData.coach || "",
       kitColors: formData.kitColors || "TBD",
       additionalDetails: formData.additionalDetails || "",
     };
@@ -192,6 +196,7 @@ export default function GamesPage() {
       endTime: game.endTime,
       location: game.location,
       opponent: (game.opponent === "N/A" || !game.opponent) ? "" : game.opponent,
+      coach: game.coach || "",
       kitColors: game.kitColors || "TBD",
       additionalDetails: game.additionalDetails || "",
     });
@@ -217,6 +222,7 @@ export default function GamesPage() {
       endTime: formData.endTime,
       location: formData.location, 
       opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || "TBD"),
+      coach: formData.coach || "",
       kitColors: formData.kitColors || "TBD",
       additionalDetails: formData.additionalDetails || "",
     };
@@ -360,16 +366,22 @@ export default function GamesPage() {
                     <Label htmlFor="location" className="text-xs uppercase tracking-wider">{dict.games.dialog.location}</Label>
                     <Input id="location" placeholder="Stadium or Pitch name" className="h-11" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="opponent" className="text-xs uppercase tracking-wider">{dict.games.dialog.opponent}</Label>
-                    <Input 
-                      id="opponent" 
-                      placeholder={isOpponentNotRequired(formData.type) ? 'N/A' : 'Away Team Name'} 
-                      className="h-11"
-                      value={isOpponentNotRequired(formData.type) ? '' : formData.opponent} 
-                      onChange={(e) => setFormData({ ...formData, opponent: e.target.value })}
-                      disabled={isOpponentNotRequired(formData.type)}
-                    />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="opponent" className="text-xs uppercase tracking-wider">{dict.games.dialog.opponent}</Label>
+                      <Input 
+                        id="opponent" 
+                        placeholder={isOpponentNotRequired(formData.type) ? 'N/A' : 'Away Team Name'} 
+                        className="h-11"
+                        value={isOpponentNotRequired(formData.type) ? '' : formData.opponent} 
+                        onChange={(e) => setFormData({ ...formData, opponent: e.target.value })}
+                        disabled={isOpponentNotRequired(formData.type)}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="coach" className="text-xs uppercase tracking-wider">{dict.games.dialog.coach}</Label>
+                      <Input id="coach" placeholder="Coach Name" className="h-11" value={formData.coach} onChange={(e) => setFormData({ ...formData, coach: e.target.value })} />
+                    </div>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="kitColors" className="text-xs uppercase tracking-wider">{dict.games.dialog.kit}</Label>
@@ -468,6 +480,12 @@ export default function GamesPage() {
                           <MapPin className="h-4 w-4 text-primary shrink-0" />
                           {game.location}
                         </div>
+                        {game.coach && (
+                          <div className="flex items-center gap-2">
+                            <UserRound className="h-4 w-4 text-primary shrink-0" />
+                            {game.coach}
+                          </div>
+                        )}
                         {game.kitColors && (
                           <div className={cn("flex items-center gap-2 font-bold", getKitColorClass(game.kitColors))}>
                             <Shirt className="h-4 w-4 shrink-0" />
@@ -581,16 +599,22 @@ export default function GamesPage() {
                 <Label htmlFor="edit-location" className="text-xs uppercase tracking-wider">{dict.games.dialog.location}</Label>
                 <Input id="edit-location" placeholder="Stadium or Pitch name" className="h-11" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-opponent" className="text-xs uppercase tracking-wider">{dict.games.dialog.opponent}</Label>
-                <Input 
-                  id="edit-opponent" 
-                  placeholder={isOpponentNotRequired(formData.type) ? 'N/A' : 'Away Team Name'} 
-                  className="h-11"
-                  value={isOpponentNotRequired(formData.type) ? '' : formData.opponent} 
-                  onChange={(e) => setFormData({ ...formData, opponent: e.target.value })}
-                  disabled={isOpponentNotRequired(formData.type)}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-opponent" className="text-xs uppercase tracking-wider">{dict.games.dialog.opponent}</Label>
+                  <Input 
+                    id="edit-opponent" 
+                    placeholder={isOpponentNotRequired(formData.type) ? 'N/A' : 'Away Team Name'} 
+                    className="h-11"
+                    value={isOpponentNotRequired(formData.type) ? '' : formData.opponent} 
+                    onChange={(e) => setFormData({ ...formData, opponent: e.target.value })}
+                    disabled={isOpponentNotRequired(formData.type)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-coach" className="text-xs uppercase tracking-wider">{dict.games.dialog.coach}</Label>
+                  <Input id="edit-coach" placeholder="Coach Name" className="h-11" value={formData.coach} onChange={(e) => setFormData({ ...formData, coach: e.target.value })} />
+                </div>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-kitColors" className="text-xs uppercase tracking-wider">{dict.games.dialog.kit}</Label>

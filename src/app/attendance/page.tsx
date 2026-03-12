@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useSearchParams } from "next/navigation";
@@ -20,7 +19,8 @@ import {
   Crown,
   Info,
   CalendarCheck,
-  Shirt
+  Shirt,
+  UserRound
 } from "lucide-react";
 import { Game, AttendanceStatus, Player, Attendance, Team } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -216,12 +216,14 @@ export default function AttendancePage() {
               <span className="flex items-center gap-2 font-medium"><Calendar className="h-4 w-4 text-primary shrink-0" /> {formatGameDate(specificGame.date)}</span>
               <span className="flex items-center gap-2 font-medium"><Clock className="h-4 w-4 text-primary shrink-0" /> {specificGame.startTime} - {specificGame.endTime}</span>
               <span className="flex items-center gap-2 font-medium"><MapPin className="h-4 w-4 text-primary shrink-0" /> {specificGame.location}</span>
+              {specificGame.coach && (
+                <span className="flex items-center gap-2 font-medium"><UserRound className="h-4 w-4 text-primary shrink-0" /> {specificGame.coach}</span>
+              )}
             </div>
             {specificGame.additionalDetails && (
               <div className="mt-6 p-4 bg-muted/20 border-l-4 border-primary/40 rounded-xl max-w-2xl shadow-sm">
                 <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground mb-2 uppercase tracking-widest">
-                  <Info className="h-3.5 w-3.5" />
-                  {dict.attendance.detailsLabel}
+                  <span className="flex items-center gap-1.5"><Info className="h-3.5 w-3.5" /> {dict.attendance.detailsLabel}</span>
                 </div>
                 <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
                   {specificGame.additionalDetails}
@@ -495,7 +497,7 @@ function AttendanceCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-6 px-6 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 flex-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6 flex-1">
           <div className="flex items-center gap-4 text-muted-foreground">
             <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
               <Calendar className="h-5 w-5 text-primary" />
@@ -523,6 +525,17 @@ function AttendanceCard({
               <p className="font-bold text-foreground text-sm">{game.location}</p>
             </div>
           </div>
+          {game.coach && (
+            <div className="flex items-center gap-4 text-muted-foreground">
+              <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
+                <UserRound className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.games.dialog.coach}</p>
+                <p className="font-bold text-foreground text-sm">{game.coach}</p>
+              </div>
+            </div>
+          )}
           {game.kitColors && (
             <div className="flex items-center gap-4 text-muted-foreground">
               <div className="bg-primary/10 p-2.5 rounded-full shrink-0">

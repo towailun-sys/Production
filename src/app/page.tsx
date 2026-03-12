@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -297,10 +296,10 @@ export default function DashboardPage() {
     const in10Days = new Date(Date.now() + 86400000 * 10).toISOString().split('T')[0];
 
     const sampleGames = [
-      { id: "seed-g1", date: today, startTime: "19:00", endTime: "21:00", location: "Central Sports Complex", type: "League", team: "team-a", opponent: "Blue Arrows FC", kitColors: "Home 1: Pink/Grey", additionalDetails: "Please arrive 30 mins early for warm up." },
-      { id: "seed-g2", date: in3Days, startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", opponent: "N/A", kitColors: "Home 2: New White / New White", additionalDetails: "Tactics session." },
-      { id: "seed-g3", date: in7Days, startTime: "20:00", endTime: "22:00", location: "South Pitch 4", type: "Friendly", team: "team-b", opponent: "Red Devils", kitColors: "Away 1: Black/Black", additionalDetails: "Friendly against rivals." },
-      { id: "seed-g4", date: in10Days, startTime: "19:00", endTime: "21:00", location: "Camp 3 Training Ground", type: "Internal", team: "team-camp3", opponent: "N/A", kitColors: "Away 2: White/White", additionalDetails: "Internal practice match." },
+      { id: "seed-g1", date: today, startTime: "19:00", endTime: "21:00", location: "Central Sports Complex", type: "League", team: "team-a", opponent: "Blue Arrows FC", coach: "Sir Alex", kitColors: "Home 1: Pink/Grey", additionalDetails: "Please arrive 30 mins early for warm up." },
+      { id: "seed-g2", date: in3Days, startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", opponent: "N/A", coach: "Pep G", kitColors: "Home 2: New White / New White", additionalDetails: "Tactics session." },
+      { id: "seed-g3", date: in7Days, startTime: "20:00", endTime: "22:00", location: "South Pitch 4", type: "Friendly", team: "team-b", opponent: "Red Devils", coach: "Klopp", kitColors: "Away 1: Black/Black", additionalDetails: "Friendly against rivals." },
+      { id: "seed-g4", date: in10Days, startTime: "19:00", endTime: "21:00", location: "Camp 3 Training Ground", type: "Internal", team: "team-camp3", opponent: "N/A", coach: "Mou", kitColors: "Away 2: White/White", additionalDetails: "Internal practice match." },
     ];
 
     sampleGames.forEach(g => {
@@ -432,6 +431,12 @@ export default function DashboardPage() {
                             <div className="flex flex-wrap items-center gap-3 mb-4">
                               <Badge className="text-[10px] md:text-xs font-bold bg-primary text-white px-3 py-0.5 border-none">{getTeamName(game.team)}</Badge>
                               <span className="text-xs md:text-sm font-bold text-muted-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{game.startTime} - {game.endTime}</span>
+                              {game.coach && (
+                                <span className="text-[10px] md:text-xs font-bold text-muted-foreground flex items-center gap-1.5">
+                                  <UserRound className="h-3.5 w-3.5 text-primary" />
+                                  {game.coach}
+                                </span>
+                              )}
                               {game.kitColors && (
                                 <span className={cn("text-[10px] md:text-xs font-bold flex items-center gap-1.5", KIT_COLORS[game.kitColors] || "text-muted-foreground")}>
                                   <Shirt className="h-3.5 w-3.5" />
