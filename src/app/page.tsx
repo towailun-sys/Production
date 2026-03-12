@@ -46,11 +46,9 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
   const firestore = useFirestore();
   const { dict, language } = useTranslation();
   
-  // Normalize kitId for consistent check
   const effectiveKitId = (!kitId || kitId === 'none') ? null : kitId;
   
   const kitRef = useMemoFirebase(() => {
-    // If it looks like a path or is null, don't try to fetch as a kit ID
     if (!effectiveKitId || effectiveKitId.includes('/')) return null;
     return doc(firestore, "kits", effectiveKitId);
   }, [firestore, effectiveKitId]);
@@ -59,7 +57,6 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
 
   if (isLoading) return <div className="h-4 w-16 animate-pulse bg-muted rounded" />;
   
-  // Case 1: Kit found in Firestore
   if (kit) {
     const kitName = language === 'zh' ? kit.nameZh || kit.name : kit.name;
     const kitColor = language === 'zh' ? kit.colorZh || kit.color : kit.color;
@@ -71,17 +68,19 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
             variant="outline" 
             className={cn(
               "text-[10px] md:text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-muted/50 transition-colors py-1", 
-              "text-primary border-primary/30"
+              "text-primary border-primary/30 h-auto"
             )}
           >
-            <Shirt className="h-3.5 w-3.5" />
-            {isAlternative && <span className="text-[9px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>}
-            <span className="truncate">{kitName}</span>
-            {kitColor && (
-              <span className="opacity-90 font-medium ml-1.5 px-1 rounded bg-primary/5">
-                {kitColor}
-              </span>
-            )}
+            <Shirt className="h-3.5 w-3.5 shrink-0" />
+            <div className="flex flex-wrap items-center gap-x-1.5 leading-none">
+              {isAlternative && <span className="text-[9px] uppercase tracking-wider opacity-70">ALT:</span>}
+              <span>{kitName}</span>
+              {kitColor && (
+                <span className="font-medium opacity-80 text-[9px] md:text-[11px]">
+                  {kitColor}
+                </span>
+              )}
+            </div>
           </Badge>
         </PopoverTrigger>
         <PopoverContent className="w-64 p-3 shadow-xl rounded-xl">
@@ -117,7 +116,6 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
     );
   }
 
-  // Case 2: Kit ID is actually a legacy description string
   if (effectiveKitId && effectiveKitId.length > 0 && effectiveKitId.length < 50) {
     return (
       <Badge 
@@ -131,7 +129,6 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
     );
   }
 
-  // Case 3: No kit assigned (TBD) - only show for primary kits
   if (!isAlternative) {
     return (
       <Badge 
@@ -401,8 +398,8 @@ export default function DashboardPage() {
     });
 
     const sampleKits = [
-      { id: "kit-home-1", name: "Home 1", nameZh: "主場一", color: "Pink/Grey", colorZh: "粉紅/灰", imageUrl: "https://picsum.photos/seed/kit1/600/800" },
-      { id: "kit-away-1", name: "Away 1", nameZh: "客場一", color: "Black/Black", colorZh: "全黑", imageUrl: "https://picsum.photos/seed/kit2/600/800" },
+      { id: "kit-home-1", name: "Home 1", nameZh: "主場一", color: "Pink / Grey", colorZh: "粉紅 / 灰", imageUrl: "https://picsum.photos/seed/kit1/600/800" },
+      { id: "kit-away-1", name: "Away 1", nameZh: "客場一", color: "Black / Black", colorZh: "全黑", imageUrl: "https://picsum.photos/seed/kit2/600/800" },
     ];
 
     sampleKits.forEach(k => {
@@ -652,3 +649,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
