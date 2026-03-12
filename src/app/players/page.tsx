@@ -1026,24 +1026,40 @@ function TeamManagementUI() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const { dict, language } = useTranslation();
-  const [newName, setNewName] = useState("");
-  const [newNameZh, setNewNameZh] = useState("");
+  const [name, setName] = useState("");
+  const [nameZh, setNameZh] = useState("");
+  const [editingTeam, setEditingTeam] = useState<Team | null>(null);
 
   const teamsQuery = useMemoFirebase(() => collection(firestore, "teams"), [firestore]);
   const { data: teams } = useCollection<Team>(teamsQuery);
 
-  const handleAddTeam = () => {
-    if (!newName) return;
-    const id = doc(collection(firestore, "teams")).id;
+  const handleSaveTeam = () => {
+    if (!name) return;
+    
+    const id = editingTeam ? editingTeam.id : doc(collection(firestore, "teams")).id;
     const teamData = {
       id,
-      name: newName,
-      nameZh: newNameZh || newName,
+      name,
+      nameZh: nameZh || name,
     };
-    setDoc(doc(firestore, "teams", id), teamData);
-    setNewName("");
-    setNewNameZh("");
-    toast({ title: "Team Added" });
+
+    setDoc(doc(firestore, "teams", id), teamData, { merge: true })
+      .then(() => {
+        toast({ title: editingTeam ? "Team Updated" : "Team Added" });
+        resetForm();
+      });
+  };
+
+  const handleEditClick = (team: Team) => {
+    setEditingTeam(team);
+    setName(team.name);
+    setNameZh(team.nameZh || "");
+  };
+
+  const resetForm = () => {
+    setEditingTeam(null);
+    setName("");
+    setNameZh("");
   };
 
   const handleDeleteTeam = (id: string) => {
@@ -1056,27 +1072,40 @@ function TeamManagementUI() {
       <div className="grid gap-4 p-4 border rounded-xl bg-muted/20">
         <div className="grid gap-2">
           <Label className="text-xs uppercase">{dict.players.teams.nameEn}</Label>
-          <Input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Team A" />
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Team A" />
         </div>
         <div className="grid gap-2">
           <Label className="text-xs uppercase">{dict.players.teams.nameZh}</Label>
-          <Input value={newNameZh} onChange={(e) => setNewNameZh(e.target.value)} placeholder="隊伍 A" />
+          <Input value={nameZh} onChange={(e) => setNameZh(e.target.value)} placeholder="隊伍 A" />
         </div>
-        <Button onClick={handleAddTeam} className="w-full font-bold">
-          <Plus className="h-4 w-4 mr-2" /> {dict.players.teams.add}
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleSaveTeam} className="flex-1 font-bold">
+            {editingTeam ? <Pencil className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+            {editingTeam ? dict.players.teams.update : dict.players.teams.add}
+          </Button>
+          {editingTeam && (
+            <Button variant="outline" onClick={resetForm} className="font-bold">
+              {dict.common.cancel}
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-2">
         {teams?.map((team) => (
-          <div key={team.id} className="flex items-center justify-between p-3 border rounded-lg bg-white shadow-sm">
+          <div key={team.id} className="flex items-center justify-between p-3 border rounded-lg bg-white shadow-sm group">
             <div className="flex flex-col">
               <span className="font-bold text-sm">{team.name}</span>
               <span className="text-xs text-muted-foreground">{team.nameZh}</span>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => handleDeleteTeam(team.id)} className="text-destructive h-8 w-8">
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-1">
+              <Button variant="ghost" size="icon" onClick={() => handleEditClick(team)} className="h-8 w-8 text-primary hover:bg-primary/10">
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => handleDeleteTeam(team.id)} className="text-destructive h-8 w-8 hover:bg-destructive/10">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         ))}
         {(!teams || teams.length === 0) && (
@@ -1099,20 +1128,41 @@ function KitManagementUI() {
     colorZh: "",
     imageUrl: ""
   });
+  const [editingKit, setEditingKit] = useState<Kit | null>(null);
 
   const kitsQuery = useMemoFirebase(() => collection(firestore, "kits"), [firestore]);
   const { data: kits } = useCollection<Kit>(kitsQuery);
 
-  const handleAddKit = () => {
+  const handleSaveKit = () => {
     if (!formData.name) return;
-    const id = doc(collection(firestore, "kits")).id;
+    
+    const id = editingKit ? editingKit.id : doc(collection(firestore, "kits")).id;
     const kitData = {
       id,
       ...formData
     };
-    setDoc(doc(firestore, "kits", id), kitData);
+
+    setDoc(doc(firestore, "kits", id), kitData, { merge: true })
+      .then(() => {
+        toast({ title: editingKit ? "Kit Updated" : "Kit Added" });
+        resetForm();
+      });
+  };
+
+  const handleEditClick = (kit: Kit) => {
+    setEditingKit(kit);
+    setFormData({
+      name: kit.name,
+      nameZh: kit.nameZh || "",
+      color: kit.color || "",
+      colorZh: kit.colorZh || "",
+      imageUrl: kit.imageUrl || ""
+    });
+  };
+
+  const resetForm = () => {
+    setEditingKit(null);
     setFormData({ name: "", nameZh: "", color: "", colorZh: "", imageUrl: "" });
-    toast({ title: "Kit Added" });
   };
 
   const handleDeleteKit = (id: string) => {
@@ -1147,14 +1197,22 @@ function KitManagementUI() {
           <Label className="text-xs uppercase">{dict.players.kits.imageUrl}</Label>
           <Input value={formData.imageUrl} onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })} placeholder="https://..." />
         </div>
-        <Button onClick={handleAddKit} className="w-full font-bold">
-          <Plus className="h-4 w-4 mr-2" /> {dict.players.kits.add}
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleSaveKit} className="flex-1 font-bold">
+            {editingKit ? <Pencil className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+            {editingKit ? dict.players.kits.update : dict.players.kits.add}
+          </Button>
+          {editingKit && (
+            <Button variant="outline" onClick={resetForm} className="font-bold">
+              {dict.common.cancel}
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="space-y-3">
         {kits?.map((kit) => (
-          <div key={kit.id} className="flex items-center gap-4 p-3 border rounded-lg bg-white shadow-sm">
+          <div key={kit.id} className="flex items-center gap-4 p-3 border rounded-lg bg-white shadow-sm group">
             <div className="h-12 w-10 shrink-0 relative bg-muted rounded overflow-hidden border">
               {kit.imageUrl ? (
                 <Image src={kit.imageUrl} alt={kit.name} fill className="object-cover" sizes="40px" />
@@ -1168,9 +1226,14 @@ function KitManagementUI() {
                 {kit.color} / {kit.colorZh}
               </div>
             </div>
-            <Button variant="ghost" size="icon" onClick={() => handleDeleteKit(kit.id)} className="text-destructive h-8 w-8">
-              <Trash2 className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-1">
+              <Button variant="ghost" size="icon" onClick={() => handleEditClick(kit)} className="h-8 w-8 text-primary hover:bg-primary/10">
+                <Pencil className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="icon" onClick={() => handleDeleteKit(kit.id)} className="text-destructive h-8 w-8 hover:bg-destructive/10">
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         ))}
         {(!kits || kits.length === 0) && (

@@ -137,6 +137,7 @@ const baseDict = {
       nameEn: "Name (English)",
       nameZh: "Name (Chinese)",
       add: "Add Team",
+      update: "Update Team",
       noTeams: "No teams defined yet."
     },
     kits: {
@@ -347,6 +348,7 @@ const zhDict: typeof baseDict = {
       nameEn: "名稱 (英文)",
       nameZh: "名稱 (中文)",
       add: "新增隊伍",
+      update: "更新隊伍",
       noTeams: "尚未定義任何隊伍。"
     },
     kits: {
