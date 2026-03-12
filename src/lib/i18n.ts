@@ -174,6 +174,16 @@ const baseDict = {
       details: "Extra Details",
       create: "Create Upcoming Fixture",
       update: "Save Changes"
+    },
+    toasts: {
+      missingInfo: "Missing Information",
+      missingInfoDesc: "Please fill in all required fields.",
+      saving: "Upcoming Fixture Scheduled",
+      savingDesc: "The event has been added to the calendar.",
+      updating: "Upcoming Fixture Updated",
+      updatingDesc: "Fixture details have been saved.",
+      removing: "Upcoming Fixture Deleted",
+      removingDesc: "The event has been removed from the list."
     }
   },
   attendance: {
@@ -192,7 +202,13 @@ const baseDict = {
     detailsLabel: "Details",
     attendingQuestion: "Are you attending?",
     confirmationRequired: "Please confirm your availability",
-    viewFullRoster: "View Full Roster"
+    viewFullRoster: "View Full Roster",
+    toasts: {
+      statusUpdated: "Status Updated",
+      statusDesc: (status: string) => `Attendance set to ${status}.`,
+      confirmDesc: "You're in!",
+      updateDesc: "Status updated"
+    }
   }
 };
 
@@ -368,6 +384,16 @@ const zhDict: typeof baseDict = {
       details: "額外詳情",
       create: "創建最近賽程",
       update: "儲存更改"
+    },
+    toasts: {
+      missingInfo: "資料缺失",
+      missingInfoDesc: "請填寫所有必填欄位。",
+      saving: "最近賽程已安排",
+      savingDesc: "活動已添加到賽程表中。",
+      updating: "最近賽程已更新",
+      updatingDesc: "賽事詳情已儲存。",
+      removing: "最近賽程已刪除",
+      removingDesc: "活動已從名單中移除。"
     }
   },
   attendance: {
@@ -386,7 +412,13 @@ const zhDict: typeof baseDict = {
     detailsLabel: "詳情",
     attendingQuestion: "你會出席嗎？",
     confirmationRequired: "請確認出席情況",
-    viewFullRoster: "查看完整隊員名單"
+    viewFullRoster: "查看完整隊員名單",
+    toasts: {
+      statusUpdated: "狀態已更新",
+      statusDesc: (status: string) => `出席情況已設置為 ${status}。`,
+      confirmDesc: "我們會見到你！",
+      updateDesc: "出席狀態已更新"
+    }
   }
 };
 

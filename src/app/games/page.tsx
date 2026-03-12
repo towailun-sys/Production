@@ -150,8 +150,8 @@ export default function GamesPage() {
     if (!formData.date || !formData.startTime || !formData.endTime || !formData.location || !formData.team) {
       toast({
         variant: "destructive",
-        title: "Missing Information",
-        description: "Please fill in all required fields.",
+        title: dict.games.toasts.missingInfo,
+        description: dict.games.toasts.missingInfoDesc,
       });
       return;
     }
@@ -187,7 +187,8 @@ export default function GamesPage() {
     setIsAddOpen(false);
     resetForm();
     toast({
-      title: "Event Scheduled",
+      title: dict.games.toasts.saving,
+      description: dict.games.toasts.savingDesc,
     });
   };
 
@@ -249,7 +250,8 @@ export default function GamesPage() {
     setEditingGame(null);
     resetForm();
     toast({
-      title: "Event Updated",
+      title: dict.games.toasts.updating,
+      description: dict.games.toasts.updatingDesc,
     });
   };
 
@@ -261,7 +263,10 @@ export default function GamesPage() {
         operation: 'delete'
       } satisfies SecurityRuleContext));
     });
-    toast({ title: "Event Deleted" });
+    toast({ 
+      title: dict.games.toasts.removing,
+      description: dict.games.toasts.removingDesc,
+    });
   };
 
   const getTeamLabel = (teamId: string) => {

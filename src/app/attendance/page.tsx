@@ -101,9 +101,10 @@ export default function AttendancePage() {
         } satisfies SecurityRuleContext));
       });
 
+    const statusLabel = status === 'Confirmed' ? dict.common.confirm : status === 'Declined' ? dict.common.decline : dict.common.pending;
     toast({
-      title: "Status Updated",
-      description: `Attendance set to ${status === 'Confirmed' ? dict.common.confirm : status === 'Declined' ? dict.common.decline : dict.common.pending}.`,
+      title: dict.attendance.toasts.statusUpdated,
+      description: dict.attendance.toasts.statusDesc(statusLabel),
     });
   };
 
