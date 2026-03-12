@@ -112,8 +112,8 @@ export default function GamesPage() {
     opponent: "",
     coach: "",
     fee: "",
-    kitColors: "",
-    alternativeKitColors: "",
+    kitColors: "none",
+    alternativeKitColors: "none",
     additionalDetails: "",
   });
 
@@ -135,8 +135,8 @@ export default function GamesPage() {
       opponent: "", 
       coach: "",
       fee: "",
-      kitColors: "",
-      alternativeKitColors: "",
+      kitColors: "none",
+      alternativeKitColors: "none",
       additionalDetails: "",
     });
   };
@@ -169,8 +169,8 @@ export default function GamesPage() {
       opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || "TBD"),
       coach: formData.coach || "",
       fee: formData.fee || "",
-      kitColors: formData.kitColors || "",
-      alternativeKitColors: formData.alternativeKitColors || "",
+      kitColors: formData.kitColors === "none" ? "" : formData.kitColors,
+      alternativeKitColors: formData.alternativeKitColors === "none" ? "" : formData.alternativeKitColors,
       additionalDetails: formData.additionalDetails || "",
     };
 
@@ -202,8 +202,8 @@ export default function GamesPage() {
       opponent: (game.opponent === "N/A" || !game.opponent) ? "" : game.opponent,
       coach: game.coach || "",
       fee: game.fee || "",
-      kitColors: game.kitColors || "",
-      alternativeKitColors: game.alternativeKitColors || "",
+      kitColors: game.kitColors || "none",
+      alternativeKitColors: game.alternativeKitColors || "none",
       additionalDetails: game.additionalDetails || "",
     });
     
@@ -230,8 +230,8 @@ export default function GamesPage() {
       opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || "TBD"),
       coach: formData.coach || "",
       fee: formData.fee || "",
-      kitColors: formData.kitColors || "",
-      alternativeKitColors: formData.alternativeKitColors || "",
+      kitColors: formData.kitColors === "none" ? "" : formData.kitColors,
+      alternativeKitColors: formData.alternativeKitColors === "none" ? "" : formData.alternativeKitColors,
       additionalDetails: formData.additionalDetails || "",
     };
 
@@ -418,7 +418,7 @@ export default function GamesPage() {
                           <SelectValue placeholder="Select kit" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">{dict.common.tbd}</SelectItem>
+                          <SelectItem value="none">{dict.common.tbd}</SelectItem>
                           {kits?.map((k) => (
                             <SelectItem key={k.id} value={k.id}>
                               <div className="flex items-center gap-2">
@@ -440,7 +440,7 @@ export default function GamesPage() {
                           <SelectValue placeholder="Select alt kit" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">{dict.common.tbd}</SelectItem>
+                          <SelectItem value="none">{dict.common.tbd}</SelectItem>
                           {kits?.map((k) => (
                             <SelectItem key={k.id} value={k.id}>
                               <div className="flex items-center gap-2">
@@ -705,7 +705,7 @@ export default function GamesPage() {
                       <SelectValue placeholder="Select kit" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">{dict.common.tbd}</SelectItem>
+                      <SelectItem value="none">{dict.common.tbd}</SelectItem>
                       {kits?.map((k) => (
                         <SelectItem key={k.id} value={k.id}>
                           <div className="flex items-center gap-2">
@@ -727,7 +727,7 @@ export default function GamesPage() {
                       <SelectValue placeholder="Select alt kit" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">{dict.common.tbd}</SelectItem>
+                      <SelectItem value="none">{dict.common.tbd}</SelectItem>
                       {kits?.map((k) => (
                         <SelectItem key={k.id} value={k.id}>
                           <div className="flex items-center gap-2">
