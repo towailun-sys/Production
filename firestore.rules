@@ -7,7 +7,7 @@ service cloud.firestore {
     // --- Helper Functions ---
 
     function isSignedIn() {
-      return request.auth != null;
+      return request.auth != null && request.auth.uid != null;
     }
 
     function isOwner(userId) {
@@ -17,7 +17,7 @@ service cloud.firestore {
     function isAdmin() {
       return isSignedIn() && 
              exists(/databases/$(database)/documents/players/$(request.auth.uid)) && 
-             get(/databases/$(database)/documents/players/$(request.auth.uid)).data.isAdmin == true;
+             get(/databases/$(database)/documents/players/$(request.auth.uid)).data.get('isAdmin', false) == true;
     }
 
     function matchesEmail(email) {
@@ -39,7 +39,7 @@ service cloud.firestore {
      */
     match /teams/{teamId} {
       allow get, list: if isSignedIn();
-      allow create, update, delete: if isSignedIn() && isAdmin();
+      allow create, update, delete: if isAdmin();
     }
 
     /**
@@ -48,15 +48,15 @@ service cloud.firestore {
     match /players/{playerUid} {
       allow get, list: if isSignedIn();
       
-      allow create: if isSignedIn() && (isOwner(playerUid) || isAdmin()) && request.resource.data.id == playerUid;
+      allow create: if isSignedIn() && (isOwner(playerUid) || isAdmin());
       
       allow update: if (
         isExistingOwner(playerUid) || 
         isExistingAdmin() || 
         (resource != null && matchesEmail(resource.data.email))
-      ) && request.resource.data.id == resource.data.id;
+      );
       
-      allow delete: if isExistingAdmin() || (resource != null && matchesEmail(resource.data.email));
+      allow delete: if isExistingAdmin();
     }
 
     /**
@@ -64,14 +64,13 @@ service cloud.firestore {
      */
     match /games/{gameId} {
       allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && isAdmin();
-      allow update, delete: if isExistingAdmin();
+      allow create, update, delete: if isAdmin();
 
       match /attendanceRecords/{playerUid} {
         allow get, list: if isSignedIn();
-        allow create: if (isOwner(playerUid) || isAdmin()) && request.resource.data.playerId == playerUid && request.resource.data.gameId == gameId;
-        allow update: if (isExistingOwner(playerUid) || isExistingAdmin()) && request.resource.data.playerId == resource.data.playerId;
-        allow delete: if isExistingAdmin();
+        allow create: if (isOwner(playerUid) || isAdmin());
+        allow update: if (isExistingOwner(playerUid) || isExistingAdmin());
+        allow delete: if isAdmin();
       }
     }
   }

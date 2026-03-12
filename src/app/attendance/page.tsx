@@ -21,7 +21,7 @@ import {
   Crown,
   Info
 } from "lucide-react";
-import { Game, AttendanceStatus, Player, Attendance } from "@/lib/types";
+import { Game, AttendanceStatus, Player, Attendance, Team } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
@@ -58,6 +58,12 @@ export default function AttendancePage() {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
   const { language, dict } = useTranslation();
+
+  const teamsQuery = useMemoFirebase(() => {
+    if (isUserLoading || !user) return null;
+    return collection(firestore, "teams");
+  }, [firestore, user, isUserLoading]);
+  const { data: teams } = useCollection<Team>(teamsQuery);
 
   const gameRef = useMemoFirebase(() => {
     if (isUserLoading || !user || !gameId) return null;
@@ -100,6 +106,13 @@ export default function AttendancePage() {
       title: "Status Updated",
       description: `Attendance set to ${status === 'Confirmed' ? dict.common.join : status === 'Declined' ? dict.common.decline : dict.common.pending}.`,
     });
+  };
+
+  const getTeamName = (teamId: string) => {
+    if (teamId === 'All') return dict.common.teams.All;
+    const team = teams?.find(t => t.id === teamId);
+    if (!team) return teamId;
+    return language === 'zh' ? team.nameZh : team.name;
   };
 
   const formatGameDate = (dateStr: string) => {
@@ -181,13 +194,10 @@ export default function AttendancePage() {
               <Badge 
                 variant="outline"
                 className={cn(
-                  "font-bold border-none text-white",
-                  specificGame.team === 'A' ? "bg-primary" : 
-                  specificGame.team === 'B' ? "bg-indigo-600" : 
-                  "bg-muted text-muted-foreground"
+                  "font-bold border-none text-white bg-primary"
                 )}
               >
-                {dict.common.teams[specificGame.team as keyof typeof dict.common.teams]}
+                {getTeamName(specificGame.team)}
               </Badge>
             </div>
             <h1 className="text-3xl font-headline">
@@ -215,10 +225,10 @@ export default function AttendancePage() {
 
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              <GameRosterList gameId={gameId} onStatusChange={handleStatusChange} />
+              <GameRosterList gameId={gameId} teams={teams || []} onStatusChange={handleStatusChange} />
             </div>
             <div className="space-y-6">
-              <AttendanceCard game={specificGame} userId={user.uid} onStatusChange={handleStatusChange} isCondensed />
+              <AttendanceCard game={specificGame} userId={user.uid} teams={teams || []} onStatusChange={handleStatusChange} isCondensed />
             </div>
           </div>
         </main>
@@ -250,6 +260,7 @@ export default function AttendancePage() {
                 key={game.id} 
                 game={game} 
                 userId={user.uid} 
+                teams={teams || []}
                 onStatusChange={handleStatusChange} 
               />
             ))
@@ -262,14 +273,16 @@ export default function AttendancePage() {
 
 function GameRosterList({ 
   gameId, 
+  teams,
   onStatusChange 
 }: { 
   gameId: string;
+  teams: Team[];
   onStatusChange: (gameId: string, status: AttendanceStatus, targetPlayerId?: string) => void;
 }) {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
-  const { dict } = useTranslation();
+  const { dict, language } = useTranslation();
   
   const playerRef = useMemoFirebase(() => {
     if (isUserLoading || !user) return null;
@@ -291,6 +304,12 @@ function GameRosterList({
 
   const getStatus = (playerId: string) => {
     return attendanceDocs?.find(a => a.playerId === playerId)?.status || "Pending";
+  };
+
+  const getTeamName = (teamId: string) => {
+    const team = teams.find(t => t.id === teamId);
+    if (!team) return teamId;
+    return language === 'zh' ? team.nameZh : team.name;
   };
 
   const confirmedCount = attendanceDocs?.filter(a => a.status === 'Confirmed').length || 0;
@@ -317,8 +336,7 @@ function GameRosterList({
                 <div className="flex items-center gap-3">
                   <div className="relative shrink-0">
                     <div className={cn(
-                      "h-10 w-10 rounded-full flex items-center justify-center font-bold",
-                      player.team === 'A' ? "bg-primary/10 text-primary" : "bg-indigo-100 text-indigo-700"
+                      "h-10 w-10 rounded-full flex items-center justify-center font-bold bg-primary/10 text-primary"
                     )}>
                       {player.number || player.name[0]}
                     </div>
@@ -339,11 +357,8 @@ function GameRosterList({
                       )}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      <span className={cn(
-                        "font-bold",
-                        player.team === 'A' ? "text-primary" : "text-indigo-600"
-                      )}>
-                        {dict.common.teams[player.team as 'A' | 'B']}
+                      <span className="font-bold text-primary">
+                        {getTeamName(player.team)}
                       </span>
                       {" • "}{player.preferredPositions?.map(pos => dict.common.positions[pos.toLowerCase() as keyof typeof dict.common.positions] || pos).join(', ') || dict.common.any}
                     </div>
@@ -394,13 +409,32 @@ function GameRosterList({
   );
 }
 
-function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: { game: Game, userId: string, onStatusChange: (id: string, s: AttendanceStatus) => void, isCondensed?: boolean }) {
+function AttendanceCard({ 
+  game, 
+  userId, 
+  teams,
+  onStatusChange, 
+  isCondensed = false 
+}: { 
+  game: Game, 
+  userId: string, 
+  teams: Team[],
+  onStatusChange: (id: string, s: AttendanceStatus) => void, 
+  isCondensed?: boolean 
+}) {
   const firestore = useFirestore();
   const { language, dict } = useTranslation();
   const attendanceRef = useMemoFirebase(() => doc(firestore, "games", game.id, "attendanceRecords", userId), [firestore, game.id, userId]);
   const { data: attendance } = useDoc<any>(attendanceRef);
   
   const currentStatus: AttendanceStatus = attendance?.status || 'Pending';
+
+  const getTeamName = (teamId: string) => {
+    if (teamId === 'All') return dict.common.teams.All;
+    const team = teams.find(t => t.id === teamId);
+    if (!team) return teamId;
+    return language === 'zh' ? team.nameZh : team.name;
+  };
 
   const formatGameDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -473,13 +507,10 @@ function AttendanceCard({ game, userId, onStatusChange, isCondensed = false }: {
             <Badge 
               variant="outline"
               className={cn(
-                "font-bold border-none text-white",
-                game.team === 'A' ? "bg-primary" : 
-                game.team === 'B' ? "bg-indigo-600" : 
-                "bg-muted text-muted-foreground"
+                "font-bold border-none text-white bg-primary"
               )}
             >
-              {dict.common.teams[game.team as keyof typeof dict.common.teams]}
+              {getTeamName(game.team)}
             </Badge>
           </div>
           <div className="flex items-center gap-1.5 text-sm font-bold">
