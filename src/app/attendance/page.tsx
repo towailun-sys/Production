@@ -214,13 +214,15 @@ export default function AttendancePage() {
                 ? dict.common.gameTypes[specificGame.type] 
                 : `${dict.common.matchVs} ${specificGame.opponent || dict.common.tbd}`}
             </h1>
-            <div className="flex flex-wrap gap-x-6 gap-y-3 text-muted-foreground text-xs md:text-sm">
+            <div className="flex flex-wrap gap-x-6 gap-y-3 text-muted-foreground text-xs md:text-sm mb-3">
               <span className="flex items-center gap-2 font-medium"><Calendar className="h-4 w-4 text-primary shrink-0" /> {formatGameDate(specificGame.date)}</span>
               <span className="flex items-center gap-2 font-medium"><Clock className="h-4 w-4 text-primary shrink-0" /> {specificGame.startTime} - {specificGame.endTime}</span>
-              <span className="flex items-center gap-2 font-medium"><MapPin className="h-4 w-4 text-primary shrink-0" /> {specificGame.location}</span>
               {specificGame.coach && (
                 <span className="flex items-center gap-2 font-medium"><UserRound className="h-4 w-4 text-primary shrink-0" /> {specificGame.coach}</span>
               )}
+            </div>
+            <div className="flex items-center gap-2 font-medium text-muted-foreground text-xs md:text-sm mb-4">
+              <MapPin className="h-4 w-4 text-primary shrink-0" /> {specificGame.location}
             </div>
             {specificGame.fee && (
               <div className="mt-4 flex items-start gap-2 text-primary font-bold text-xs md:text-sm">
@@ -506,7 +508,7 @@ function AttendanceCard({
       </CardHeader>
       <CardContent className="pt-6 px-6 pb-6 space-y-6">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 flex-1">
             <div className="flex items-start gap-4 text-muted-foreground">
               <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
                 <Calendar className="h-5 w-5 text-primary" />
@@ -523,15 +525,6 @@ function AttendanceCard({
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1.5">{dict.attendance.timeLabel}</p>
                 <p className="font-bold text-foreground text-sm">{game.startTime} - {game.endTime}</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-4 text-muted-foreground sm:col-span-2 md:col-span-1">
-              <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
-                <MapPin className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1.5">{dict.attendance.locationLabel}</p>
-                <p className="font-bold text-foreground text-sm leading-snug">{game.location}</p>
               </div>
             </div>
             {game.coach && (
@@ -553,6 +546,16 @@ function AttendanceCard({
                 <ChevronLeft className="h-4 w-4 rotate-180" />
               </Link>
             </Button>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-4 pt-4 border-t border-dashed text-muted-foreground">
+          <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
+            <MapPin className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1.5">{dict.attendance.locationLabel}</p>
+            <p className="font-bold text-foreground text-sm leading-snug">{game.location}</p>
           </div>
         </div>
 
