@@ -622,13 +622,13 @@ export default function DashboardPage() {
                               {game.additionalDetails && (
                                 <Popover>
                                   <PopoverTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full bg-primary/10 text-primary hover:bg-primary/20 shrink-0">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 shrink-0">
                                       <Info className="h-4 w-4" />
                                     </Button>
                                   </PopoverTrigger>
                                   <PopoverContent className="w-80 p-4 shadow-xl">
                                     <div className="space-y-2">
-                                      <div className="flex items-center gap-2 text-[10px] font-bold text-primary uppercase tracking-widest">
+                                      <div className="flex items-center gap-2 text-[10px] font-bold text-destructive uppercase tracking-widest">
                                         <Info className="h-3 w-3" /> {dict.attendance.detailsLabel}
                                       </div>
                                       <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">

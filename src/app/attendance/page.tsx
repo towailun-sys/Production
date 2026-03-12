@@ -207,13 +207,13 @@ export default function AttendancePage() {
               {specificGame.additionalDetails && (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-primary/10 text-primary hover:bg-primary/20">
+                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20">
                       <Info className="h-5 w-5" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-80 p-6 shadow-2xl rounded-2xl">
                     <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-[10px] font-bold text-primary uppercase tracking-widest">
+                      <div className="flex items-center gap-2 text-[10px] font-bold text-destructive uppercase tracking-widest">
                         <Info className="h-4 w-4" /> {dict.attendance.detailsLabel}
                       </div>
                       <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
@@ -515,13 +515,13 @@ function AttendanceCard({
             {game.additionalDetails && (
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full bg-primary/10 text-primary hover:bg-primary/20">
+                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20">
                     <Info className="h-4 w-4" />
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-80 p-5 shadow-2xl rounded-2xl">
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-[10px] font-bold text-primary uppercase tracking-widest">
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-destructive uppercase tracking-widest">
                       <Info className="h-4 w-4" /> {dict.attendance.detailsLabel}
                     </div>
                     <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">

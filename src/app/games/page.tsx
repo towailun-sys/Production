@@ -557,7 +557,7 @@ export default function GamesPage() {
 
                       {game.additionalDetails && (
                         <div className="flex items-start gap-2 text-[11px] text-muted-foreground mt-3 bg-muted/20 p-3 rounded-xl border border-dashed">
-                          <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
+                          <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-destructive" />
                           <p className="leading-relaxed whitespace-pre-wrap">{game.additionalDetails}</p>
                         </div>
                       )}
