@@ -1,3 +1,4 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -5,7 +6,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { LanguageProvider } from '@/components/language-provider';
 
 export const metadata: Metadata = {
-  title: 'SquadFlow | Professional Football Team Management',
+  title: 'Happy Hour Football Club | Professional Team Management',
   description: 'Manage your football team, games, and player attendance with ease.',
 };
 

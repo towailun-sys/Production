@@ -47,7 +47,7 @@ const baseDict = {
     }
   },
   nav: {
-    title: "SquadFlow",
+    title: "Happy Hour Football Club",
     dashboard: "Upcoming Fixture",
     attendance: "My Attendance",
     players: "Squad",
@@ -224,7 +224,7 @@ const zhDict: typeof baseDict = {
     }
   },
   nav: {
-    title: "SquadFlow",
+    title: "Happy Hour 足球會",
     dashboard: "可供出席的場次",
     attendance: "我出席的",
     players: "陣容",

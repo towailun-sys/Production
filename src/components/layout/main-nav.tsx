@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { 
-  Trophy, 
   Users, 
   Calendar, 
   LayoutDashboard, 
@@ -31,6 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/components/language-provider";
+import Image from "next/image";
 
 export function MainNav() {
   const pathname = usePathname();
@@ -61,7 +61,7 @@ export function MainNav() {
       await signInWithPopup(auth, provider);
       toast({
         title: "Signed in successfully",
-        description: "Welcome back to SquadFlow.",
+        description: "Welcome back to Happy Hour Football Club.",
       });
     } catch (error: any) {
       if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
@@ -119,10 +119,27 @@ export function MainNav() {
     <nav className="sticky top-0 z-50 w-full border-b bg-primary text-primary-foreground shadow-lg">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <Trophy className="h-7 w-7 md:h-8 md:w-8 text-accent shrink-0" />
-            <span className="font-headline text-lg md:text-xl font-bold tracking-tight">{dict.nav.title}</span>
-          </div>
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-white/20 bg-white/10 group-hover:border-accent transition-colors">
+              <Image 
+                src="/logo.png" 
+                alt="HHFC Logo" 
+                fill 
+                className="object-cover"
+                onError={(e) => {
+                  // Fallback if image doesn't exist yet
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                }}
+              />
+              <div className="flex h-full w-full items-center justify-center font-headline font-bold text-accent text-lg">
+                H
+              </div>
+            </div>
+            <span className="font-headline text-lg md:text-xl font-bold tracking-tight whitespace-nowrap">
+              {dict.nav.title}
+            </span>
+          </Link>
 
           {/* Desktop Navigation - Only render if mounted to avoid hydration issues */}
           <div className="hidden md:flex items-center space-x-6">
