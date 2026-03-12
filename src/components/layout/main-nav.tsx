@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -119,9 +120,9 @@ export function MainNav() {
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-white/20 bg-white/10 group-hover:border-accent transition-colors flex items-center justify-center">
+            <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-white/20 bg-white group-hover:border-accent transition-colors flex items-center justify-center">
               <Image 
-                src="/logo.png" 
+                src="/IMG_8760.jpg" 
                 alt="Club Logo" 
                 fill 
                 className="object-cover"
@@ -130,7 +131,7 @@ export function MainNav() {
                   target.style.display = 'none';
                 }}
               />
-              <div className="font-headline font-bold text-accent text-lg">
+              <div className="font-headline font-bold text-primary text-lg">
                 H
               </div>
             </div>

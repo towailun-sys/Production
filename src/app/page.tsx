@@ -77,7 +77,7 @@ export function KitColorText({ colorText, className }: { colorText: string | und
   const parts = colorText.split('/').map(p => p.trim());
   
   return (
-    <span className={className}>
+    <span className={cn("bg-white/50 px-1 rounded", className)}>
       {parts.map((part, i) => (
         <Fragment key={i}>
           <span style={{ color: getColorHex(part) }}>{part}</span>
@@ -121,6 +121,7 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
             <div className="flex flex-wrap items-center gap-x-1.5 leading-none">
               {isAlternative && <span className="text-[9px] uppercase tracking-wider opacity-70">ALT:</span>}
               <span>{kitName}</span>
+              {' '}
               {kitColor && (
                 <KitColorText 
                   colorText={kitColor} 
@@ -138,7 +139,7 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
                 <span className="text-xs font-bold uppercase tracking-widest">{dict.players.kits.viewImage}</span>
               </div>
               <Badge variant="outline" className="text-[9px] font-bold h-auto py-1">
-                {kitName} {kitColor && <KitColorText colorText={kitColor} className="ml-1.5 border-l pl-1.5" />}
+                {kitName} {' '} {kitColor && <KitColorText colorText={kitColor} className="ml-1.5 border-l pl-1.5" />}
               </Badge>
             </div>
             <div className="relative aspect-[4/5] w-full rounded-lg overflow-hidden border bg-muted">
