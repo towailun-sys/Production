@@ -62,7 +62,8 @@ import {
   Users,
   UserSearch,
   Shirt,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Upload
 } from "lucide-react";
 import { Player, PlayerPosition, PlayerStatus, Team, Kit } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -1134,6 +1135,25 @@ function KitManagementUI() {
   const kitsQuery = useMemoFirebase(() => collection(firestore, "kits"), [firestore]);
   const { data: kits } = useCollection<Kit>(kitsQuery);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 800000) { // Limit to ~800KB for Base64 storage
+        toast({
+          variant: "destructive",
+          title: "File too large",
+          description: "Please upload a smaller image (under 800KB).",
+        });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, imageUrl: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSaveKit = () => {
     if (!formData.name) return;
     
@@ -1194,9 +1214,23 @@ function KitManagementUI() {
             <Input value={formData.colorZh} onChange={(e) => setFormData({ ...formData, colorZh: e.target.value })} placeholder="粉紅 / 灰" />
           </div>
         </div>
-        <div className="grid gap-2">
-          <Label className="text-xs uppercase">{dict.players.kits.imageUrl}</Label>
-          <Input value={formData.imageUrl} onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })} placeholder="https://..." />
+        
+        <div className="grid gap-3">
+          <Label className="text-xs uppercase">{dict.players.kits.upload}</Label>
+          <div className="flex flex-col gap-3">
+            <Input 
+              type="file" 
+              accept="image/*" 
+              onChange={handleFileChange}
+              className="cursor-pointer file:bg-primary file:text-white file:border-none file:rounded-md file:px-3 file:py-1 file:mr-4 file:font-bold h-11"
+            />
+            <div className="flex items-center gap-4">
+              <Separator className="flex-1" />
+              <span className="text-[10px] text-muted-foreground uppercase font-bold">OR URL</span>
+              <Separator className="flex-1" />
+            </div>
+            <Input value={formData.imageUrl.startsWith('data:') ? '' : formData.imageUrl} onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })} placeholder="https://..." />
+          </div>
         </div>
         
         {formData.imageUrl && (
@@ -1207,8 +1241,16 @@ function KitManagementUI() {
               fill 
               className="object-cover" 
               sizes="100px"
-              onError={() => toast({ variant: "destructive", title: "Image failed to load", description: "Please check the URL." })}
+              unoptimized={formData.imageUrl.startsWith('data:')}
             />
+            <Button 
+              variant="destructive" 
+              size="icon" 
+              className="absolute top-1 right-1 h-6 w-6 rounded-full opacity-80"
+              onClick={() => setFormData({ ...formData, imageUrl: "" })}
+            >
+              <X className="h-3 w-3" />
+            </Button>
           </div>
         )}
 
@@ -1230,7 +1272,7 @@ function KitManagementUI() {
           <div key={kit.id} className="flex items-center gap-4 p-3 border rounded-lg bg-white shadow-sm group">
             <div className="h-12 w-10 shrink-0 relative bg-muted rounded overflow-hidden border">
               {kit.imageUrl ? (
-                <Image src={kit.imageUrl} alt={kit.name} fill className="object-cover" sizes="40px" />
+                <Image src={kit.imageUrl} alt={kit.name} fill className="object-cover" sizes="40px" unoptimized={kit.imageUrl.startsWith('data:')} />
               ) : (
                 <ImageIcon className="h-4 w-4 m-auto text-muted-foreground opacity-20" />
               )}
