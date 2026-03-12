@@ -57,7 +57,9 @@ import {
   Settings2,
   Plus,
   Mail,
-  Smartphone
+  Smartphone,
+  MoreVertical,
+  Users
 } from "lucide-react";
 import { Player, PlayerPosition, PlayerStatus, Team } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
