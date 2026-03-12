@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -41,12 +40,10 @@ export function MainNav() {
   const { toast } = useToast();
   const { language, setLanguage, dict } = useTranslation();
 
-  // Handle hydration mismatch by waiting for mount
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Close mobile menu when navigating
   useEffect(() => {
     setIsOpen(false);
   }, [pathname]);
@@ -140,7 +137,6 @@ export function MainNav() {
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
             {mounted && routes.map((route) => (
               <Link
@@ -212,7 +208,6 @@ export function MainNav() {
             </div>
           </div>
 
-          {/* Mobile Actions */}
           <div className="md:hidden flex items-center gap-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -242,7 +237,6 @@ export function MainNav() {
         </div>
       </div>
 
-      {/* Mobile Menu Overlay */}
       {isOpen && (
         <div className="md:hidden border-t bg-primary animate-in slide-in-from-top-4 duration-300 shadow-2xl pb-6">
           <div className="space-y-1.5 px-4 pt-4">
