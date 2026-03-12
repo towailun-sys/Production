@@ -238,7 +238,7 @@ export default function DashboardPage() {
         name: user.displayName || "Admin User",
         email: user.email || "",
         status: "Active",
-        teams: ["default"],
+        teams: [],
         preferredPositions: ["MF", "FW"],
         number: 10
       });
@@ -274,23 +274,40 @@ export default function DashboardPage() {
     
     const sampleTeams = [
       { id: "team-a", name: "Team A", nameZh: "隊伍A" },
-      { id: "team-b", name: "Team B", nameZh: "隊伍B" }
+      { id: "team-b", name: "Team B", nameZh: "隊伍B" },
+      { id: "team-camp3", name: "Team Camp 3", nameZh: "訓練營 3" }
     ];
 
     sampleTeams.forEach(t => {
       setDoc(doc(firestore, "teams", t.id), t);
     });
 
+    const today = new Date().toISOString().split('T')[0];
+    const in3Days = new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0];
+    const in7Days = new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0];
+    const in10Days = new Date(Date.now() + 86400000 * 10).toISOString().split('T')[0];
+
     const sampleGames = [
-      { id: "seed-g1", date: new Date().toISOString().split('T')[0], startTime: "19:00", endTime: "21:00", location: "Central Sports Complex", type: "League", team: "team-a", opponent: "Blue Arrows FC", kitColors: "Home 1: Pink/Grey", additionalDetails: "Please arrive 30 mins early for warm up." },
-      { id: "seed-g2", date: new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0], startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", opponent: "N/A", kitColors: "Home 2: New White / New White", additionalDetails: "Tactics session." },
+      { id: "seed-g1", date: today, startTime: "19:00", endTime: "21:00", location: "Central Sports Complex", type: "League", team: "team-a", opponent: "Blue Arrows FC", kitColors: "Home 1: Pink/Grey", additionalDetails: "Please arrive 30 mins early for warm up." },
+      { id: "seed-g2", date: in3Days, startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", opponent: "N/A", kitColors: "Home 2: New White / New White", additionalDetails: "Tactics session." },
+      { id: "seed-g3", date: in7Days, startTime: "20:00", endTime: "22:00", location: "South Pitch 4", type: "Friendly", team: "team-b", opponent: "Red Devils", kitColors: "Away 1: Black/Black", additionalDetails: "Friendly against rivals." },
+      { id: "seed-g4", date: in10Days, startTime: "19:00", endTime: "21:00", location: "Camp 3 Training Ground", type: "Internal", team: "team-camp3", opponent: "N/A", kitColors: "Away 2: White/White", additionalDetails: "Internal practice match." },
     ];
 
     sampleGames.forEach(g => {
       setDoc(doc(firestore, "games", g.id), g);
     });
 
-    toast({ title: "Seeding Initiated" });
+    // Also update current user to be in all these teams so they can see them on the dashboard
+    const playerRef = doc(firestore, "players", user.uid);
+    setDoc(playerRef, { 
+      id: user.uid,
+      teams: ["team-a", "team-b", "team-camp3"],
+      status: "Active",
+      number: currentPlayer.number || 10
+    }, { merge: true });
+
+    toast({ title: "Seeding Complete", description: "Sample teams and games created. You are now assigned to all teams." });
     setIsSeeding(false);
   };
 
