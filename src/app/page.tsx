@@ -298,9 +298,9 @@ export default function DashboardPage() {
     const in10Days = new Date(Date.now() + 86400000 * 10).toISOString().split('T')[0];
 
     const sampleGames = [
-      { id: "seed-g1", date: today, startTime: "19:00", endTime: "21:00", location: "Central Sports Complex", type: "League", team: "team-a", opponent: "Blue Arrows FC", coach: "Sir Alex", fee: "$100\nPayment via Bank Transfer", kitColors: "Home 1: Pink/Grey", additionalDetails: "Please arrive 30 mins early for warm up." },
+      { id: "seed-g1", date: today, startTime: "19:00", endTime: "21:00", location: "Central Sports Complex, Pitch 1", type: "League", team: "team-a", opponent: "Blue Arrows FC", coach: "Sir Alex", fee: "$100\nPayment via Bank Transfer", kitColors: "Home 1: Pink/Grey", additionalDetails: "Please arrive 30 mins early for warm up." },
       { id: "seed-g2", date: in3Days, startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", opponent: "N/A", coach: "Pep G", fee: "Free", kitColors: "Home 2: New White / New White", additionalDetails: "Tactics session." },
-      { id: "seed-g3", date: in7Days, startTime: "20:00", endTime: "22:00", location: "South Pitch 4", type: "Friendly", team: "team-b", opponent: "Red Devils", coach: "Klopp", fee: "$80 cash on pitch", kitColors: "Away 1: Black/Black", additionalDetails: "Friendly against rivals." },
+      { id: "seed-g3", date: in7Days, startTime: "20:00", endTime: "22:00", location: "South Pitch 4, Main Stadium", type: "Friendly", team: "team-b", opponent: "Red Devils", coach: "Klopp", fee: "$80 cash on pitch", kitColors: "Away 1: Black/Black", additionalDetails: "Friendly against rivals." },
       { id: "seed-g4", date: in10Days, startTime: "19:00", endTime: "21:00", location: "Camp 3 Training Ground", type: "Internal", team: "team-camp3", opponent: "N/A", coach: "Mou", fee: "Split by 14\nUsually $50-$60", kitColors: "Away 2: White/White", additionalDetails: "Internal practice match." },
     ];
 
@@ -460,7 +460,7 @@ export default function DashboardPage() {
                             {game.fee && (
                               <div className="flex items-start gap-2 text-primary font-bold text-[11px] md:text-xs pt-1">
                                 <Banknote className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                                <span className="whitespace-pre-wrap">{game.fee}</span>
+                                <span className="whitespace-pre-wrap leading-normal">{game.fee}</span>
                               </div>
                             )}
                             

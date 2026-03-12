@@ -505,48 +505,48 @@ function AttendanceCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-6 px-6 pb-6 space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 flex-1">
-            <div className="flex items-center gap-4 text-muted-foreground">
+            <div className="flex items-start gap-4 text-muted-foreground">
               <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
                 <Calendar className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.attendance.dateLabel}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1.5">{dict.attendance.dateLabel}</p>
                 <p className="font-bold text-foreground text-sm">{formatGameDate(game.date)}</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 text-muted-foreground">
+            <div className="flex items-start gap-4 text-muted-foreground">
               <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
                 <Clock className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.attendance.timeLabel}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1.5">{dict.attendance.timeLabel}</p>
                 <p className="font-bold text-foreground text-sm">{game.startTime} - {game.endTime}</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 text-muted-foreground">
+            <div className="flex items-start gap-4 text-muted-foreground sm:col-span-2 md:col-span-1">
               <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
                 <MapPin className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.attendance.locationLabel}</p>
-                <p className="font-bold text-foreground text-sm">{game.location}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1.5">{dict.attendance.locationLabel}</p>
+                <p className="font-bold text-foreground text-sm leading-snug">{game.location}</p>
               </div>
             </div>
             {game.coach && (
-              <div className="flex items-center gap-4 text-muted-foreground">
+              <div className="flex items-start gap-4 text-muted-foreground">
                 <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
                   <UserRound className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.games.dialog.coach}</p>
-                  <p className="font-bold text-foreground text-sm">{game.coach}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1.5">{dict.games.dialog.coach}</p>
+                  <p className="font-bold text-foreground text-sm leading-snug">{game.coach}</p>
                 </div>
               </div>
             )}
           </div>
-          <div className="shrink-0">
+          <div className="shrink-0 pt-1">
             <Button variant="outline" className="font-bold border-primary text-primary hover:bg-primary/5 gap-2 w-full md:w-auto" asChild>
               <Link href={`/attendance?gameId=${game.id}`}>
                 {dict.attendance.viewFullRoster}
