@@ -1,4 +1,3 @@
-
 /**
  * Centralized Dictionaries for UI Strings
  */
@@ -145,7 +144,7 @@ const baseDict = {
     title: "Upcoming Fixtures",
     subtitle: "Plan and manage upcoming fixtures.",
     scheduleGame: "Schedule Game",
-    manageEvent: "Manage Event",
+    manageEvent: "管理活動",
     dialog: {
       addTitle: "Schedule New Event",
       editTitle: "Edit Event",

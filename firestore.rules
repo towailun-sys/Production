@@ -2,110 +2,76 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * SQUADFLOW SECURITY RULES - PROTOTYPING PHASE
-     * 
-     * CORE PHILOSOPHY:
-     * This ruleset implements a strict authorization model while maintaining flexible data shapes 
-     * for rapid prototyping. Access is granted based on verified identity (Firebase Auth) and 
-     * explicit ownership or administrative roles.
-     */
-
     // --- Helper Functions ---
 
-    /** Checks if the user is authenticated. */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /** Checks if the authenticated user's UID matches the provided userId. */
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** Checks if the document exists and the current user is the owner. */
-    function isExistingOwner(userId) {
-      return resource != null && isOwner(userId);
-    }
-
     /** 
-     * Checks if the user has administrative privileges. 
-     * In prototyping, we check both the roles_admin collection AND the player profile.
+     * Robust isAdmin check. 
+     * Checks roles_admin collection OR the player's own profile field.
      */
     function isAdmin() {
       return isSignedIn() && (
         exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)) ||
-        get(/databases/$(database)/documents/players/$(request.auth.uid)).data.isAdmin == true
+        (exists(/databases/$(database)/documents/players/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/players/$(request.auth.uid)).data.isAdmin == true)
       );
     }
 
     // --- Collection Rules ---
 
-    /**
-     * @description Rules for player profiles.
-     * Users can manage their own profiles; Admins manage all.
-     */
+    // Player profiles: Everyone can read, owners and admins can write.
     match /players/{playerId} {
       allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && (request.auth.uid == playerId || isAdmin());
-      allow update, delete: if isOwner(playerId) || isAdmin();
+      allow create: if isSignedIn() && (isOwner(playerId) || isAdmin());
+      allow update: if isOwner(playerId) || isAdmin();
+      allow delete: if isAdmin();
     }
 
-    /**
-     * @description Rules for teams. Read by all, managed by admins.
-     */
+    // Teams & Kits: Public read for members, managed by admins.
     match /teams/{teamId} {
       allow get, list: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      allow write: if isAdmin();
     }
 
-    /**
-     * @description Rules for kits. Read by all, managed by admins.
-     */
     match /kits/{kitId} {
       allow get, list: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      allow write: if isAdmin();
     }
 
-    /**
-     * @description Rules for game schedules. Read by all, managed by admins.
-     */
+    // Games: Public read for members, managed by admins.
     match /games/{gameId} {
       allow get, list: if isSignedIn();
-      allow create, update, delete: if isAdmin();
+      allow write: if isAdmin();
     }
 
-    /**
-     * @description User-specific attendance records.
-     */
-    match /users/{userId}/game_attendances/{attendanceId} {
-      allow get, list: if isOwner(userId) || isAdmin();
-      allow create: if (isOwner(userId) && request.resource.data.playerId == userId) || isAdmin();
-      allow update: if (isExistingOwner(userId) && request.resource.data.playerId == resource.data.playerId) || isAdmin();
-      allow delete: if isExistingOwner(userId) || isAdmin();
-    }
-
-    /**
-     * @description Support for sub-collection queries (attendance records) within games.
-     */
+    // Attendance Records: Stored inside games for easy roster viewing.
     match /games/{gameId}/attendanceRecords/{playerId} {
       allow get, list: if isSignedIn();
       allow write: if isOwner(playerId) || isAdmin();
     }
 
-    /**
-     * @description Support for admin-led Collection Group queries.
-     */
+    // User-centric attendance path (for 'My Attendance' screen).
+    match /users/{userId}/game_attendances/{attendanceId} {
+      allow get, list: if isOwner(userId) || isAdmin();
+      allow write: if (isOwner(userId) && request.resource.data.playerId == userId) || isAdmin();
+    }
+
+    // Support for Collection Group queries on attendance.
     match /{path=**}/game_attendances/{attendanceId} {
       allow list: if isAdmin();
     }
 
-    /**
-     * @description System collection for admin roles.
-     */
+    // System roles.
     match /roles_admin/{userId} {
       allow get: if isSignedIn();
-      allow list, create, update, delete: if false;
+      allow write: if false; // Managed manually or via Cloud Functions.
     }
   }
 }
