@@ -27,13 +27,14 @@ service cloud.firestore {
 
     // --- Collection Rules ---
 
-    // Player profiles: Everyone can read, owners and admins can write.
-    // Also allows a user to create their own initial profile.
+    // Player profiles: Everyone can read.
+    // Owners and admins can write.
+    // Also allow a user to delete a profile if the email matches their authenticated email (for claiming/linking).
     match /players/{playerId} {
       allow get, list: if isSignedIn();
       allow create: if isSignedIn() && (request.auth.uid == playerId || isAdmin());
       allow update: if isOwner(playerId) || isAdmin();
-      allow delete: if isAdmin();
+      allow delete: if isAdmin() || (isSignedIn() && request.auth.token.email == resource.data.email);
     }
 
     // Teams: Public read for signed-in members, managed by admins.

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, Fragment } from "react";
@@ -368,6 +367,8 @@ export default function DashboardPage() {
     setIsLinking(true);
     
     const newDocRef = doc(firestore, "players", user.uid);
+    const oldDocRef = doc(firestore, "players", preEnteredProfile.id);
+    
     const claimData = {
       ...preEnteredProfile,
       id: user.uid,
@@ -377,8 +378,14 @@ export default function DashboardPage() {
 
     setDoc(newDocRef, claimData)
       .then(() => {
-        const oldDocRef = doc(firestore, "players", preEnteredProfile.id);
-        deleteDoc(oldDocRef);
+        // After successfully creating the new document, delete the old one.
+        // The updated security rules allow this deletion if the email matches.
+        deleteDoc(oldDocRef).catch((error) => {
+          errorEmitter.emit('permission-error', new FirestorePermissionError({
+            path: oldDocRef.path,
+            operation: 'delete'
+          } satisfies SecurityRuleContext));
+        });
         toast({ title: "Profile Claimed!" });
       })
       .catch(async (error) => {
