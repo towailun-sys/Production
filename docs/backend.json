@@ -46,7 +46,7 @@
         },
         "color": {
           "type": "string",
-          "description": "Kit color description (e.g., Pink/Grey)."
+          "description": "Kit color description (e.g., Pink / Grey)."
         },
         "colorZh": {
           "type": "string",
@@ -252,13 +252,7 @@
           "schema": {
             "$ref": "#/backend/entities/Team"
           },
-          "description": "Stores dynamic team types/divisions.",
-          "params": [
-            {
-              "name": "teamId",
-              "description": "Unique team ID."
-            }
-          ]
+          "description": "Stores dynamic team types/divisions."
         }
       },
       {
@@ -268,13 +262,7 @@
           "schema": {
             "$ref": "#/backend/entities/Kit"
           },
-          "description": "Stores team kit details and images.",
-          "params": [
-            {
-              "name": "kitId",
-              "description": "Unique kit ID."
-            }
-          ]
+          "description": "Stores team kit details and images."
         }
       },
       {
@@ -284,13 +272,7 @@
           "schema": {
             "$ref": "#/backend/entities/Player"
           },
-          "description": "Stores individual player profiles. playerUid is the Auth UID.",
-          "params": [
-            {
-              "name": "playerUid",
-              "description": "Firebase Auth UID."
-            }
-          ]
+          "description": "Stores individual player profiles."
         }
       },
       {
@@ -300,13 +282,7 @@
           "schema": {
             "$ref": "#/backend/entities/Game"
           },
-          "description": "Stores details for scheduled games.",
-          "params": [
-            {
-              "name": "gameId",
-              "description": "Unique game ID."
-            }
-          ]
+          "description": "Stores details for scheduled games."
         }
       },
       {
@@ -316,17 +292,7 @@
           "schema": {
             "$ref": "#/backend/entities/PlayerGameAttendance"
           },
-          "description": "Records an individual player's attendance status for a specific game.",
-          "params": [
-            {
-              "name": "gameId",
-              "description": "Game ID."
-            },
-            {
-              "name": "playerUid",
-              "description": "Player's Auth UID."
-            }
-          ]
+          "description": "Records an individual player's attendance status for a specific game."
         }
       }
     ]
