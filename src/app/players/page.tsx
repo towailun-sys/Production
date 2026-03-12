@@ -1209,7 +1209,9 @@ function KitManagementUI() {
                   <Image src={kit.imageUrl} alt={kit.name} fill className="object-cover" />
                 </div>
                 <div>
-                  <div className={cn("font-bold text-sm", kit.colorClass)}>{language === 'zh' ? kit.nameZh : kit.name}</div>
+                  <div className={cn("font-bold text-sm", kit.colorClass)}>
+                    {language === 'zh' ? kit.nameZh || kit.name : kit.name}
+                  </div>
                   <div className="text-[9px] text-muted-foreground font-bold flex items-center gap-1 uppercase tracking-tighter">
                     <ImageIcon className="h-3 w-3" /> Image Uploaded
                   </div>
