@@ -144,7 +144,7 @@ const baseDict = {
     title: "Upcoming Fixtures",
     subtitle: "Plan and manage upcoming fixtures.",
     scheduleGame: "Schedule Game",
-    manageEvent: "管理活動",
+    manageEvent: "Manage Event",
     dialog: {
       addTitle: "Schedule New Event",
       editTitle: "Edit Event",
@@ -229,9 +229,9 @@ const zhDict: typeof baseDict = {
   },
   nav: {
     title: "歡樂時光足球會",
-    dashboard: "賽程",
+    dashboard: "最近賽程",
     attendance: "我出席的",
-    players: "陣容",
+    players: "球員",
     games: "場次",
     signIn: "登入",
     signOut: "登出",
@@ -276,7 +276,7 @@ const zhDict: typeof baseDict = {
     manageKits: "管理球衣",
     searchPlaceholder: "搜尋球員...",
     noPlayersFound: "找不到符合搜尋條件的球員。",
-    managementLabel: "陣容管理",
+    managementLabel: "球員管理",
     promoteAdmin: "升級為管理員",
     revokeAdmin: "撤銷管理員權限",
     tableHeader: {
