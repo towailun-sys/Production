@@ -19,7 +19,8 @@ import {
   Loader2,
   Crown,
   Info,
-  CalendarCheck
+  CalendarCheck,
+  Shirt
 } from "lucide-react";
 import { Game, AttendanceStatus, Player, Attendance, Team } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -38,6 +39,14 @@ import {
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useTranslation } from "@/components/language-provider";
+
+const KIT_COLORS: Record<string, string> = {
+  "Home 1: Pink/Grey": "text-pink-500",
+  "Home 2: New White / New White": "text-slate-300",
+  "Away 1: Black/Black": "text-slate-950",
+  "Away 2: White/White": "text-slate-300",
+  "TBD": "text-muted-foreground"
+};
 
 export default function AttendancePage() {
   const searchParams = useSearchParams();
@@ -191,6 +200,12 @@ export default function AttendancePage() {
                 <Check className="h-3.5 w-3.5" />
                 {dict.common.confirm}
               </Badge>
+              {specificGame.kitColors && (
+                <Badge variant="outline" className={cn("font-bold gap-1.5 py-1", KIT_COLORS[specificGame.kitColors] || "text-muted-foreground")}>
+                  <Shirt className="h-3.5 w-3.5" />
+                  {dict.common.kits[specificGame.kitColors as keyof typeof dict.common.kits] || specificGame.kitColors}
+                </Badge>
+              )}
             </div>
             <h1 className="text-2xl md:text-3xl font-headline leading-tight">
               {specificGame.type === 'Training' || specificGame.type === 'Internal' 
@@ -203,7 +218,7 @@ export default function AttendancePage() {
               <span className="flex items-center gap-2 font-medium"><MapPin className="h-4 w-4 text-primary shrink-0" /> {specificGame.location}</span>
             </div>
             {specificGame.additionalDetails && (
-              <div className="mt-6 p-4 bg-muted/20 border-l-4 border-primary/40 rounded-r-xl max-w-2xl">
+              <div className="mt-6 p-4 bg-muted/20 border-l-4 border-primary/40 rounded-xl max-w-2xl shadow-sm">
                 <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground mb-2 uppercase tracking-widest">
                   <Info className="h-3.5 w-3.5" />
                   {dict.attendance.detailsLabel}
@@ -480,7 +495,7 @@ function AttendanceCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="pt-6 px-6 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 flex-1">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 flex-1">
           <div className="flex items-center gap-4 text-muted-foreground">
             <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
               <Calendar className="h-5 w-5 text-primary" />
@@ -508,6 +523,19 @@ function AttendanceCard({
               <p className="font-bold text-foreground text-sm">{game.location}</p>
             </div>
           </div>
+          {game.kitColors && (
+            <div className="flex items-center gap-4 text-muted-foreground">
+              <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
+                <Shirt className={cn("h-5 w-5", KIT_COLORS[game.kitColors] || "text-primary")} />
+              </div>
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.games.dialog.kit}</p>
+                <p className={cn("font-bold text-sm", KIT_COLORS[game.kitColors] || "text-foreground")}>
+                  {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
+                </p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="shrink-0">

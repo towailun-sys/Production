@@ -20,7 +20,8 @@ import {
   Sparkles,
   Check,
   X,
-  Crown
+  Crown,
+  Shirt
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, Attendance, AttendanceStatus, Team } from "@/lib/types";
@@ -31,6 +32,14 @@ import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useTranslation } from "@/components/language-provider";
+
+const KIT_COLORS: Record<string, string> = {
+  "Home 1: Pink/Grey": "text-pink-500",
+  "Home 2: New White / New White": "text-slate-300",
+  "Away 1: Black/Black": "text-slate-950",
+  "Away 2: White/White": "text-slate-300",
+  "TBD": "text-muted-foreground"
+};
 
 function UserAttendanceToggle({ gameId, userId }: { gameId: string, userId: string }) {
   const firestore = useFirestore();
@@ -298,13 +307,12 @@ export default function DashboardPage() {
       setDoc(doc(firestore, "games", g.id), g);
     });
 
-    // Also update current user to be in all these teams so they can see them on the dashboard
     const playerRef = doc(firestore, "players", user.uid);
     setDoc(playerRef, { 
       id: user.uid,
       teams: ["team-a", "team-b", "team-camp3"],
       status: "Active",
-      number: currentPlayer.number || 10
+      number: currentPlayer?.number || 10
     }, { merge: true });
 
     toast({ title: "Seeding Complete", description: "Sample teams and games created. You are now assigned to all teams." });
@@ -424,6 +432,12 @@ export default function DashboardPage() {
                             <div className="flex flex-wrap items-center gap-3 mb-4">
                               <Badge className="text-[10px] md:text-xs font-bold bg-primary text-white px-3 py-0.5 border-none">{getTeamName(game.team)}</Badge>
                               <span className="text-xs md:text-sm font-bold text-muted-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{game.startTime} - {game.endTime}</span>
+                              {game.kitColors && (
+                                <span className={cn("text-[10px] md:text-xs font-bold flex items-center gap-1.5", KIT_COLORS[game.kitColors] || "text-muted-foreground")}>
+                                  <Shirt className="h-3.5 w-3.5" />
+                                  {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
+                                </span>
+                              )}
                             </div>
                             <h3 className="text-lg md:text-xl font-headline mb-4 leading-tight">
                               {game.type === 'Training' || game.type === 'Internal' ? dict.common.gameTypes[game.type] : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
