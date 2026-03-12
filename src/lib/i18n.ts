@@ -146,7 +146,8 @@ const baseDict = {
       opponent: "Opponent",
       coach: "Coach",
       fee: "Fee",
-      kit: "Kit Selection",
+      kit: "Primary Kit",
+      alternativeKit: "Alternative Kit",
       details: "Additional Details",
       create: "Create Event",
       update: "Save Changes"
@@ -315,7 +316,8 @@ const zhDict: typeof baseDict = {
       opponent: "對手",
       coach: "教練",
       fee: "費用",
-      kit: "球衣顏色",
+      kit: "首選球衣",
+      alternativeKit: "後備球衣",
       details: "額外詳情",
       create: "創建活動",
       update: "儲存更改"

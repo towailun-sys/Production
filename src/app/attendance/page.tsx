@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useSearchParams } from "next/navigation";
@@ -214,6 +215,13 @@ export default function AttendancePage() {
                 <Badge variant="outline" className={cn("font-bold gap-1.5 py-1", KIT_COLORS[specificGame.kitColors] || "text-muted-foreground")}>
                   <Shirt className="h-3.5 w-3.5" />
                   {dict.common.kits[specificGame.kitColors as keyof typeof dict.common.kits] || specificGame.kitColors}
+                </Badge>
+              )}
+              {specificGame.alternativeKitColors && specificGame.alternativeKitColors !== 'TBD' && (
+                <Badge variant="outline" className={cn("font-bold gap-1.5 py-1 opacity-80", KIT_COLORS[specificGame.alternativeKitColors] || "text-muted-foreground")}>
+                  <Shirt className="h-3.5 w-3.5" />
+                  <span className="text-[9px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>
+                  {dict.common.kits[specificGame.alternativeKitColors as keyof typeof dict.common.kits] || specificGame.alternativeKitColors}
                 </Badge>
               )}
               {specificGame.additionalDetails && (
@@ -586,19 +594,29 @@ function AttendanceCard({
                 </div>
               </div>
             )}
-            {game.kitColors && (
-              <div className="flex items-start gap-4 text-muted-foreground">
-                <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
-                  <Shirt className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1.5">{dict.games.dialog.kit}</p>
-                  <p className={cn("font-bold text-sm", KIT_COLORS[game.kitColors] || "text-foreground")}>
-                    {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
-                  </p>
-                </div>
+            <div className="flex items-start gap-4 text-muted-foreground">
+              <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
+                <Shirt className="h-5 w-5 text-primary" />
               </div>
-            )}
+              <div className="flex flex-col gap-3">
+                {game.kitColors && (
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1.5">{dict.games.dialog.kit}</p>
+                    <p className={cn("font-bold text-sm", KIT_COLORS[game.kitColors] || "text-foreground")}>
+                      {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
+                    </p>
+                  </div>
+                )}
+                {game.alternativeKitColors && game.alternativeKitColors !== 'TBD' && (
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1.5">{dict.games.dialog.alternativeKit}</p>
+                    <p className={cn("font-bold text-sm", KIT_COLORS[game.alternativeKitColors] || "text-foreground")}>
+                      {dict.common.kits[game.alternativeKitColors as keyof typeof dict.common.kits] || game.alternativeKitColors}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           <div className="shrink-0 pt-1">
             <Button variant="outline" className="font-bold border-primary text-primary hover:bg-primary/5 gap-2 w-full md:w-auto" asChild>

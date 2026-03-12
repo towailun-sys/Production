@@ -134,7 +134,11 @@
         },
         "kitColors": {
           "type": "string",
-          "description": "The assigned kit for this game."
+          "description": "The primary kit assigned for this game."
+        },
+        "alternativeKitColors": {
+          "type": "string",
+          "description": "An optional secondary kit for the game."
         },
         "coach": {
           "type": "string",

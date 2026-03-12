@@ -35,6 +35,7 @@ export interface Game {
   team: string; // References Team.id or 'All'
   opponent?: string;
   kitColors?: string;
+  alternativeKitColors?: string;
   coach?: string;
   fee?: string;
   additionalDetails?: string;

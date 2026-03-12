@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState } from "react";
@@ -303,10 +304,10 @@ export default function DashboardPage() {
     const in10Days = new Date(Date.now() + 86400000 * 10).toISOString().split('T')[0];
 
     const sampleGames = [
-      { id: "seed-g1", date: today, startTime: "19:00", endTime: "21:00", location: "Central Sports Complex, Pitch 1", type: "League", team: "team-a", opponent: "Blue Arrows FC", coach: "Sir Alex", fee: "$100\nPayment via Bank Transfer", kitColors: "Home 1: Pink/Grey", additionalDetails: "Please arrive 30 mins early for warm up." },
-      { id: "seed-g2", date: in3Days, startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", opponent: "N/A", coach: "Pep G", fee: "Free", kitColors: "Home 2: New White / New White", additionalDetails: "Tactics session." },
-      { id: "seed-g3", date: in7Days, startTime: "20:00", endTime: "22:00", location: "South Pitch 4, Main Stadium", type: "Friendly", team: "team-b", opponent: "Red Devils", coach: "Klopp", fee: "$80 cash on pitch", kitColors: "Away 1: Black/Black", additionalDetails: "Friendly against rivals." },
-      { id: "seed-g4", date: in10Days, startTime: "19:00", endTime: "21:00", location: "Camp 3 Training Ground", type: "Internal", team: "team-camp3", opponent: "N/A", coach: "Mou", fee: "Split by 14\nUsually $50-$60", kitColors: "Away 2: White/White", additionalDetails: "Internal practice match." },
+      { id: "seed-g1", date: today, startTime: "19:00", endTime: "21:00", location: "Central Sports Complex, Pitch 1", type: "League", team: "team-a", opponent: "Blue Arrows FC", coach: "Sir Alex", fee: "$100\nPayment via Bank Transfer", kitColors: "Home 1: Pink/Grey", alternativeKitColors: "Away 1: Black/Black", additionalDetails: "Please arrive 30 mins early for warm up." },
+      { id: "seed-g2", date: in3Days, startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", opponent: "N/A", coach: "Pep G", fee: "Free", kitColors: "Home 2: New White / New White", alternativeKitColors: "TBD", additionalDetails: "Tactics session." },
+      { id: "seed-g3", date: in7Days, startTime: "20:00", endTime: "22:00", location: "South Pitch 4, Main Stadium", type: "Friendly", team: "team-b", opponent: "Red Devils", coach: "Klopp", fee: "$80 cash on pitch", kitColors: "Away 1: Black/Black", alternativeKitColors: "Away 2: White/White", additionalDetails: "Friendly against rivals." },
+      { id: "seed-g4", date: in10Days, startTime: "19:00", endTime: "21:00", location: "Camp 3 Training Ground", type: "Internal", team: "team-camp3", opponent: "N/A", coach: "Mou", fee: "Split by 14\nUsually $50-$60", kitColors: "Away 2: White/White", alternativeKitColors: "TBD", additionalDetails: "Internal practice match." },
     ];
 
     sampleGames.forEach(g => {
@@ -453,12 +454,21 @@ export default function DashboardPage() {
                                   {game.coach}
                                 </span>
                               )}
-                              {game.kitColors && (
-                                <span className={cn("text-[10px] md:text-xs font-bold flex items-center gap-1.5", KIT_COLORS[game.kitColors] || "text-muted-foreground")}>
-                                  <Shirt className="h-3.5 w-3.5" />
-                                  {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
-                                </span>
-                              )}
+                              <div className="flex flex-wrap gap-3">
+                                {game.kitColors && (
+                                  <span className={cn("text-[10px] md:text-xs font-bold flex items-center gap-1.5", KIT_COLORS[game.kitColors] || "text-muted-foreground")}>
+                                    <Shirt className="h-3.5 w-3.5" />
+                                    {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
+                                  </span>
+                                )}
+                                {game.alternativeKitColors && game.alternativeKitColors !== 'TBD' && (
+                                  <span className={cn("text-[10px] md:text-xs font-bold flex items-center gap-1.5 opacity-80", KIT_COLORS[game.alternativeKitColors] || "text-muted-foreground")}>
+                                    <Shirt className="h-3.5 w-3.5" />
+                                    <span className="text-[9px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>
+                                    {dict.common.kits[game.alternativeKitColors as keyof typeof dict.common.kits] || game.alternativeKitColors}
+                                  </span>
+                                )}
+                              </div>
                               {game.additionalDetails && (
                                 <Popover>
                                   <PopoverTrigger asChild>

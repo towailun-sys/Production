@@ -106,6 +106,7 @@ export default function GamesPage() {
     coach: string;
     fee: string;
     kitColors: string;
+    alternativeKitColors: string;
     additionalDetails: string;
   }>({
     type: "Training",
@@ -118,6 +119,7 @@ export default function GamesPage() {
     coach: "",
     fee: "",
     kitColors: "TBD",
+    alternativeKitColors: "TBD",
     additionalDetails: "",
   });
 
@@ -140,6 +142,7 @@ export default function GamesPage() {
       coach: "",
       fee: "",
       kitColors: "TBD",
+      alternativeKitColors: "TBD",
       additionalDetails: "",
     });
   };
@@ -173,6 +176,7 @@ export default function GamesPage() {
       coach: formData.coach || "",
       fee: formData.fee || "",
       kitColors: formData.kitColors || "TBD",
+      alternativeKitColors: formData.alternativeKitColors || "TBD",
       additionalDetails: formData.additionalDetails || "",
     };
 
@@ -205,6 +209,7 @@ export default function GamesPage() {
       coach: game.coach || "",
       fee: game.fee || "",
       kitColors: game.kitColors || "TBD",
+      alternativeKitColors: game.alternativeKitColors || "TBD",
       additionalDetails: game.additionalDetails || "",
     });
     
@@ -232,6 +237,7 @@ export default function GamesPage() {
       coach: formData.coach || "",
       fee: formData.fee || "",
       kitColors: formData.kitColors || "TBD",
+      alternativeKitColors: formData.alternativeKitColors || "TBD",
       additionalDetails: formData.additionalDetails || "",
     };
 
@@ -401,26 +407,49 @@ export default function GamesPage() {
                       onChange={(e) => setFormData({ ...formData, fee: e.target.value })}
                     />
                   </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="kitColors" className="text-xs uppercase tracking-wider">{dict.games.dialog.kit}</Label>
-                    <Select 
-                      value={formData.kitColors}
-                      onValueChange={(val) => setFormData({ ...formData, kitColors: val })}
-                    >
-                      <SelectTrigger id="kitColors" className="h-11">
-                        <SelectValue placeholder="Select kit colors" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {KIT_OPTIONS.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            <div className="flex items-center gap-2">
-                              <Shirt className={cn("h-4 w-4", option.color)} />
-                              {dict.common.kits[option.value as keyof typeof dict.common.kits] || option.value}
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="kitColors" className="text-xs uppercase tracking-wider">{dict.games.dialog.kit}</Label>
+                      <Select 
+                        value={formData.kitColors}
+                        onValueChange={(val) => setFormData({ ...formData, kitColors: val })}
+                      >
+                        <SelectTrigger id="kitColors" className="h-11">
+                          <SelectValue placeholder="Select kit colors" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {KIT_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              <div className="flex items-center gap-2">
+                                <Shirt className={cn("h-4 w-4", option.color)} />
+                                {dict.common.kits[option.value as keyof typeof dict.common.kits] || option.value}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="alternativeKitColors" className="text-xs uppercase tracking-wider">{dict.games.dialog.alternativeKit}</Label>
+                      <Select 
+                        value={formData.alternativeKitColors}
+                        onValueChange={(val) => setFormData({ ...formData, alternativeKitColors: val })}
+                      >
+                        <SelectTrigger id="alternativeKitColors" className="h-11">
+                          <SelectValue placeholder="Select alt kit" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {KIT_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              <div className="flex items-center gap-2">
+                                <Shirt className={cn("h-4 w-4", option.color)} />
+                                {dict.common.kits[option.value as keyof typeof dict.common.kits] || option.value}
+                              </div>
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="additionalDetails" className="text-xs uppercase tracking-wider">{dict.games.dialog.details}</Label>
@@ -505,12 +534,21 @@ export default function GamesPage() {
                               {game.coach}
                             </div>
                           )}
-                          {game.kitColors && (
-                            <div className={cn("flex items-center gap-2 font-bold", getKitColorClass(game.kitColors))}>
-                              <Shirt className="h-4 w-4 shrink-0" />
-                              {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
-                            </div>
-                          )}
+                          <div className="flex flex-wrap gap-4">
+                            {game.kitColors && (
+                              <div className={cn("flex items-center gap-2 font-bold", getKitColorClass(game.kitColors))}>
+                                <Shirt className="h-4 w-4 shrink-0" />
+                                {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
+                              </div>
+                            )}
+                            {game.alternativeKitColors && game.alternativeKitColors !== 'TBD' && (
+                              <div className={cn("flex items-center gap-2 font-bold opacity-80", getKitColorClass(game.alternativeKitColors))}>
+                                <Shirt className="h-4 w-4 shrink-0" />
+                                <span className="text-[10px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>
+                                {dict.common.kits[game.alternativeKitColors as keyof typeof dict.common.kits] || game.alternativeKitColors}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -654,26 +692,49 @@ export default function GamesPage() {
                   onChange={(e) => setFormData({ ...formData, fee: e.target.value })}
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-kitColors" className="text-xs uppercase tracking-wider">{dict.games.dialog.kit}</Label>
-                <Select 
-                  value={formData.kitColors}
-                  onValueChange={(val) => setFormData({ ...formData, kitColors: val })}
-                >
-                  <SelectTrigger id="edit-kitColors" className="h-11">
-                    <SelectValue placeholder="Select kit colors" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {KIT_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        <div className="flex items-center gap-2">
-                          <Shirt className={cn("h-4 w-4", option.color)} />
-                          {dict.common.kits[option.value as keyof typeof dict.common.kits] || option.value}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-kitColors" className="text-xs uppercase tracking-wider">{dict.games.dialog.kit}</Label>
+                  <Select 
+                    value={formData.kitColors}
+                    onValueChange={(val) => setFormData({ ...formData, kitColors: val })}
+                  >
+                    <SelectTrigger id="edit-kitColors" className="h-11">
+                      <SelectValue placeholder="Select kit colors" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {KIT_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          <div className="flex items-center gap-2">
+                            <Shirt className={cn("h-4 w-4", option.color)} />
+                            {dict.common.kits[option.value as keyof typeof dict.common.kits] || option.value}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-alternativeKitColors" className="text-xs uppercase tracking-wider">{dict.games.dialog.alternativeKit}</Label>
+                  <Select 
+                    value={formData.alternativeKitColors}
+                    onValueChange={(val) => setFormData({ ...formData, alternativeKitColors: val })}
+                  >
+                    <SelectTrigger id="edit-alternativeKitColors" className="h-11">
+                      <SelectValue placeholder="Select alt kit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {KIT_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          <div className="flex items-center gap-2">
+                            <Shirt className={cn("h-4 w-4", option.color)} />
+                            {dict.common.kits[option.value as keyof typeof dict.common.kits] || option.value}
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-additionalDetails" className="text-xs uppercase tracking-wider">{dict.games.dialog.details}</Label>
