@@ -121,7 +121,7 @@ export default function PlayersPage() {
     email: string;
     mobileNumber: string;
     preferredPositions: PlayerPosition[];
-    team: string;
+    teams: string[];
     status: PlayerStatus;
     isAdmin: boolean;
     isCaptain: boolean;
@@ -134,7 +134,7 @@ export default function PlayersPage() {
     email: "",
     mobileNumber: "",
     preferredPositions: [],
-    team: "",
+    teams: [],
     status: "Active",
     isAdmin: false,
     isCaptain: false,
@@ -167,12 +167,23 @@ export default function PlayersPage() {
     });
   };
 
+  const handleTeamToggle = (teamId: string) => {
+    setFormData(prev => {
+      const exists = prev.teams.includes(teamId);
+      if (exists) {
+        return { ...prev, teams: prev.teams.filter(id => id !== teamId) };
+      } else {
+        return { ...prev, teams: [...prev.teams, teamId] };
+      }
+    });
+  };
+
   const handleAddPlayer = () => {
-    if (!formData.name || !formData.team) {
+    if (!formData.name || formData.teams.length === 0) {
       toast({
         variant: "destructive",
         title: "Missing Information",
-        description: "Name and Team are required.",
+        description: "Name and at least one Team are required.",
       });
       return;
     }
@@ -188,7 +199,7 @@ export default function PlayersPage() {
       email: formData.email || "",
       mobileNumber: formData.mobileNumber || "",
       preferredPositions: formData.preferredPositions,
-      team: formData.team,
+      teams: formData.teams,
       status: formData.status,
       isAdmin: formData.isAdmin,
       isCaptain: formData.isCaptain,
@@ -222,7 +233,7 @@ export default function PlayersPage() {
       email: player.email || "",
       mobileNumber: player.mobileNumber || "",
       preferredPositions: player.preferredPositions || [],
-      team: player.team || "",
+      teams: player.teams || [],
       status: player.status || "Active",
       isAdmin: player.isAdmin || false,
       isCaptain: player.isCaptain || false,
@@ -235,7 +246,7 @@ export default function PlayersPage() {
   };
 
   const handleUpdatePlayer = () => {
-    if (!editingPlayer || !formData.name || !formData.team) return;
+    if (!editingPlayer || !formData.name || formData.teams.length === 0) return;
 
     const playerRef = doc(firestore, "players", editingPlayer.id);
     const updateData = {
@@ -246,7 +257,7 @@ export default function PlayersPage() {
       email: formData.email || "",
       mobileNumber: formData.mobileNumber || "",
       preferredPositions: formData.preferredPositions,
-      team: formData.team,
+      teams: formData.teams,
       status: formData.status,
       isAdmin: formData.isAdmin,
       isCaptain: formData.isCaptain,
@@ -268,29 +279,6 @@ export default function PlayersPage() {
     toast({
       title: "Updating Player",
       description: "Squad information has been updated.",
-    });
-  };
-
-  const handleToggleAdminStatus = (player: Player) => {
-    if (!currentPlayer?.isAdmin) return;
-    
-    const playerRef = doc(firestore, "players", player.id);
-    const newAdminStatus = !player.isAdmin;
-    
-    const updateData = { id: player.id, isAdmin: newAdminStatus };
-
-    setDoc(playerRef, updateData, { merge: true })
-      .catch(async (error) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: playerRef.path,
-          operation: 'update',
-          requestResourceData: updateData
-        } satisfies SecurityRuleContext));
-      });
-
-    toast({
-      title: newAdminStatus ? "Player Promoted" : "Admin Rights Revoked",
-      description: `${player.name} is ${newAdminStatus ? 'now an administrator' : 'no longer an administrator'}.`,
     });
   };
 
@@ -319,7 +307,7 @@ export default function PlayersPage() {
       email: "",
       mobileNumber: "",
       preferredPositions: [],
-      team: "",
+      teams: [],
       status: "Active",
       isAdmin: false,
       isCaptain: false,
@@ -509,24 +497,26 @@ export default function PlayersPage() {
                         </Label>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-4">
                       <div className="grid gap-2">
-                        <Label htmlFor="team">{dict.common.team}</Label>
-                        <Select 
-                          value={formData.team} 
-                          onValueChange={(val) => setFormData({ ...formData, team: val })}
-                        >
-                          <SelectTrigger id="team">
-                            <SelectValue placeholder="Select team" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {teams?.map((team) => (
-                              <SelectItem key={team.id} value={team.id}>
+                        <Label>{dict.common.team} (Multi-select)</Label>
+                        <div className="grid grid-cols-2 gap-3 p-3 border rounded-md bg-muted/20">
+                          {teams?.map((team) => (
+                            <div key={team.id} className="flex items-center space-x-2">
+                              <Checkbox 
+                                id={`team-${team.id}`} 
+                                checked={formData.teams.includes(team.id)}
+                                onCheckedChange={() => handleTeamToggle(team.id)}
+                              />
+                              <label
+                                htmlFor={`team-${team.id}`}
+                                className="text-sm font-medium leading-none cursor-pointer"
+                              >
                                 {language === 'zh' ? team.nameZh : team.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                              </label>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                       <div className="grid gap-2">
                         <Label htmlFor="status">{dict.common.statusLabel}</Label>
@@ -658,24 +648,26 @@ export default function PlayersPage() {
                   </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-team">{dict.common.team}</Label>
-                  <Select 
-                    value={formData.team} 
-                    onValueChange={(val) => setFormData({ ...formData, team: val })}
-                  >
-                    <SelectTrigger id="edit-team">
-                      <SelectValue placeholder="Select team" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {teams?.map((team) => (
-                        <SelectItem key={team.id} value={team.id}>
+                  <Label>{dict.common.team} (Multi-select)</Label>
+                  <div className="grid grid-cols-2 gap-3 p-3 border rounded-md bg-muted/20">
+                    {teams?.map((team) => (
+                      <div key={team.id} className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={`edit-team-${team.id}`} 
+                          checked={formData.teams.includes(team.id)}
+                          onCheckedChange={() => handleTeamToggle(team.id)}
+                        />
+                        <label
+                          htmlFor={`edit-team-${team.id}`}
+                          className="text-sm font-medium leading-none cursor-pointer"
+                        >
                           {language === 'zh' ? team.nameZh : team.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-status">{dict.common.statusLabel}</Label>
@@ -817,9 +809,13 @@ export default function PlayersPage() {
                             </div>
                           </TableCell>
                           <TableCell className="text-center">
-                            <Badge className="font-bold bg-primary text-white">
-                              {getTeamName(player.team)}
-                            </Badge>
+                            <div className="flex flex-wrap gap-1 justify-center">
+                              {player.teams?.map(teamId => (
+                                <Badge key={teamId} className="font-bold bg-primary text-white text-[10px]">
+                                  {getTeamName(teamId)}
+                                </Badge>
+                              ))}
+                            </div>
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className={cn("gap-1 font-bold", statusCfg.color)}>

@@ -64,9 +64,12 @@
           },
           "description": "The player's preferred positions on the field."
         },
-        "team": {
-          "type": "string",
-          "description": "The ID of the team the player belongs to."
+        "teams": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The IDs of the teams the player belongs to."
         },
         "status": {
           "type": "string",
@@ -85,7 +88,7 @@
       "required": [
         "id",
         "name",
-        "team",
+        "teams",
         "status"
       ]
     },

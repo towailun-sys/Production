@@ -16,7 +16,7 @@ export interface Player {
   email?: string;
   mobileNumber?: string;
   preferredPositions: PlayerPosition[];
-  team: string; // References Team.id
+  teams: string[]; // References Team.id
   status: PlayerStatus;
   isAdmin?: boolean;
   isCaptain?: boolean;

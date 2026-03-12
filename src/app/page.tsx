@@ -240,11 +240,6 @@ export default function DashboardPage() {
       });
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast({ title: "ID Copied" });
-  };
-
   const handleClaimAdmin = () => {
     if (!user) return;
     setIsClaimingAdmin(true);
@@ -262,7 +257,7 @@ export default function DashboardPage() {
         name: user.displayName || "Admin User",
         email: user.email || "",
         status: "Active",
-        team: "default",
+        teams: ["default"],
         preferredPositions: ["MF", "FW"],
         number: 10
       });
@@ -347,7 +342,8 @@ export default function DashboardPage() {
   const filteredGames = upcomingGames?.filter(game => {
     if (currentPlayer?.isAdmin) return true;
     if (!currentPlayer) return false;
-    return game.team === 'All' || game.team === currentPlayer.team;
+    // Show game if it's for 'All' or if it matches any of the player's teams
+    return game.team === 'All' || currentPlayer.teams?.includes(game.team);
   }) || [];
 
   return (
@@ -395,7 +391,14 @@ export default function DashboardPage() {
                   <CardContent className="space-y-4">
                     <div className="text-foreground font-medium">{dict.dashboard.claimProfileDesc(preEnteredProfile.name, preEnteredProfile.email || "")}</div>
                     <div className="p-4 bg-white rounded-lg border flex items-center justify-between">
-                      <div><div className="font-bold">{preEnteredProfile.name}</div><div className="text-xs text-muted-foreground">{getTeamName(preEnteredProfile.team)}</div></div>
+                      <div>
+                        <div className="font-bold">{preEnteredProfile.name}</div>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {preEnteredProfile.teams?.map(tId => (
+                            <Badge key={tId} variant="outline" className="text-[10px]">{getTeamName(tId)}</Badge>
+                          ))}
+                        </div>
+                      </div>
                       <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-primary hover:bg-primary/90 gap-2 font-bold">{dict.dashboard.claimProfileBtn}</Button>
                     </div>
                   </CardContent>
@@ -408,7 +411,7 @@ export default function DashboardPage() {
                     <Calendar className="h-6 w-6 text-primary" />{dict.nav.dashboard}
                     {currentPlayer && (
                       <Badge variant="outline" className="ml-2 bg-primary/10 text-primary border-primary/20 font-bold">
-                        {currentPlayer.isAdmin ? dict.dashboard.fullAccess : dict.dashboard.teamView(getTeamName(currentPlayer.team))}
+                        {currentPlayer.isAdmin ? dict.dashboard.fullAccess : dict.dashboard.teamView(currentPlayer.teams?.map(getTeamName).join(', ') || "No Team")}
                       </Badge>
                     )}
                   </h2>
@@ -455,7 +458,11 @@ export default function DashboardPage() {
                       <div key={p.id} className="py-2 flex items-center gap-2">
                         <div className="h-8 w-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-[10px]">{p.number || p.name[0]}</div>
                         <div className="flex-1 text-xs font-bold truncate">{p.nickname || p.name}</div>
-                        <Badge variant="outline" className="text-[8px] h-4 px-1 bg-primary text-white border-none">{getTeamName(p.team)}</Badge>
+                        <div className="flex flex-wrap gap-1">
+                          {p.teams?.map(tId => (
+                            <Badge key={tId} variant="outline" className="text-[8px] h-4 px-1 bg-primary text-white border-none">{getTeamName(tId)}</Badge>
+                          ))}
+                        </div>
                       </div>
                     ))}
                   </div>

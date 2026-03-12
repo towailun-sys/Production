@@ -358,7 +358,7 @@ function GameRosterList({
                     </div>
                     <div className="text-xs text-muted-foreground">
                       <span className="font-bold text-primary">
-                        {getTeamName(player.team)}
+                        {player.teams?.map(getTeamName).join(', ')}
                       </span>
                       {" • "}{player.preferredPositions?.map(pos => dict.common.positions[pos.toLowerCase() as keyof typeof dict.common.positions] || pos).join(', ') || dict.common.any}
                     </div>
