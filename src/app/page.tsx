@@ -29,7 +29,7 @@ import {
   Shirt,
   Banknote,
   Info,
-  ImageIcon
+  Image as ImageIcon
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, Attendance, AttendanceStatus, Team, Kit } from "@/lib/types";
@@ -83,7 +83,7 @@ function KitBadge({ kitId, isAlternative = false }: { kitId: string, isAlternati
           variant="outline" 
           className={cn(
             "text-[10px] md:text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-muted/50 transition-colors py-1", 
-            kit.colorClass || "text-muted-foreground"
+            "text-muted-foreground"
           )}
         >
           <Shirt className="h-3.5 w-3.5" />
@@ -96,7 +96,7 @@ function KitBadge({ kitId, isAlternative = false }: { kitId: string, isAlternati
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Shirt className={cn("h-4 w-4", kit.colorClass)} />
+              <Shirt className="h-4 w-4" />
               <span className="text-xs font-bold uppercase tracking-widest">{dict.players.kits.viewImage}</span>
             </div>
             <Badge variant="outline" className="text-[9px] font-bold">{kitName}</Badge>
@@ -377,8 +377,8 @@ export default function DashboardPage() {
     });
 
     const sampleKits = [
-      { id: "kit-home-1", name: "Home 1", nameZh: "主場一", color: "Pink/Grey", colorZh: "粉紅/灰", imageUrl: "https://picsum.photos/seed/kit1/600/800", colorClass: "text-pink-500" },
-      { id: "kit-away-1", name: "Away 1", nameZh: "客場一", color: "Black/Black", colorZh: "全黑", imageUrl: "https://picsum.photos/seed/kit2/600/800", colorClass: "text-slate-900" },
+      { id: "kit-home-1", name: "Home 1", nameZh: "主場一", color: "Pink/Grey", colorZh: "粉紅/灰", imageUrl: "https://picsum.photos/seed/kit1/600/800" },
+      { id: "kit-away-1", name: "Away 1", nameZh: "客場一", color: "Black/Black", colorZh: "全黑", imageUrl: "https://picsum.photos/seed/kit2/600/800" },
     ];
 
     sampleKits.forEach(k => {

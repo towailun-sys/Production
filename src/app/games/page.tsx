@@ -273,7 +273,9 @@ export default function GamesPage() {
   const getKitLabel = (kitId: string) => {
     const kit = kits?.find(k => k.id === kitId);
     if (!kit) return dict.common.tbd;
-    return language === 'zh' ? kit.nameZh || kit.name : kit.name;
+    const name = language === 'zh' ? kit.nameZh || kit.name : kit.name;
+    const color = language === 'zh' ? kit.colorZh || kit.color : kit.color;
+    return color ? `${name} (${color})` : name;
   };
 
   if (isUserLoading) {
@@ -422,8 +424,9 @@ export default function GamesPage() {
                           {kits?.map((k) => (
                             <SelectItem key={k.id} value={k.id}>
                               <div className="flex items-center gap-2">
-                                <Shirt className={cn("h-4 w-4", k.colorClass)} />
+                                <Shirt className="h-4 w-4" />
                                 {language === 'zh' ? k.nameZh || k.name : k.name}
+                                {k.color && <span className="opacity-70 ml-1">({language === 'zh' ? k.colorZh || k.color : k.color})</span>}
                               </div>
                             </SelectItem>
                           ))}
@@ -444,8 +447,9 @@ export default function GamesPage() {
                           {kits?.map((k) => (
                             <SelectItem key={k.id} value={k.id}>
                               <div className="flex items-center gap-2">
-                                <Shirt className={cn("h-4 w-4", k.colorClass)} />
+                                <Shirt className="h-4 w-4" />
                                 {language === 'zh' ? k.nameZh || k.name : k.name}
+                                {k.color && <span className="opacity-70 ml-1">({language === 'zh' ? k.colorZh || k.color : k.color})</span>}
                               </div>
                             </SelectItem>
                           ))}
@@ -709,8 +713,9 @@ export default function GamesPage() {
                       {kits?.map((k) => (
                         <SelectItem key={k.id} value={k.id}>
                           <div className="flex items-center gap-2">
-                            <Shirt className={cn("h-4 w-4", k.colorClass)} />
+                            <Shirt className="h-4 w-4" />
                             {language === 'zh' ? k.nameZh || k.name : k.name}
+                            {k.color && <span className="opacity-70 ml-1">({language === 'zh' ? k.colorZh || k.color : k.color})</span>}
                           </div>
                         </SelectItem>
                       ))}
@@ -731,8 +736,9 @@ export default function GamesPage() {
                       {kits?.map((k) => (
                         <SelectItem key={k.id} value={k.id}>
                           <div className="flex items-center gap-2">
-                            <Shirt className={cn("h-4 w-4", k.colorClass)} />
+                            <Shirt className="h-4 w-4" />
                             {language === 'zh' ? k.nameZh || k.name : k.name}
+                            {k.color && <span className="opacity-70 ml-1">({language === 'zh' ? k.colorZh || k.color : k.color})</span>}
                           </div>
                         </SelectItem>
                       ))}
