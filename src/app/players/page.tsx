@@ -1260,10 +1260,11 @@ function TeamManagementUI() {
   const { data: teams } = useCollection<Team>(teamsQuery);
   const { toast } = useToast();
 
-  const [newTeam, setNewTeam] = useState({ name: "", nameZh: "" });
+  const [teamForm, setTeamForm] = useState({ name: "", nameZh: "" });
+  const [editingTeamId, setEditingTeamId] = useState<string | null>(null);
 
-  const handleAddTeam = () => {
-    if (!newTeam.name || !newTeam.nameZh) {
+  const handleSaveTeam = () => {
+    if (!teamForm.name || !teamForm.nameZh) {
       toast({
         variant: "destructive",
         title: "Input Required",
@@ -1271,20 +1272,31 @@ function TeamManagementUI() {
       });
       return;
     }
-    const id = doc(collection(firestore, "teams")).id;
+    const id = editingTeamId || doc(collection(firestore, "teams")).id;
     const teamRef = doc(firestore, "teams", id);
-    const teamData = { id, ...newTeam };
+    const teamData = { id, ...teamForm };
 
-    setDoc(teamRef, teamData).catch(error => {
+    setDoc(teamRef, teamData, { merge: true }).catch(error => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: teamRef.path,
-        operation: 'create',
+        operation: editingTeamId ? 'update' : 'create',
         requestResourceData: teamData
       } satisfies SecurityRuleContext));
     });
 
-    setNewTeam({ name: "", nameZh: "" });
-    toast({ title: "Team Added" });
+    setTeamForm({ name: "", nameZh: "" });
+    setEditingTeamId(null);
+    toast({ title: editingTeamId ? "Team Updated" : "Team Added" });
+  };
+
+  const handleEditClick = (team: Team) => {
+    setTeamForm({ name: team.name, nameZh: team.nameZh });
+    setEditingTeamId(team.id);
+  };
+
+  const cancelEdit = () => {
+    setTeamForm({ name: "", nameZh: "" });
+    setEditingTeamId(null);
   };
 
   const handleDeleteTeam = (id: string) => {
@@ -1295,18 +1307,29 @@ function TeamManagementUI() {
         operation: 'delete'
       } satisfies SecurityRuleContext));
     });
+    if (editingTeamId === id) cancelEdit();
     toast({ title: "Team Deleted" });
   };
 
   return (
     <div className="space-y-6 py-4">
       <div className="grid gap-5 p-5 border rounded-2xl bg-muted/20">
+        <div className="flex items-center justify-between mb-1">
+          <h3 className="text-sm font-bold uppercase tracking-widest text-primary">
+            {editingTeamId ? dict.common.edit : dict.players.teams.add}
+          </h3>
+          {editingTeamId && (
+            <Button variant="ghost" size="sm" onClick={cancelEdit} className="h-7 text-[10px] font-bold">
+              {dict.common.cancel}
+            </Button>
+          )}
+        </div>
         <div className="grid gap-2">
           <Label className="font-bold text-xs uppercase tracking-widest text-muted-foreground">{dict.players.teams.nameEn}</Label>
           <Input 
             placeholder="Team A" 
-            value={newTeam.name} 
-            onChange={(e) => setNewTeam({ ...newTeam, name: e.target.value })} 
+            value={teamForm.name} 
+            onChange={(e) => setTeamForm({ ...teamForm, name: e.target.value })} 
             className="h-11"
           />
         </div>
@@ -1314,14 +1337,14 @@ function TeamManagementUI() {
           <Label className="font-bold text-xs uppercase tracking-widest text-muted-foreground">{dict.players.teams.nameZh}</Label>
           <Input 
             placeholder="隊伍A" 
-            value={newTeam.nameZh} 
-            onChange={(e) => setNewTeam({ ...newTeam, nameZh: e.target.value })} 
+            value={teamForm.nameZh} 
+            onChange={(e) => setTeamForm({ ...teamForm, nameZh: e.target.value })} 
             className="h-11"
           />
         </div>
-        <Button onClick={handleAddTeam} className="w-full gap-2 font-bold bg-primary h-11 shadow-sm">
-          <Plus className="h-4 w-4" />
-          {dict.players.teams.add}
+        <Button onClick={handleSaveTeam} className="w-full gap-2 font-bold bg-primary h-11 shadow-sm">
+          {editingTeamId ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+          {editingTeamId ? dict.common.save : dict.players.teams.add}
         </Button>
       </div>
 
@@ -1337,9 +1360,14 @@ function TeamManagementUI() {
                 <div className="font-bold text-sm text-foreground">{team.name}</div>
                 <div className="text-xs text-muted-foreground font-medium">{team.nameZh}</div>
               </div>
-              <Button variant="ghost" size="icon" className="h-10 w-10 text-destructive hover:bg-destructive/10 rounded-full" onClick={() => handleDeleteTeam(team.id)}>
-                <Trash2 className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center gap-1">
+                <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-primary/10 rounded-full" onClick={() => handleEditClick(team)}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:bg-destructive/10 rounded-full" onClick={() => handleDeleteTeam(team.id)}>
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           ))
         )}

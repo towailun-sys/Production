@@ -81,7 +81,7 @@ export function KitColorText({ colorText, className }: { colorText: string | und
       {parts.map((part, i) => (
         <Fragment key={i}>
           <span style={{ color: getColorHex(part) }}>{part}</span>
-          {i < parts.length - 1 && <span className="mx-0.5 text-muted-foreground">/</span>}
+          {i < parts.length - 1 && <span className="mx-1 text-muted-foreground">/</span>}
         </Fragment>
       ))}
     </span>
@@ -118,13 +118,13 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
             )}
           >
             <Shirt className="h-3.5 w-3.5 shrink-0" />
-            <div className="flex flex-wrap items-center gap-x-1 leading-none">
-              {isAlternative && <span className="text-[9px] uppercase tracking-wider opacity-70 mr-1">ALT:</span>}
-              <span className="mr-1">{kitName}</span>
+            <div className="flex flex-wrap items-center gap-x-1.5 leading-none">
+              {isAlternative && <span className="text-[9px] uppercase tracking-wider opacity-70">ALT:</span>}
+              <span>{kitName}</span>
               {kitColor && (
                 <KitColorText 
                   colorText={kitColor} 
-                  className="font-bold opacity-100 text-[10px] md:text-[11px] bg-muted/30 px-1.5 py-0.5 rounded" 
+                  className="font-bold" 
                 />
               )}
             </div>
