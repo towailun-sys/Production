@@ -393,7 +393,13 @@ export default function GamesPage() {
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="fee" className="text-xs uppercase tracking-wider">{dict.games.dialog.fee}</Label>
-                    <Input id="fee" placeholder="e.g. $100 or Split by all" className="h-11" value={formData.fee} onChange={(e) => setFormData({ ...formData, fee: e.target.value })} />
+                    <Textarea 
+                      id="fee" 
+                      placeholder="e.g. $100 or Split by all" 
+                      className="min-h-[80px] rounded-xl"
+                      value={formData.fee} 
+                      onChange={(e) => setFormData({ ...formData, fee: e.target.value })}
+                    />
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="kitColors" className="text-xs uppercase tracking-wider">{dict.games.dialog.kit}</Label>
@@ -499,9 +505,9 @@ export default function GamesPage() {
                           </div>
                         )}
                         {game.fee && (
-                          <div className="flex items-center gap-2">
-                            <Banknote className="h-4 w-4 text-primary shrink-0" />
-                            {game.fee}
+                          <div className="flex items-start gap-2">
+                            <Banknote className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                            <span className="whitespace-pre-wrap">{game.fee}</span>
                           </div>
                         )}
                         {game.kitColors && (
@@ -514,7 +520,7 @@ export default function GamesPage() {
                       {game.additionalDetails && (
                         <div className="flex items-start gap-2 text-[11px] text-muted-foreground mt-3 bg-muted/20 p-3 rounded-xl border border-dashed">
                           <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
-                          <p className="leading-relaxed">{game.additionalDetails}</p>
+                          <p className="leading-relaxed whitespace-pre-wrap">{game.additionalDetails}</p>
                         </div>
                       )}
                     </div>
@@ -636,7 +642,13 @@ export default function GamesPage() {
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-fee" className="text-xs uppercase tracking-wider">{dict.games.dialog.fee}</Label>
-                <Input id="edit-fee" placeholder="e.g. $100 or Split by all" className="h-11" value={formData.fee} onChange={(e) => setFormData({ ...formData, fee: e.target.value })} />
+                <Textarea 
+                  id="edit-fee" 
+                  placeholder="e.g. $100 or Split by all" 
+                  className="min-h-[80px] rounded-xl"
+                  value={formData.fee} 
+                  onChange={(e) => setFormData({ ...formData, fee: e.target.value })}
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-kitColors" className="text-xs uppercase tracking-wider">{dict.games.dialog.kit}</Label>

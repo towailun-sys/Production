@@ -440,9 +440,9 @@ export default function DashboardPage() {
                                 </span>
                               )}
                               {game.fee && (
-                                <span className="text-[10px] md:text-xs font-bold text-muted-foreground flex items-center gap-1.5">
-                                  <Banknote className="h-3.5 w-3.5 text-primary" />
-                                  {game.fee}
+                                <span className="text-[10px] md:text-xs font-bold text-muted-foreground flex items-start gap-1.5">
+                                  <Banknote className="h-3.5 w-3.5 text-primary mt-0.5" />
+                                  <span className="whitespace-pre-wrap">{game.fee}</span>
                                 </span>
                               )}
                               {game.kitColors && (

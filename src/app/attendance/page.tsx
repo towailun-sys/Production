@@ -222,7 +222,10 @@ export default function AttendancePage() {
                 <span className="flex items-center gap-2 font-medium"><UserRound className="h-4 w-4 text-primary shrink-0" /> {specificGame.coach}</span>
               )}
               {specificGame.fee && (
-                <span className="flex items-center gap-2 font-medium"><Banknote className="h-4 w-4 text-primary shrink-0" /> {specificGame.fee}</span>
+                <span className="flex items-start gap-2 font-medium">
+                  <Banknote className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                  <span className="whitespace-pre-wrap">{specificGame.fee}</span>
+                </span>
               )}
             </div>
             {specificGame.additionalDetails && (
@@ -548,7 +551,7 @@ function AttendanceCard({
               </div>
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1">{dict.attendance.feeLabel}</p>
-                <p className="font-bold text-foreground text-sm">{game.fee}</p>
+                <p className="font-bold text-foreground text-sm whitespace-pre-wrap">{game.fee}</p>
               </div>
             </div>
           )}
