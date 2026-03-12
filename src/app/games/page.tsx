@@ -51,7 +51,7 @@ import {
   Banknote,
   Calendar as CalendarIcon
 } from "lucide-react";
-import { Game, GameType, Player, Team } from "@/lib/types";
+import { Game, GameType, Player, Team, Kit } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
@@ -60,18 +60,6 @@ import Link from "next/link";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useTranslation } from "@/components/language-provider";
-
-const KIT_OPTIONS = [
-  { value: "Home 1: Pink/Grey", color: "text-pink-500" },
-  { value: "Home 2: New White / New White", color: "text-slate-300" },
-  { value: "Away 1: Black/Black", color: "text-slate-950" },
-  { value: "Away 2: White/White", color: "text-slate-300" },
-  { value: "TBD", color: "text-muted-foreground" }
-];
-
-const getKitColorClass = (kitLabel: string) => {
-  return KIT_OPTIONS.find(opt => opt.value === kitLabel)?.color || "text-muted-foreground";
-};
 
 export default function GamesPage() {
   const { user, isUserLoading } = useUser();
@@ -94,6 +82,12 @@ export default function GamesPage() {
     return collection(firestore, "teams");
   }, [firestore, user, isUserLoading]);
   const { data: teams } = useCollection<Team>(teamsQuery);
+
+  const kitsQuery = useMemoFirebase(() => {
+    if (isUserLoading || !user) return null;
+    return collection(firestore, "kits");
+  }, [firestore, user, isUserLoading]);
+  const { data: kits } = useCollection<Kit>(kitsQuery);
 
   const [formData, setFormData] = useState<{
     type: GameType;
@@ -118,8 +112,8 @@ export default function GamesPage() {
     opponent: "",
     coach: "",
     fee: "",
-    kitColors: "TBD",
-    alternativeKitColors: "TBD",
+    kitColors: "",
+    alternativeKitColors: "",
     additionalDetails: "",
   });
 
@@ -141,8 +135,8 @@ export default function GamesPage() {
       opponent: "", 
       coach: "",
       fee: "",
-      kitColors: "TBD",
-      alternativeKitColors: "TBD",
+      kitColors: "",
+      alternativeKitColors: "",
       additionalDetails: "",
     });
   };
@@ -175,8 +169,8 @@ export default function GamesPage() {
       opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || "TBD"),
       coach: formData.coach || "",
       fee: formData.fee || "",
-      kitColors: formData.kitColors || "TBD",
-      alternativeKitColors: formData.alternativeKitColors || "TBD",
+      kitColors: formData.kitColors || "",
+      alternativeKitColors: formData.alternativeKitColors || "",
       additionalDetails: formData.additionalDetails || "",
     };
 
@@ -208,8 +202,8 @@ export default function GamesPage() {
       opponent: (game.opponent === "N/A" || !game.opponent) ? "" : game.opponent,
       coach: game.coach || "",
       fee: game.fee || "",
-      kitColors: game.kitColors || "TBD",
-      alternativeKitColors: game.alternativeKitColors || "TBD",
+      kitColors: game.kitColors || "",
+      alternativeKitColors: game.alternativeKitColors || "",
       additionalDetails: game.additionalDetails || "",
     });
     
@@ -236,8 +230,8 @@ export default function GamesPage() {
       opponent: isOpponentNotRequired(formData.type) ? "N/A" : (formData.opponent || "TBD"),
       coach: formData.coach || "",
       fee: formData.fee || "",
-      kitColors: formData.kitColors || "TBD",
-      alternativeKitColors: formData.alternativeKitColors || "TBD",
+      kitColors: formData.kitColors || "",
+      alternativeKitColors: formData.alternativeKitColors || "",
       additionalDetails: formData.additionalDetails || "",
     };
 
@@ -274,6 +268,12 @@ export default function GamesPage() {
     const team = teams?.find(t => t.id === teamId);
     if (!team) return teamId;
     return language === 'zh' ? team.nameZh : team.name;
+  };
+
+  const getKitLabel = (kitId: string) => {
+    const kit = kits?.find(k => k.id === kitId);
+    if (!kit) return dict.common.tbd;
+    return language === 'zh' ? kit.nameZh || kit.name : kit.name;
   };
 
   if (isUserLoading) {
@@ -415,14 +415,15 @@ export default function GamesPage() {
                         onValueChange={(val) => setFormData({ ...formData, kitColors: val })}
                       >
                         <SelectTrigger id="kitColors" className="h-11">
-                          <SelectValue placeholder="Select kit colors" />
+                          <SelectValue placeholder="Select kit" />
                         </SelectTrigger>
                         <SelectContent>
-                          {KIT_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
+                          <SelectItem value="">{dict.common.tbd}</SelectItem>
+                          {kits?.map((k) => (
+                            <SelectItem key={k.id} value={k.id}>
                               <div className="flex items-center gap-2">
-                                <Shirt className={cn("h-4 w-4", option.color)} />
-                                {dict.common.kits[option.value as keyof typeof dict.common.kits] || option.value}
+                                <Shirt className={cn("h-4 w-4", k.colorClass)} />
+                                {language === 'zh' ? k.nameZh || k.name : k.name}
                               </div>
                             </SelectItem>
                           ))}
@@ -439,11 +440,12 @@ export default function GamesPage() {
                           <SelectValue placeholder="Select alt kit" />
                         </SelectTrigger>
                         <SelectContent>
-                          {KIT_OPTIONS.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
+                          <SelectItem value="">{dict.common.tbd}</SelectItem>
+                          {kits?.map((k) => (
+                            <SelectItem key={k.id} value={k.id}>
                               <div className="flex items-center gap-2">
-                                <Shirt className={cn("h-4 w-4", option.color)} />
-                                {dict.common.kits[option.value as keyof typeof dict.common.kits] || option.value}
+                                <Shirt className={cn("h-4 w-4", k.colorClass)} />
+                                {language === 'zh' ? k.nameZh || k.name : k.name}
                               </div>
                             </SelectItem>
                           ))}
@@ -536,16 +538,16 @@ export default function GamesPage() {
                           )}
                           <div className="flex flex-wrap gap-4">
                             {game.kitColors && (
-                              <div className={cn("flex items-center gap-2 font-bold", getKitColorClass(game.kitColors))}>
+                              <div className="flex items-center gap-2 font-bold text-primary">
                                 <Shirt className="h-4 w-4 shrink-0" />
-                                {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
+                                {getKitLabel(game.kitColors)}
                               </div>
                             )}
-                            {game.alternativeKitColors && game.alternativeKitColors !== 'TBD' && (
-                              <div className={cn("flex items-center gap-2 font-bold opacity-80", getKitColorClass(game.alternativeKitColors))}>
+                            {game.alternativeKitColors && (
+                              <div className="flex items-center gap-2 font-bold text-muted-foreground opacity-80">
                                 <Shirt className="h-4 w-4 shrink-0" />
                                 <span className="text-[10px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>
-                                {dict.common.kits[game.alternativeKitColors as keyof typeof dict.common.kits] || game.alternativeKitColors}
+                                {getKitLabel(game.alternativeKitColors)}
                               </div>
                             )}
                           </div>
@@ -700,14 +702,15 @@ export default function GamesPage() {
                     onValueChange={(val) => setFormData({ ...formData, kitColors: val })}
                   >
                     <SelectTrigger id="edit-kitColors" className="h-11">
-                      <SelectValue placeholder="Select kit colors" />
+                      <SelectValue placeholder="Select kit" />
                     </SelectTrigger>
                     <SelectContent>
-                      {KIT_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
+                      <SelectItem value="">{dict.common.tbd}</SelectItem>
+                      {kits?.map((k) => (
+                        <SelectItem key={k.id} value={k.id}>
                           <div className="flex items-center gap-2">
-                            <Shirt className={cn("h-4 w-4", option.color)} />
-                            {dict.common.kits[option.value as keyof typeof dict.common.kits] || option.value}
+                            <Shirt className={cn("h-4 w-4", k.colorClass)} />
+                            {language === 'zh' ? k.nameZh || k.name : k.name}
                           </div>
                         </SelectItem>
                       ))}
@@ -724,11 +727,12 @@ export default function GamesPage() {
                       <SelectValue placeholder="Select alt kit" />
                     </SelectTrigger>
                     <SelectContent>
-                      {KIT_OPTIONS.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
+                      <SelectItem value="">{dict.common.tbd}</SelectItem>
+                      {kits?.map((k) => (
+                        <SelectItem key={k.id} value={k.id}>
                           <div className="flex items-center gap-2">
-                            <Shirt className={cn("h-4 w-4", option.color)} />
-                            {dict.common.kits[option.value as keyof typeof dict.common.kits] || option.value}
+                            <Shirt className={cn("h-4 w-4", k.colorClass)} />
+                            {language === 'zh' ? k.nameZh || k.name : k.name}
                           </div>
                         </SelectItem>
                       ))}

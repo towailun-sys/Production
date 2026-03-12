@@ -27,9 +27,10 @@ import {
   CalendarCheck,
   Shirt,
   UserRound,
-  Banknote
+  Banknote,
+  Image as ImageIcon
 } from "lucide-react";
-import { Game, AttendanceStatus, Player, Attendance, Team } from "@/lib/types";
+import { Game, AttendanceStatus, Player, Attendance, Team, Kit } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
@@ -46,14 +47,64 @@ import {
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useTranslation } from "@/components/language-provider";
+import Image from "next/image";
 
-const KIT_COLORS: Record<string, string> = {
-  "Home 1: Pink/Grey": "text-pink-500",
-  "Home 2: New White / New White": "text-slate-300",
-  "Away 1: Black/Black": "text-slate-950",
-  "Away 2: White/White": "text-slate-300",
-  "TBD": "text-muted-foreground"
-};
+function KitBadge({ kitId, isAlternative = false }: { kitId: string, isAlternative?: boolean }) {
+  const firestore = useFirestore();
+  const { dict, language } = useTranslation();
+  const kitRef = useMemoFirebase(() => doc(firestore, "kits", kitId), [firestore, kitId]);
+  const { data: kit, isLoading } = useDoc<Kit>(kitRef);
+
+  if (isLoading) return <div className="h-4 w-16 animate-pulse bg-muted rounded" />;
+  if (!kit) return <span className="text-[10px] font-bold text-muted-foreground">{dict.common.tbd}</span>;
+
+  const kitName = language === 'zh' ? kit.nameZh || kit.name : kit.name;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Badge 
+          variant="outline" 
+          className={cn(
+            "text-[10px] font-bold flex items-center gap-1.5 cursor-pointer hover:bg-muted/10 py-1 transition-colors", 
+            kit.colorClass || "text-muted-foreground"
+          )}
+        >
+          <Shirt className="h-3.5 w-3.5" />
+          {isAlternative && <span className="text-[9px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>}
+          {kitName}
+        </Badge>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 p-3 shadow-2xl rounded-xl">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Shirt className={cn("h-4 w-4", kit.colorClass)} />
+              <span className="text-[10px] font-bold uppercase tracking-widest">{dict.players.kits.viewImage}</span>
+            </div>
+            <Badge variant="outline" className="text-[9px] font-bold">{kitName}</Badge>
+          </div>
+          <div className="relative aspect-[4/5] w-full rounded-lg overflow-hidden border bg-muted">
+            {kit.imageUrl ? (
+              <Image 
+                src={kit.imageUrl} 
+                alt={kitName} 
+                fill 
+                className="object-cover"
+                sizes="256px"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
+                <ImageIcon className="h-8 w-8 opacity-20" />
+                <span className="text-[10px]">No image available</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 export default function AttendancePage() {
   const searchParams = useSearchParams();
@@ -195,11 +246,7 @@ export default function AttendancePage() {
           
           <header className="mb-8">
             <div className="flex flex-wrap items-center gap-3 mb-3">
-              <Badge 
-                className={cn(
-                  "font-bold bg-primary text-white px-3 py-1 text-[10px] md:text-xs border-none"
-                )}
-              >
+              <Badge className="font-bold bg-primary text-white px-3 py-1 text-[10px] md:text-xs border-none">
                 {getTeamName(specificGame.team)}
               </Badge>
               <Badge variant="outline" className={cn(
@@ -211,19 +258,8 @@ export default function AttendancePage() {
               )}>
                 {dict.common.gameTypes[specificGame.type] || specificGame.type}
               </Badge>
-              {specificGame.kitColors && (
-                <Badge variant="outline" className={cn("font-bold gap-1.5 py-1", KIT_COLORS[specificGame.kitColors] || "text-muted-foreground")}>
-                  <Shirt className="h-3.5 w-3.5" />
-                  {dict.common.kits[specificGame.kitColors as keyof typeof dict.common.kits] || specificGame.kitColors}
-                </Badge>
-              )}
-              {specificGame.alternativeKitColors && specificGame.alternativeKitColors !== 'TBD' && (
-                <Badge variant="outline" className={cn("font-bold gap-1.5 py-1 opacity-80", KIT_COLORS[specificGame.alternativeKitColors] || "text-muted-foreground")}>
-                  <Shirt className="h-3.5 w-3.5" />
-                  <span className="text-[9px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>
-                  {dict.common.kits[specificGame.alternativeKitColors as keyof typeof dict.common.kits] || specificGame.alternativeKitColors}
-                </Badge>
-              )}
+              {specificGame.kitColors && <KitBadge kitId={specificGame.kitColors} />}
+              {specificGame.alternativeKitColors && <KitBadge kitId={specificGame.alternativeKitColors} isAlternative />}
               {specificGame.additionalDetails && (
                 <Popover>
                   <PopoverTrigger asChild>
@@ -600,22 +636,8 @@ function AttendanceCard({
                 <Shirt className="h-5 w-5 text-primary" />
               </div>
               <div className="flex flex-col gap-3">
-                {game.kitColors && (
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1.5">{dict.games.dialog.kit}</p>
-                    <p className={cn("font-bold text-sm", KIT_COLORS[game.kitColors] || "text-foreground")}>
-                      {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
-                    </p>
-                  </div>
-                )}
-                {game.alternativeKitColors && game.alternativeKitColors !== 'TBD' && (
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1.5">{dict.games.dialog.alternativeKit}</p>
-                    <p className={cn("font-bold text-sm", KIT_COLORS[game.alternativeKitColors] || "text-foreground")}>
-                      {dict.common.kits[game.alternativeKitColors as keyof typeof dict.common.kits] || game.alternativeKitColors}
-                    </p>
-                  </div>
-                )}
+                {game.kitColors && <KitBadge kitId={game.kitColors} />}
+                {game.alternativeKitColors && <KitBadge kitId={game.alternativeKitColors} isAlternative />}
               </div>
             </div>
           </div>

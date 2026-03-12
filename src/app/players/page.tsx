@@ -60,9 +60,11 @@ import {
   Smartphone,
   MoreVertical,
   Users,
-  UserSearch
+  UserSearch,
+  Shirt,
+  Image as ImageIcon
 } from "lucide-react";
-import { Player, PlayerPosition, PlayerStatus, Team } from "@/lib/types";
+import { Player, PlayerPosition, PlayerStatus, Team, Kit } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
@@ -79,6 +81,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
+import Image from "next/image";
 
 export default function PlayersPage() {
   const { user, isUserLoading } = useUser();
@@ -90,6 +93,7 @@ export default function PlayersPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isTeamsOpen, setIsTeamsOpen] = useState(false);
+  const [isKitsOpen, setIsKitsOpen] = useState(false);
   const [editingPlayer, setEditingPlayer] = useState<Player | null>(null);
 
   const POSITIONS: { value: PlayerPosition; label: string }[] = [
@@ -396,6 +400,21 @@ export default function PlayersPage() {
           
           {currentPlayer?.isAdmin && (
             <div className="flex flex-wrap gap-2">
+              <Dialog open={isKitsOpen} onOpenChange={setIsKitsOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" className="gap-2 font-bold border-accent text-accent hover:bg-accent/5 h-10 px-4 text-xs md:text-sm">
+                    <Shirt className="h-4 w-4" />
+                    {dict.players.manageKits}
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-[500px] max-h-[85vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="font-headline">{dict.players.kits.title}</DialogTitle>
+                  </DialogHeader>
+                  <KitManagementUI />
+                </DialogContent>
+              </Dialog>
+
               <Dialog open={isTeamsOpen} onOpenChange={setIsTeamsOpen}>
                 <DialogTrigger asChild>
                   <Button variant="outline" className="gap-2 font-bold border-primary text-primary hover:bg-primary/5 h-10 px-4 text-xs md:text-sm">
@@ -993,6 +1012,126 @@ export default function PlayersPage() {
           </CardContent>
         </Card>
       </main>
+    </div>
+  );
+}
+
+function KitManagementUI() {
+  const firestore = useFirestore();
+  const { dict, language } = useTranslation();
+  const { user, isUserLoading } = useUser();
+  const kitsQuery = useMemoFirebase(() => {
+    if (isUserLoading || !user) return null;
+    return collection(firestore, "kits");
+  }, [firestore, user, isUserLoading]);
+  const { data: kits } = useCollection<Kit>(kitsQuery);
+  const { toast } = useToast();
+
+  const [newKit, setNewKit] = useState<Partial<Kit>>({ name: "", nameZh: "", imageUrl: "", colorClass: "text-primary" });
+
+  const handleAddKit = () => {
+    if (!newKit.name || !newKit.imageUrl) {
+      toast({
+        variant: "destructive",
+        title: "Input Required",
+        description: "Please provide a name and an image URL.",
+      });
+      return;
+    }
+    const id = doc(collection(firestore, "kits")).id;
+    const kitRef = doc(firestore, "kits", id);
+    const kitData = { id, ...newKit };
+
+    setDoc(kitRef, kitData).catch(error => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: kitRef.path,
+        operation: 'create',
+        requestResourceData: kitData
+      } satisfies SecurityRuleContext));
+    });
+
+    setNewKit({ name: "", nameZh: "", imageUrl: "", colorClass: "text-primary" });
+    toast({ title: "Kit Added" });
+  };
+
+  const handleDeleteKit = (id: string) => {
+    const kitRef = doc(firestore, "kits", id);
+    deleteDoc(kitRef).catch(error => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: kitRef.path,
+        operation: 'delete'
+      } satisfies SecurityRuleContext));
+    });
+    toast({ title: "Kit Deleted" });
+  };
+
+  return (
+    <div className="space-y-6 py-4">
+      <div className="grid gap-4 p-4 border rounded-2xl bg-muted/20">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="grid gap-1.5">
+            <Label className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">{dict.players.kits.nameEn}</Label>
+            <Input 
+              placeholder="Home 1" 
+              value={newKit.name} 
+              onChange={(e) => setNewKit({ ...newKit, name: e.target.value })} 
+            />
+          </div>
+          <div className="grid gap-1.5">
+            <Label className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">{dict.players.kits.nameZh}</Label>
+            <Input 
+              placeholder="主場一" 
+              value={newKit.nameZh} 
+              onChange={(e) => setNewKit({ ...newKit, nameZh: e.target.value })} 
+            />
+          </div>
+        </div>
+        <div className="grid gap-1.5">
+          <Label className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">{dict.players.kits.imageUrl}</Label>
+          <Input 
+            placeholder="https://..." 
+            value={newKit.imageUrl} 
+            onChange={(e) => setNewKit({ ...newKit, imageUrl: e.target.value })} 
+          />
+        </div>
+        <div className="grid gap-1.5">
+          <Label className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">{dict.players.kits.colorClass}</Label>
+          <Input 
+            placeholder="text-pink-500" 
+            value={newKit.colorClass} 
+            onChange={(e) => setNewKit({ ...newKit, colorClass: e.target.value })} 
+          />
+        </div>
+        <Button onClick={handleAddKit} size="sm" className="w-full gap-2 font-bold bg-primary h-10 shadow-sm mt-2">
+          <Plus className="h-4 w-4" />
+          {dict.players.kits.add}
+        </Button>
+      </div>
+
+      <div className="grid gap-4">
+        {kits?.length === 0 ? (
+          <div className="p-10 text-center text-muted-foreground italic text-sm">
+            {dict.players.kits.noKits}
+          </div>
+        ) : (
+          kits?.map((kit) => (
+            <div key={kit.id} className="p-3 border rounded-xl flex items-center justify-between bg-white hover:bg-muted/5 transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="relative h-12 w-12 rounded-lg overflow-hidden border bg-muted shrink-0">
+                  <Image src={kit.imageUrl} alt={kit.name} fill className="object-cover" />
+                </div>
+                <div>
+                  <div className={cn("font-bold text-sm", kit.colorClass)}>{language === 'zh' ? kit.nameZh : kit.name}</div>
+                  <div className="text-[10px] text-muted-foreground font-medium truncate max-w-[150px]">{kit.imageUrl}</div>
+                </div>
+              </div>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-full" onClick={() => handleDeleteKit(kit.id)}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))
+        )}
+      </div>
     </div>
   );
 }

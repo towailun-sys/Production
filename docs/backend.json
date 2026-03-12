@@ -26,6 +26,39 @@
         "nameZh"
       ]
     },
+    "Kit": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Kit",
+      "type": "object",
+      "description": "Represents a team uniform/kit.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the kit."
+        },
+        "name": {
+          "type": "string",
+          "description": "Kit name (e.g., Home 1: Pink/Grey)."
+        },
+        "nameZh": {
+          "type": "string",
+          "description": "Kit name in Chinese."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL to the kit reference image."
+        },
+        "colorClass": {
+          "type": "string",
+          "description": "Tailwind color class for the badge (e.g., text-pink-500)."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "imageUrl"
+      ]
+    },
     "Player": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Player",
@@ -134,11 +167,11 @@
         },
         "kitColors": {
           "type": "string",
-          "description": "The primary kit assigned for this game."
+          "description": "The ID of the primary kit assigned for this game."
         },
         "alternativeKitColors": {
           "type": "string",
-          "description": "An optional secondary kit for the game."
+          "description": "The ID of the alternative kit assigned for this game."
         },
         "coach": {
           "type": "string",
@@ -220,6 +253,22 @@
             {
               "name": "teamId",
               "description": "Unique team ID."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/kits/{kitId}",
+        "definition": {
+          "entityName": "Kit",
+          "schema": {
+            "$ref": "#/backend/entities/Kit"
+          },
+          "description": "Stores team kit details and images.",
+          "params": [
+            {
+              "name": "kitId",
+              "description": "Unique kit ID."
             }
           ]
         }

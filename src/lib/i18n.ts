@@ -44,13 +44,6 @@ const baseDict = {
       df: "DF",
       mf: "MF",
       fw: "FW"
-    },
-    kits: {
-      "Home 1: Pink/Grey": "Home 1: Pink/Grey",
-      "Home 2: New White / New White": "Home 2: New White / New White",
-      "Away 1: Black/Black": "Away 1: Black/Black",
-      "Away 2: White/White": "Away 2: White/White",
-      "TBD": "TBD"
     }
   },
   nav: {
@@ -99,6 +92,7 @@ const baseDict = {
     subtitle: "Manage your squad and link Google accounts.",
     addPlayer: "Add Player",
     manageTeams: "Manage Teams",
+    manageKits: "Manage Kits",
     searchPlaceholder: "Search players...",
     tableHeader: {
       number: "#",
@@ -129,6 +123,16 @@ const baseDict = {
       nameZh: "Name (Chinese)",
       add: "Add Team",
       noTeams: "No teams defined yet."
+    },
+    kits: {
+      title: "Manage Squad Kits",
+      nameEn: "Name (English)",
+      nameZh: "Name (Chinese)",
+      imageUrl: "Image URL",
+      colorClass: "Color (e.g. text-pink-500)",
+      add: "Add Kit",
+      noKits: "No kits defined yet.",
+      viewImage: "View Reference Image"
     }
   },
   games: {
@@ -215,13 +219,6 @@ const zhDict: typeof baseDict = {
       df: "後衛",
       mf: "中場",
       fw: "前鋒"
-    },
-    kits: {
-      "Home 1: Pink/Grey": "主場 1: 粉紅/灰",
-      "Home 2: New White / New White": "主場 2: 新白 / 新白",
-      "Away 1: Black/Black": "客場 1: 黑/黑",
-      "Away 2: White/White": "客場 2: 白/白",
-      "TBD": "有待決定"
     }
   },
   nav: {
@@ -270,6 +267,7 @@ const zhDict: typeof baseDict = {
     subtitle: "管理球員名單並連結 Google 帳號。",
     addPlayer: "新增球員",
     manageTeams: "管理隊伍",
+    manageKits: "管理球衣",
     searchPlaceholder: "搜尋球員...",
     tableHeader: {
       number: "#",
@@ -300,6 +298,16 @@ const zhDict: typeof baseDict = {
       nameZh: "名稱 (中文)",
       add: "新增隊伍",
       noTeams: "尚未定義任何隊伍。"
+    },
+    kits: {
+      title: "管理球隊球衣",
+      nameEn: "名稱 (英文)",
+      nameZh: "名稱 (中文)",
+      imageUrl: "圖片網址",
+      colorClass: "顏色代碼 (如 text-pink-500)",
+      add: "新增球衣",
+      noKits: "尚未定義任何球衣。",
+      viewImage: "查看參考圖片"
     }
   },
   games: {

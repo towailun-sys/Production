@@ -8,6 +8,14 @@ export interface Team {
   nameZh: string;
 }
 
+export interface Kit {
+  id: string;
+  name: string;
+  nameZh?: string;
+  imageUrl: string;
+  colorClass?: string;
+}
+
 export interface Player {
   id: string;
   name: string;
@@ -34,8 +42,8 @@ export interface Game {
   type: GameType;
   team: string; // References Team.id or 'All'
   opponent?: string;
-  kitColors?: string;
-  alternativeKitColors?: string;
+  kitColors?: string; // References Kit.id
+  alternativeKitColors?: string; // References Kit.id
   coach?: string;
   fee?: string;
   additionalDetails?: string;

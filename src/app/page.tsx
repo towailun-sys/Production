@@ -28,10 +28,11 @@ import {
   Crown,
   Shirt,
   Banknote,
-  Info
+  Info,
+  ImageIcon
 } from "lucide-react";
 import Link from "next/link";
-import { Game, Player, Attendance, AttendanceStatus, Team } from "@/lib/types";
+import { Game, Player, Attendance, AttendanceStatus, Team, Kit } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, query, orderBy, limit, where, doc, setDoc, deleteDoc } from "firebase/firestore";
@@ -39,14 +40,64 @@ import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useTranslation } from "@/components/language-provider";
+import Image from "next/image";
 
-const KIT_COLORS: Record<string, string> = {
-  "Home 1: Pink/Grey": "text-pink-500",
-  "Home 2: New White / New White": "text-slate-300",
-  "Away 1: Black/Black": "text-slate-950",
-  "Away 2: White/White": "text-slate-300",
-  "TBD": "text-muted-foreground"
-};
+function KitBadge({ kitId, isAlternative = false }: { kitId: string, isAlternative?: boolean }) {
+  const firestore = useFirestore();
+  const { dict, language } = useTranslation();
+  const kitRef = useMemoFirebase(() => doc(firestore, "kits", kitId), [firestore, kitId]);
+  const { data: kit, isLoading } = useDoc<Kit>(kitRef);
+
+  if (isLoading) return <div className="h-4 w-16 animate-pulse bg-muted rounded" />;
+  if (!kit) return <span className="text-[10px] font-bold text-muted-foreground">{dict.common.tbd}</span>;
+
+  const kitName = language === 'zh' ? kit.nameZh || kit.name : kit.name;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Badge 
+          variant="outline" 
+          className={cn(
+            "text-[10px] md:text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-muted/50 transition-colors", 
+            kit.colorClass || "text-muted-foreground"
+          )}
+        >
+          <Shirt className="h-3.5 w-3.5" />
+          {isAlternative && <span className="text-[9px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>}
+          {kitName}
+        </Badge>
+      </PopoverTrigger>
+      <PopoverContent className="w-64 p-3 shadow-xl rounded-xl">
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Shirt className={cn("h-4 w-4", kit.colorClass)} />
+              <span className="text-xs font-bold uppercase tracking-widest">{dict.players.kits.viewImage}</span>
+            </div>
+            <Badge variant="outline" className="text-[9px] font-bold">{kitName}</Badge>
+          </div>
+          <div className="relative aspect-[4/5] w-full rounded-lg overflow-hidden border bg-muted">
+            {kit.imageUrl ? (
+              <Image 
+                src={kit.imageUrl} 
+                alt={kitName} 
+                fill 
+                className="object-cover"
+                sizes="256px"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
+                <ImageIcon className="h-8 w-8 opacity-20" />
+                <span className="text-[10px]">No image available</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
 
 function UserAttendanceToggle({ gameId, userId }: { gameId: string, userId: string }) {
   const firestore = useFirestore();
@@ -301,16 +352,21 @@ export default function DashboardPage() {
       setDoc(doc(firestore, "teams", t.id), t);
     });
 
+    const sampleKits = [
+      { id: "kit-home-1", name: "Home 1: Pink/Grey", nameZh: "主場一: 粉紅/灰", imageUrl: "https://picsum.photos/seed/kit1/600/800", colorClass: "text-pink-500" },
+      { id: "kit-away-1", name: "Away 1: Black/Black", nameZh: "客場一: 全黑", imageUrl: "https://picsum.photos/seed/kit2/600/800", colorClass: "text-slate-900" },
+    ];
+
+    sampleKits.forEach(k => {
+      setDoc(doc(firestore, "kits", k.id), k);
+    });
+
     const today = new Date().toISOString().split('T')[0];
     const in3Days = new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0];
-    const in7Days = new Date(Date.now() + 86400000 * 7).toISOString().split('T')[0];
-    const in10Days = new Date(Date.now() + 86400000 * 10).toISOString().split('T')[0];
 
     const sampleGames = [
-      { id: "seed-g1", date: today, startTime: "19:00", endTime: "21:00", location: "Central Sports Complex, Pitch 1", type: "League", team: "team-a", opponent: "Blue Arrows FC", coach: "Sir Alex", fee: "$100\nPayment via Bank Transfer", kitColors: "Home 1: Pink/Grey", alternativeKitColors: "Away 1: Black/Black", additionalDetails: "Please arrive 30 mins early for warm up." },
-      { id: "seed-g2", date: in3Days, startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", opponent: "N/A", coach: "Pep G", fee: "Free", kitColors: "Home 2: New White / New White", alternativeKitColors: "TBD", additionalDetails: "Tactics session." },
-      { id: "seed-g3", date: in7Days, startTime: "20:00", endTime: "22:00", location: "Stadium Main Pitch", type: "Friendly", team: "team-b", opponent: "Red Devils", coach: "Klopp", fee: "$80 cash on pitch", kitColors: "Away 1: Black/Black", alternativeKitColors: "Away 2: White/White", additionalDetails: "Friendly against rivals." },
-      { id: "seed-g4", date: in10Days, startTime: "19:00", endTime: "21:00", location: "Camp 3 Training Ground", type: "Internal", team: "team-camp3", opponent: "N/A", coach: "Mou", fee: "Split by 14\nUsually $50-$60", kitColors: "Away 2: White/White", alternativeKitColors: "TBD", additionalDetails: "Internal practice match." },
+      { id: "seed-g1", date: today, startTime: "19:00", endTime: "21:00", location: "Central Sports Complex, Pitch 1", type: "League", team: "team-a", opponent: "Blue Arrows FC", coach: "Sir Alex", fee: "$100\nPayment via Bank Transfer", kitColors: "kit-home-1", alternativeKitColors: "kit-away-1", additionalDetails: "Please arrive 30 mins early for warm up." },
+      { id: "seed-g2", date: in3Days, startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", opponent: "N/A", coach: "Pep G", fee: "Free", kitColors: "kit-home-1", alternativeKitColors: "", additionalDetails: "Tactics session." },
     ];
 
     sampleGames.forEach(g => {
@@ -325,7 +381,7 @@ export default function DashboardPage() {
       number: (currentPlayer?.number !== undefined && currentPlayer?.number !== null) ? currentPlayer.number : 10
     }, { merge: true });
 
-    toast({ title: "Seeding Complete", description: "Sample teams and games created. You are now assigned to all teams." });
+    toast({ title: "Seeding Complete", description: "Sample teams, kits, and games created." });
     setIsSeeding(false);
   };
 
@@ -458,19 +514,8 @@ export default function DashboardPage() {
                                 </span>
                               )}
                               <div className="flex flex-wrap gap-3">
-                                {game.kitColors && (
-                                  <span className={cn("text-[10px] md:text-xs font-bold flex items-center gap-1.5", KIT_COLORS[game.kitColors] || "text-muted-foreground")}>
-                                    <Shirt className="h-3.5 w-3.5" />
-                                    {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
-                                  </span>
-                                )}
-                                {game.alternativeKitColors && game.alternativeKitColors !== 'TBD' && (
-                                  <span className={cn("text-[10px] md:text-xs font-bold flex items-center gap-1.5 opacity-80", KIT_COLORS[game.alternativeKitColors] || "text-muted-foreground")}>
-                                    <Shirt className="h-3.5 w-3.5" />
-                                    <span className="text-[9px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>
-                                    {dict.common.kits[game.alternativeKitColors as keyof typeof dict.common.kits] || game.alternativeKitColors}
-                                  </span>
-                                )}
+                                {game.kitColors && <KitBadge kitId={game.kitColors} />}
+                                {game.alternativeKitColors && <KitBadge kitId={game.alternativeKitColors} isAlternative />}
                               </div>
                               {game.additionalDetails && (
                                 <Popover>
