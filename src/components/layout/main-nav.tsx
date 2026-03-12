@@ -35,10 +35,16 @@ import { useTranslation } from "@/components/language-provider";
 export function MainNav() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const { toast } = useToast();
   const { language, setLanguage, dict } = useTranslation();
+
+  // Handle hydration mismatch by waiting for mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Close mobile menu when navigating
   useEffect(() => {
@@ -118,8 +124,9 @@ export function MainNav() {
             <span className="font-headline text-lg md:text-xl font-bold tracking-tight">{dict.nav.title}</span>
           </div>
 
+          {/* Desktop Navigation - Only render if mounted to avoid hydration issues */}
           <div className="hidden md:flex items-center space-x-6">
-            {routes.map((route) => (
+            {mounted && routes.map((route) => (
               <Link
                 key={route.href}
                 href={route.href}
@@ -138,7 +145,7 @@ export function MainNav() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="text-primary-foreground hover:text-accent hover:bg-white/10 gap-2 font-bold h-9 px-3">
                     <Languages className="h-4 w-4" />
-                    {language === 'en' ? 'EN' : 'ZH'}
+                    {mounted ? (language === 'en' ? 'EN' : 'ZH') : '...'}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
@@ -223,7 +230,7 @@ export function MainNav() {
       {isOpen && (
         <div className="md:hidden border-t bg-primary animate-in slide-in-from-top-4 duration-300 shadow-2xl pb-6">
           <div className="space-y-1.5 px-4 pt-4">
-            {routes.map((route) => (
+            {mounted && routes.map((route) => (
               <Link
                 key={route.href}
                 href={route.href}
