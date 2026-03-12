@@ -60,7 +60,7 @@ export function MainNav() {
       await signInWithPopup(auth, provider);
       toast({
         title: "Signed in successfully",
-        description: "Welcome back to Happy Hour Football Club.",
+        description: `Welcome back to ${dict.nav.title}.`,
       });
     } catch (error: any) {
       if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
