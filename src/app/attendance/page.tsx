@@ -198,10 +198,6 @@ export default function AttendancePage() {
               >
                 {getTeamName(specificGame.team)}
               </Badge>
-              <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 font-bold border-emerald-200 gap-1.5 py-1">
-                <Check className="h-3.5 w-3.5" />
-                {dict.common.confirm}
-              </Badge>
               {specificGame.kitColors && (
                 <Badge variant="outline" className={cn("font-bold gap-1.5 py-1", KIT_COLORS[specificGame.kitColors] || "text-muted-foreground")}>
                   <Shirt className="h-3.5 w-3.5" />
@@ -508,7 +504,7 @@ function AttendanceCard({
       </CardHeader>
       <CardContent className="pt-6 px-6 pb-6 space-y-6">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 flex-1">
             <div className="flex items-start gap-4 text-muted-foreground">
               <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
                 <Calendar className="h-5 w-5 text-primary" />
@@ -535,6 +531,19 @@ function AttendanceCard({
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1.5">{dict.games.dialog.coach}</p>
                   <p className="font-bold text-foreground text-sm leading-snug">{game.coach}</p>
+                </div>
+              </div>
+            )}
+            {game.kitColors && (
+              <div className="flex items-start gap-4 text-muted-foreground">
+                <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
+                  <Shirt className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60 leading-none mb-1.5">{dict.games.dialog.kit}</p>
+                  <p className={cn("font-bold text-sm", KIT_COLORS[game.kitColors] || "text-foreground")}>
+                    {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
+                  </p>
                 </div>
               </div>
             )}
@@ -574,3 +583,4 @@ function AttendanceCard({
     </Card>
   );
 }
+
