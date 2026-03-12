@@ -45,7 +45,8 @@ import {
   Lock,
   Loader2,
   Users,
-  Info
+  Info,
+  Calendar as CalendarIcon
 } from "lucide-react";
 import { Game, GameType, Player, Team } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -269,10 +270,10 @@ export default function GamesPage() {
     return (
       <div className="min-h-screen bg-background">
         <MainNav />
-        <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center text-center">
+        <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center text-center px-6">
           <Lock className="h-12 w-12 text-muted-foreground mb-4" />
-          <h1 className="text-2xl font-headline mb-2">Access Restricted</h1>
-          <p className="text-muted-foreground">Sign in to manage the game schedule.</p>
+          <h1 className="text-xl md:text-2xl font-headline mb-2">Access Restricted</h1>
+          <p className="text-muted-foreground text-sm">Sign in to manage the game schedule.</p>
         </main>
       </div>
     );
@@ -282,34 +283,34 @@ export default function GamesPage() {
     <div className="min-h-screen bg-background pb-12">
       <MainNav />
       <main className="container mx-auto px-4 py-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
-          <div>
-            <h1 className="text-3xl font-headline">{dict.games.title}</h1>
-            <p className="text-muted-foreground">{dict.games.subtitle}</p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-6">
+          <div className="space-y-1">
+            <h1 className="text-2xl md:text-3xl font-headline">{dict.games.title}</h1>
+            <p className="text-muted-foreground text-sm md:text-base">{dict.games.subtitle}</p>
           </div>
           {currentPlayer?.isAdmin && (
             <Dialog open={isAddOpen} onOpenChange={(open) => { setIsAddOpen(open); if(!open) resetForm(); }}>
               <DialogTrigger asChild>
-                <Button className="bg-primary hover:bg-primary/90 gap-2 font-bold">
+                <Button className="bg-primary hover:bg-primary/90 gap-2 font-bold h-11 px-6 shadow-md w-full md:w-auto">
                   <Plus className="h-4 w-4" />
                   {dict.games.scheduleGame}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
+              <DialogContent className="sm:max-w-[450px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle className="font-headline">{dict.games.dialog.addTitle}</DialogTitle>
+                  <DialogTitle className="font-headline text-xl">{dict.games.dialog.addTitle}</DialogTitle>
                 </DialogHeader>
-                <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
+                <div className="grid gap-5 py-4 px-1">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="type">{dict.games.dialog.type}</Label>
+                      <Label htmlFor="type" className="text-xs uppercase tracking-wider">{dict.games.dialog.type}</Label>
                       <Select 
                         value={formData.type}
                         onValueChange={(val: GameType) => {
                           setFormData({ ...formData, type: val, opponent: isOpponentNotRequired(val) ? "" : formData.opponent });
                         }}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="h-11">
                           <SelectValue placeholder="Select type" />
                         </SelectTrigger>
                         <SelectContent>
@@ -321,12 +322,12 @@ export default function GamesPage() {
                       </Select>
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="team">{dict.games.dialog.team}</Label>
+                      <Label htmlFor="team" className="text-xs uppercase tracking-wider">{dict.games.dialog.team}</Label>
                       <Select 
                         value={formData.team}
                         onValueChange={(val) => setFormData({ ...formData, team: val })}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="h-11">
                           <SelectValue placeholder="Select team" />
                         </SelectTrigger>
                         <SelectContent>
@@ -341,40 +342,41 @@ export default function GamesPage() {
                     </div>
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="date">{dict.games.dialog.date}</Label>
-                    <Input id="date" type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
+                    <Label htmlFor="date" className="text-xs uppercase tracking-wider">{dict.games.dialog.date}</Label>
+                    <Input id="date" type="date" className="h-11" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
-                      <Label htmlFor="startTime">{dict.games.dialog.start}</Label>
-                      <Input id="startTime" type="time" value={formData.startTime} onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} />
+                      <Label htmlFor="startTime" className="text-xs uppercase tracking-wider">{dict.games.dialog.start}</Label>
+                      <Input id="startTime" type="time" className="h-11" value={formData.startTime} onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} />
                     </div>
                     <div className="grid gap-2">
-                      <Label htmlFor="endTime">{dict.games.dialog.end}</Label>
-                      <Input id="endTime" type="time" value={formData.endTime} onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} />
+                      <Label htmlFor="endTime" className="text-xs uppercase tracking-wider">{dict.games.dialog.end}</Label>
+                      <Input id="endTime" type="time" className="h-11" value={formData.endTime} onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} />
                     </div>
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="location">{dict.games.dialog.location}</Label>
-                    <Input id="location" placeholder="Stadium or Pitch name" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
+                    <Label htmlFor="location" className="text-xs uppercase tracking-wider">{dict.games.dialog.location}</Label>
+                    <Input id="location" placeholder="Stadium or Pitch name" className="h-11" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="opponent">{dict.games.dialog.opponent} {isOpponentNotRequired(formData.type) ? '(Auto: N/A)' : '(Optional)'}</Label>
+                    <Label htmlFor="opponent" className="text-xs uppercase tracking-wider">{dict.games.dialog.opponent}</Label>
                     <Input 
                       id="opponent" 
                       placeholder={isOpponentNotRequired(formData.type) ? 'N/A' : 'Away Team Name'} 
+                      className="h-11"
                       value={isOpponentNotRequired(formData.type) ? '' : formData.opponent} 
                       onChange={(e) => setFormData({ ...formData, opponent: e.target.value })}
                       disabled={isOpponentNotRequired(formData.type)}
                     />
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="kitColors">{dict.games.dialog.kit}</Label>
+                    <Label htmlFor="kitColors" className="text-xs uppercase tracking-wider">{dict.games.dialog.kit}</Label>
                     <Select 
                       value={formData.kitColors}
                       onValueChange={(val) => setFormData({ ...formData, kitColors: val })}
                     >
-                      <SelectTrigger id="kitColors">
+                      <SelectTrigger id="kitColors" className="h-11">
                         <SelectValue placeholder="Select kit colors" />
                       </SelectTrigger>
                       <SelectContent>
@@ -390,17 +392,18 @@ export default function GamesPage() {
                     </Select>
                   </div>
                   <div className="grid gap-2">
-                    <Label htmlFor="additionalDetails">{dict.games.dialog.details}</Label>
+                    <Label htmlFor="additionalDetails" className="text-xs uppercase tracking-wider">{dict.games.dialog.details}</Label>
                     <Textarea 
                       id="additionalDetails" 
                       placeholder="e.g. Pitch 4, bring water, etc." 
+                      className="min-h-[100px] rounded-xl"
                       value={formData.additionalDetails} 
                       onChange={(e) => setFormData({ ...formData, additionalDetails: e.target.value })}
                     />
                   </div>
                 </div>
-                <DialogFooter>
-                  <Button onClick={handleAddGame} className="bg-primary w-full font-bold">{dict.games.dialog.create}</Button>
+                <DialogFooter className="mt-4">
+                  <Button onClick={handleAddGame} className="bg-primary w-full font-bold h-12 shadow-lg">{dict.games.dialog.create}</Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
@@ -410,30 +413,34 @@ export default function GamesPage() {
         <div className="grid gap-6">
           {isGamesLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
-              <Card key={i} className="h-32 animate-pulse bg-muted/50" />
+              <Card key={i} className="h-32 animate-pulse bg-muted/50 rounded-2xl" />
             ))
           ) : !games || games.length === 0 ? (
-            <Card className="p-12 text-center border-dashed border-2">
-              <p className="text-muted-foreground">No events scheduled.</p>
+            <Card className="p-16 text-center border-dashed border-2 rounded-2xl flex flex-col items-center gap-4">
+              <CalendarIcon className="h-12 w-12 text-muted-foreground/30" />
+              <p className="text-muted-foreground font-medium">No events scheduled yet.</p>
             </Card>
           ) : (
             games.map((game) => (
-              <Card key={game.id} className="border-none shadow-md hover:shadow-lg transition-all border-l-4 border-primary">
-                <CardContent className="p-6">
+              <Card key={game.id} className="border-none shadow-md hover:shadow-lg transition-all border-l-4 border-primary rounded-2xl overflow-hidden">
+                <CardContent className="p-5 md:p-6">
                   <div className="flex flex-col md:flex-row md:items-center gap-6">
-                    <div className="flex flex-col items-center justify-center bg-muted/30 p-4 rounded-lg min-w-[100px] border">
-                      <span className="text-sm font-bold uppercase text-muted-foreground">
+                    <div className="flex flex-row md:flex-col items-center justify-center bg-muted/30 p-4 md:p-5 rounded-2xl min-w-[100px] border gap-3 md:gap-1">
+                      <span className="text-[10px] md:text-sm font-bold uppercase tracking-widest text-muted-foreground">
                         {new Date(game.date).toLocaleString('default', { month: 'short' })}
                       </span>
-                      <span className="text-3xl font-bold font-headline text-primary">
+                      <span className="text-3xl md:text-4xl font-bold font-headline text-primary leading-none">
                         {new Date(game.date).getDate()}
+                      </span>
+                      <span className="text-[10px] font-bold md:hidden text-muted-foreground">
+                        {new Date(game.date).toLocaleString('default', { weekday: 'short' })}
                       </span>
                     </div>
 
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center gap-2">
+                    <div className="flex-1 space-y-3">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Badge variant="outline" className={cn(
-                          "font-bold px-2 py-0.5 border-none",
+                          "font-bold px-2 py-0.5 border-none text-[10px] uppercase tracking-wider",
                           game.type === 'League' ? "bg-primary text-white" : 
                           game.type === 'Training' ? "bg-accent text-white" :
                           game.type === 'Internal' ? "bg-indigo-600 text-white" :
@@ -441,42 +448,42 @@ export default function GamesPage() {
                         )}>
                           {dict.common.gameTypes[game.type] || game.type}
                         </Badge>
-                        <Badge variant="secondary" className="border-none flex gap-1 items-center font-bold bg-primary text-white">
+                        <Badge variant="secondary" className="border-none flex gap-1.5 items-center font-bold bg-primary text-white px-2.5 py-0.5 text-[10px]">
                           <Users className="h-3 w-3" />
                           {getTeamLabel(game.team)}
                         </Badge>
                       </div>
-                      <h3 className="text-xl font-headline font-bold">
+                      <h3 className="text-lg md:text-xl font-headline font-bold leading-tight">
                         {game.type === 'Training' || game.type === 'Internal' 
                           ? dict.common.gameTypes[game.type] 
                           : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
                       </h3>
-                      <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-muted-foreground">
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="h-4 w-4 text-primary" />
+                      <div className="flex flex-wrap gap-x-6 gap-y-3 text-xs md:text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4 text-primary shrink-0" />
                           {game.startTime} - {game.endTime}
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          <MapPin className="h-4 w-4 text-primary" />
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-primary shrink-0" />
                           {game.location}
                         </div>
                         {game.kitColors && (
-                          <div className={cn("flex items-center gap-1.5 font-bold", getKitColorClass(game.kitColors))}>
-                            <Shirt className="h-4 w-4" />
-                            {dict.games.dialog.kit}: {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
+                          <div className={cn("flex items-center gap-2 font-bold", getKitColorClass(game.kitColors))}>
+                            <Shirt className="h-4 w-4 shrink-0" />
+                            {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
                           </div>
                         )}
                       </div>
                       {game.additionalDetails && (
-                        <div className="flex items-start gap-1.5 text-xs text-muted-foreground mt-2 bg-muted/20 p-2 rounded">
-                          <Info className="h-3 w-3 mt-0.5 shrink-0" />
-                          <p>{game.additionalDetails}</p>
+                        <div className="flex items-start gap-2 text-[11px] text-muted-foreground mt-3 bg-muted/20 p-3 rounded-xl border border-dashed">
+                          <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary/60" />
+                          <p className="leading-relaxed">{game.additionalDetails}</p>
                         </div>
                       )}
                     </div>
 
-                    <div className="flex md:flex-col items-center gap-2 justify-end">
-                      <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 font-bold gap-1" asChild>
+                    <div className="flex flex-row md:flex-col items-center gap-3 justify-between md:justify-center border-t md:border-none pt-4 md:pt-0">
+                      <Button variant="ghost" size="sm" className="text-primary hover:text-primary/80 hover:bg-primary/5 font-bold gap-1.5 h-10 px-4 flex-1 md:flex-none" asChild>
                         <Link href={`/attendance?gameId=${game.id}`}>
                           {dict.dashboard.viewRoster}
                           <ChevronRight className="h-4 w-4" />
@@ -486,16 +493,17 @@ export default function GamesPage() {
                       {currentPlayer?.isAdmin && (
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground">
+                            <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:bg-primary/5 rounded-full shrink-0">
                               <MoreVertical className="h-5 w-5" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onSelect={() => handleEditClick(game)} className="gap-2">
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground px-3">Manage Event</DropdownMenuLabel>
+                            <DropdownMenuItem onSelect={() => handleEditClick(game)} className="gap-3 py-3">
                               <Pencil className="h-4 w-4" />
                               {dict.common.edit}
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDeleteGame(game.id)} className="gap-2 text-destructive focus:text-destructive">
+                            <DropdownMenuItem onClick={() => handleDeleteGame(game.id)} className="gap-3 py-3 text-destructive focus:text-destructive">
                               <Trash2 className="h-4 w-4" />
                               {dict.common.delete}
                             </DropdownMenuItem>
@@ -511,19 +519,19 @@ export default function GamesPage() {
         </div>
 
         <Dialog open={isEditOpen} onOpenChange={(open) => { if(!open) { setIsEditOpen(false); setEditingGame(null); resetForm(); } }}>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent className="sm:max-w-[450px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="font-headline">{dict.games.dialog.editTitle}</DialogTitle>
+              <DialogTitle className="font-headline text-xl">{dict.games.dialog.editTitle}</DialogTitle>
             </DialogHeader>
-            <div className="grid gap-4 py-4 max-h-[70vh] overflow-y-auto px-1">
+            <div className="grid gap-5 py-4 px-1">
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-type">{dict.games.dialog.type}</Label>
+                  <Label htmlFor="edit-type" className="text-xs uppercase tracking-wider">{dict.games.dialog.type}</Label>
                   <Select 
                     value={formData.type}
                     onValueChange={(val: GameType) => setFormData({ ...formData, type: val, opponent: isOpponentNotRequired(val) ? "" : formData.opponent })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11">
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
@@ -535,12 +543,12 @@ export default function GamesPage() {
                   </Select>
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-team">{dict.games.dialog.team}</Label>
+                  <Label htmlFor="edit-team" className="text-xs uppercase tracking-wider">{dict.games.dialog.team}</Label>
                   <Select 
                     value={formData.team}
                     onValueChange={(val) => setFormData({ ...formData, team: val })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11">
                       <SelectValue placeholder="Select team" />
                     </SelectTrigger>
                     <SelectContent>
@@ -555,40 +563,41 @@ export default function GamesPage() {
                 </div>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-date">{dict.games.dialog.date}</Label>
-                <Input id="edit-date" type="date" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
+                <Label htmlFor="edit-date" className="text-xs uppercase tracking-wider">{dict.games.dialog.date}</Label>
+                <Input id="edit-date" type="date" className="h-11" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-startTime">{dict.games.dialog.start}</Label>
-                  <Input id="edit-startTime" type="time" value={formData.startTime} onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} />
+                  <Label htmlFor="edit-startTime" className="text-xs uppercase tracking-wider">{dict.games.dialog.start}</Label>
+                  <Input id="edit-startTime" type="time" className="h-11" value={formData.startTime} onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-endTime">{dict.games.dialog.end}</Label>
-                  <Input id="edit-endTime" type="time" value={formData.endTime} onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} />
+                  <Label htmlFor="edit-endTime" className="text-xs uppercase tracking-wider">{dict.games.dialog.end}</Label>
+                  <Input id="edit-endTime" type="time" className="h-11" value={formData.endTime} onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} />
                 </div>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-location">{dict.games.dialog.location}</Label>
-                <Input id="edit-location" placeholder="Stadium or Pitch name" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
+                <Label htmlFor="edit-location" className="text-xs uppercase tracking-wider">{dict.games.dialog.location}</Label>
+                <Input id="edit-location" placeholder="Stadium or Pitch name" className="h-11" value={formData.location} onChange={(e) => setFormData({ ...formData, location: e.target.value })} />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-opponent">{dict.games.dialog.opponent} {isOpponentNotRequired(formData.type) ? '(Auto: N/A)' : '(Optional)'}</Label>
+                <Label htmlFor="edit-opponent" className="text-xs uppercase tracking-wider">{dict.games.dialog.opponent}</Label>
                 <Input 
                   id="edit-opponent" 
                   placeholder={isOpponentNotRequired(formData.type) ? 'N/A' : 'Away Team Name'} 
+                  className="h-11"
                   value={isOpponentNotRequired(formData.type) ? '' : formData.opponent} 
                   onChange={(e) => setFormData({ ...formData, opponent: e.target.value })}
                   disabled={isOpponentNotRequired(formData.type)}
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-kitColors">{dict.games.dialog.kit}</Label>
+                <Label htmlFor="edit-kitColors" className="text-xs uppercase tracking-wider">{dict.games.dialog.kit}</Label>
                 <Select 
                   value={formData.kitColors}
                   onValueChange={(val) => setFormData({ ...formData, kitColors: val })}
                 >
-                  <SelectTrigger id="edit-kitColors">
+                  <SelectTrigger id="edit-kitColors" className="h-11">
                     <SelectValue placeholder="Select kit colors" />
                   </SelectTrigger>
                   <SelectContent>
@@ -604,17 +613,18 @@ export default function GamesPage() {
                 </Select>
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="edit-additionalDetails">{dict.games.dialog.details}</Label>
+                <Label htmlFor="edit-additionalDetails" className="text-xs uppercase tracking-wider">{dict.games.dialog.details}</Label>
                 <Textarea 
                   id="edit-additionalDetails" 
                   placeholder="e.g. Pitch 4, bring water, etc." 
+                  className="min-h-[100px] rounded-xl"
                   value={formData.additionalDetails} 
                   onChange={(e) => setFormData({ ...formData, additionalDetails: e.target.value })}
                 />
               </div>
             </div>
-            <DialogFooter>
-              <Button onClick={handleUpdateGame} className="bg-primary w-full font-bold">{dict.games.dialog.update}</Button>
+            <DialogFooter className="mt-4">
+              <Button onClick={handleUpdateGame} className="bg-primary w-full font-bold h-12 shadow-lg">{dict.games.dialog.update}</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

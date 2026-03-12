@@ -93,23 +93,23 @@ function UserAttendanceToggle({ gameId, userId }: { gameId: string, userId: stri
         size="sm" 
         variant={currentStatus === 'Confirmed' ? "default" : "outline"}
         className={cn(
-          "flex-1 h-9 text-xs font-bold transition-all", 
+          "flex-1 h-10 text-xs font-bold transition-all", 
           currentStatus === 'Confirmed' ? "bg-primary hover:bg-primary/90 border-primary text-white" : "hover:border-primary hover:text-primary"
         )}
         onClick={() => updateStatus('Confirmed')}
       >
-        <Check className="h-3.5 w-3.5 mr-1.5" /> {dict.common.join}
+        <Check className="h-4 w-4 mr-1.5" /> {dict.common.join}
       </Button>
       <Button 
         size="sm" 
         variant={currentStatus === 'Declined' ? "default" : "outline"}
         className={cn(
-          "flex-1 h-9 text-xs font-bold transition-all",
-          currentStatus === 'Declined' ? "bg-destructive hover:bg-destructive/90 border-destructive" : "hover:border-destructive hover:text-destructive"
+          "flex-1 h-10 text-xs font-bold transition-all",
+          currentStatus === 'Declined' ? "bg-destructive hover:bg-destructive/90 border-destructive text-white" : "hover:border-destructive hover:text-destructive"
         )}
         onClick={() => updateStatus('Declined')}
       >
-        <X className="h-3.5 w-3.5 mr-1.5" /> {dict.common.decline}
+        <X className="h-4 w-4 mr-1.5" /> {dict.common.decline}
       </Button>
     </div>
   );
@@ -134,7 +134,7 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
     .filter(Boolean) as Player[] || [];
 
   if (confirmedPlayers.length === 0) {
-    return <div className="text-[10px] text-muted-foreground italic mt-2">{dict.dashboard.noConfirmations}</div>;
+    return <div className="text-[11px] text-muted-foreground italic mt-3">{dict.dashboard.noConfirmations}</div>;
   }
 
   return (
@@ -148,9 +148,9 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
           <Badge 
             key={p.id} 
             variant="secondary" 
-            className="text-[9px] py-0 px-2 h-5 font-bold gap-1 bg-primary/10 text-primary border-primary/20"
+            className="text-[10px] py-0.5 px-2 h-6 font-bold gap-1 bg-primary/10 text-primary border-primary/20"
           >
-            {p.isCaptain && <Crown className="h-2.5 w-2.5 text-accent" />}
+            {p.isCaptain && <Crown className="h-3 w-3 text-accent" />}
             {p.number && <span className="mr-0.5 opacity-60">#{p.number}</span>}
             {p.nickname || p.name}
           </Badge>
@@ -342,7 +342,6 @@ export default function DashboardPage() {
   const filteredGames = upcomingGames?.filter(game => {
     if (currentPlayer?.isAdmin) return true;
     if (!currentPlayer) return false;
-    // Show game if it's for 'All' or if it matches any of the player's teams
     return game.team === 'All' || currentPlayer.teams?.includes(game.team);
   }) || [];
 
@@ -350,96 +349,99 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-background pb-12">
       <MainNav />
       <main className="container mx-auto px-4 py-8 md:py-12">
-        <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-headline mb-2">
+        <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="space-y-1">
+            <h1 className="text-2xl md:text-4xl font-headline tracking-tight">
               {user ? (language === 'zh' ? `${dict.dashboard.welcome}，${welcomeName}！` : `${dict.dashboard.welcome}, ${welcomeName}!`) : dict.nav.dashboard}
             </h1>
-            <div className="text-muted-foreground font-medium">{dict.dashboard.subtitle}</div>
+            <div className="text-muted-foreground font-medium text-sm md:text-base">{dict.dashboard.subtitle}</div>
           </div>
           <div className="flex flex-wrap gap-2">
             {currentPlayer?.isAdmin && (
               <>
-                <Button variant="outline" size="sm" className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold" onClick={handleSeedData}>
-                  <Database className="mr-2 h-4 w-4" /> {dict.dashboard.seedData}
+                <Button variant="outline" size="sm" className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold text-xs" onClick={handleSeedData}>
+                  <Database className="mr-2 h-3.5 w-3.5" /> {dict.dashboard.seedData}
                 </Button>
-                <Button variant="outline" size="sm" className="border-dashed border-destructive text-destructive hover:bg-destructive/5 font-bold" onClick={handleToggleAdminRole}>
-                  <UserRound className="mr-2 h-4 w-4" /> {dict.dashboard.testAsPlayer}
+                <Button variant="outline" size="sm" className="border-dashed border-destructive text-destructive hover:bg-destructive/5 font-bold text-xs" onClick={handleToggleAdminRole}>
+                  <UserRound className="mr-2 h-3.5 w-3.5" /> {dict.dashboard.testAsPlayer}
                 </Button>
               </>
             )}
             {user && (!currentPlayer || !currentPlayer.isAdmin) && (
-              <Button variant="outline" size="sm" className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold" onClick={handleClaimAdmin}>
-                <ShieldCheck className="mr-2 h-4 w-4" /> {dict.dashboard.claimAdmin}
+              <Button variant="outline" size="sm" className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold text-xs" onClick={handleClaimAdmin}>
+                <ShieldCheck className="mr-2 h-3.5 w-3.5" /> {dict.dashboard.claimAdmin}
               </Button>
             )}
           </div>
         </header>
 
         {!user ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center bg-muted/20 rounded-3xl border border-dashed border-primary/20">
-            <Lock className="h-8 w-8 text-primary mb-4" />
-            <h2 className="text-2xl font-headline mb-2">{dict.attendance.signinRequired}</h2>
-            <div className="text-muted-foreground max-sm">{dict.attendance.signinDesc}</div>
+          <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-muted/20 rounded-3xl border border-dashed border-primary/20">
+            <Lock className="h-10 w-10 text-primary mb-4" />
+            <h2 className="text-xl md:text-2xl font-headline mb-2">{dict.attendance.signinRequired}</h2>
+            <div className="text-muted-foreground text-sm max-w-sm">{dict.attendance.signinDesc}</div>
           </div>
         ) : (
           <div className="grid gap-8 lg:grid-cols-4">
             <div className="lg:col-span-3 space-y-8">
               {!currentPlayer && preEnteredProfile && (
                 <Card className="border-primary border-2 bg-primary/5 shadow-xl">
-                  <CardHeader><CardTitle className="flex items-center gap-2 text-primary"><Sparkles className="h-6 w-6" />{dict.dashboard.claimProfileTitle}</CardTitle></CardHeader>
+                  <CardHeader><CardTitle className="flex items-center gap-2 text-primary text-lg md:text-xl"><Sparkles className="h-5 w-5 md:h-6 md:w-6" />{dict.dashboard.claimProfileTitle}</CardTitle></CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="text-foreground font-medium">{dict.dashboard.claimProfileDesc(preEnteredProfile.name, preEnteredProfile.email || "")}</div>
-                    <div className="p-4 bg-white rounded-lg border flex items-center justify-between">
+                    <div className="text-foreground text-sm md:text-base font-medium">{dict.dashboard.claimProfileDesc(preEnteredProfile.name, preEnteredProfile.email || "")}</div>
+                    <div className="p-4 bg-white rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                       <div>
                         <div className="font-bold">{preEnteredProfile.name}</div>
-                        <div className="flex flex-wrap gap-1 mt-1">
+                        <div className="flex flex-wrap gap-1.5 mt-2">
                           {preEnteredProfile.teams?.map(tId => (
-                            <Badge key={tId} variant="outline" className="text-[10px]">{getTeamName(tId)}</Badge>
+                            <Badge key={tId} variant="outline" className="text-[10px] py-0 px-2 h-5">{getTeamName(tId)}</Badge>
                           ))}
                         </div>
                       </div>
-                      <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-primary hover:bg-primary/90 gap-2 font-bold">{dict.dashboard.claimProfileBtn}</Button>
+                      <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-primary hover:bg-primary/90 gap-2 font-bold w-full sm:w-auto">{dict.dashboard.claimProfileBtn}</Button>
                     </div>
                   </CardContent>
                 </Card>
               )}
 
               <section>
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-2xl font-headline flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
+                  <h2 className="text-xl md:text-2xl font-headline flex items-center gap-2">
                     <Calendar className="h-6 w-6 text-primary" />{dict.nav.dashboard}
                     {currentPlayer && (
-                      <Badge variant="outline" className="ml-2 bg-primary/10 text-primary border-primary/20 font-bold">
+                      <Badge variant="outline" className="hidden sm:inline-flex ml-2 bg-primary/10 text-primary border-primary/20 font-bold">
                         {currentPlayer.isAdmin ? dict.dashboard.fullAccess : dict.dashboard.teamView(currentPlayer.teams?.map(getTeamName).join(', ') || "No Team")}
                       </Badge>
                     )}
                   </h2>
-                  <Link href="/games"><Button variant="ghost" size="sm" className="text-primary gap-1 font-bold">{dict.dashboard.fullSchedule} <ArrowRight className="h-4 w-4" /></Button></Link>
+                  <Link href="/games"><Button variant="ghost" size="sm" className="text-primary gap-1 font-bold p-0 sm:px-3 sm:py-2 hover:bg-transparent sm:hover:bg-muted/50">{dict.dashboard.fullSchedule} <ArrowRight className="h-4 w-4" /></Button></Link>
                 </div>
 
                 <div className="grid gap-6">
                   {isGamesLoading ? <Loader2 className="animate-spin" /> : filteredGames.length === 0 ? <Card className="p-12 text-center border-dashed border-2 text-muted-foreground">{dict.dashboard.noGames}</Card> : (
                     filteredGames.map((game) => (
-                      <Card key={game.id} className="border-none shadow-md overflow-hidden border-l-4 border-primary">
+                      <Card key={game.id} className="border-none shadow-md overflow-hidden border-l-4 border-primary transition-all active:scale-[0.98] sm:active:scale-100">
                         <CardContent className="p-0 flex flex-col md:flex-row">
-                          <div className="p-6 flex-1">
-                            <div className="flex items-center gap-3 mb-4">
-                              <Badge className="text-xs font-bold uppercase bg-primary text-white">{getTeamName(game.team)}</Badge>
-                              <span className="text-sm font-bold text-muted-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{game.startTime} - {game.endTime}</span>
+                          <div className="p-5 md:p-6 flex-1">
+                            <div className="flex flex-wrap items-center gap-3 mb-4">
+                              <Badge className="text-[10px] md:text-xs font-bold uppercase bg-primary text-white px-2 py-0.5">{getTeamName(game.team)}</Badge>
+                              <span className="text-xs md:text-sm font-bold text-muted-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{game.startTime} - {game.endTime}</span>
                             </div>
-                            <h3 className="text-xl font-headline mb-4">
+                            <h3 className="text-lg md:text-xl font-headline mb-4 leading-tight">
                               {game.type === 'Training' || game.type === 'Internal' ? dict.common.gameTypes[game.type] : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
                             </h3>
-                            <div className="grid gap-2 text-sm text-muted-foreground">
-                              <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-primary" />{formatGameDate(game.date)}</div>
-                              <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" />{game.location}</div>
+                            <div className="grid gap-2.5 text-xs md:text-sm text-muted-foreground">
+                              <div className="flex items-center gap-2.5"><Calendar className="h-4 w-4 text-primary shrink-0" />{formatGameDate(game.date)}</div>
+                              <div className="flex items-center gap-2.5"><MapPin className="h-4 w-4 text-primary shrink-0" />{game.location}</div>
                             </div>
                             <GameAttendancePreview gameId={game.id} allPlayers={players || []} userId={user?.uid} />
                           </div>
-                          <div className="bg-muted/30 p-6 md:w-80 border-t md:border-t-0 md:border-l flex flex-col justify-between">
-                            <UserAttendanceToggle gameId={game.id} userId={user.uid} />
-                            <Link href={`/attendance?gameId=${game.id}`} className="mt-4"><Button variant="outline" size="sm" className="w-full text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white gap-2">{dict.dashboard.viewRoster}</Button></Link>
+                          <div className="bg-muted/30 p-5 md:p-6 md:w-80 border-t md:border-t-0 md:border-l flex flex-col justify-between gap-4">
+                            <div className="space-y-1">
+                              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{dict.attendance.attendingQuestion}</p>
+                              <UserAttendanceToggle gameId={game.id} userId={user.uid} />
+                            </div>
+                            <Link href={`/attendance?gameId=${game.id}`} className="mt-2 sm:mt-0"><Button variant="outline" size="sm" className="w-full text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white gap-2 h-10 md:h-9">{dict.dashboard.viewRoster}</Button></Link>
                           </div>
                         </CardContent>
                       </Card>
@@ -449,24 +451,24 @@ export default function DashboardPage() {
               </section>
             </div>
 
-            <div className="space-y-8">
+            <div className="space-y-8 lg:sticky lg:top-24 h-fit">
               <Card className="border-primary/10 shadow-lg bg-primary/5">
-                <CardHeader><CardTitle className="text-lg flex items-center gap-2"><Trophy className="h-5 w-5 text-primary" />{dict.dashboard.teammates}</CardTitle></CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="divide-y max-h-[400px] overflow-auto pr-2">
+                <CardHeader className="pb-3"><CardTitle className="text-lg flex items-center gap-2"><Trophy className="h-5 w-5 text-primary" />{dict.dashboard.teammates}</CardTitle></CardHeader>
+                <CardContent className="space-y-5">
+                  <div className="divide-y max-h-[300px] lg:max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
                     {players?.map((p) => (
-                      <div key={p.id} className="py-2 flex items-center gap-2">
-                        <div className="h-8 w-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-[10px]">{p.number || p.name[0]}</div>
-                        <div className="flex-1 text-xs font-bold truncate">{p.nickname || p.name}</div>
-                        <div className="flex flex-wrap gap-1">
+                      <div key={p.id} className="py-2.5 flex items-center gap-3">
+                        <div className="h-8 w-8 shrink-0 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-[11px] border border-primary/10">{p.number || p.name[0]}</div>
+                        <div className="flex-1 text-xs font-bold truncate text-foreground/90">{p.nickname || p.name}</div>
+                        <div className="flex flex-wrap gap-1 justify-end max-w-[40%]">
                           {p.teams?.map(tId => (
-                            <Badge key={tId} variant="outline" className="text-[8px] h-4 px-1 bg-primary text-white border-none">{getTeamName(tId)}</Badge>
+                            <Badge key={tId} variant="outline" className="text-[8px] h-4 px-1 bg-primary text-white border-none whitespace-nowrap">{getTeamName(tId)}</Badge>
                           ))}
                         </div>
                       </div>
                     ))}
                   </div>
-                  <Link href="/players"><Button className="w-full bg-primary font-bold">{dict.dashboard.viewPlayers}</Button></Link>
+                  <Link href="/players"><Button className="w-full bg-primary font-bold h-10">{dict.dashboard.viewPlayers}</Button></Link>
                 </CardContent>
               </Card>
             </div>
