@@ -15,7 +15,9 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      return isSignedIn() && get(/databases/$(database)/documents/players/$(request.auth.uid)).data.isAdmin == true;
+      return isSignedIn() && 
+             exists(/databases/$(database)/documents/players/$(request.auth.uid)) && 
+             get(/databases/$(database)/documents/players/$(request.auth.uid)).data.isAdmin == true;
     }
 
     function matchesEmail(email) {

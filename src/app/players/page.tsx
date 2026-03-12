@@ -107,7 +107,10 @@ export default function PlayersPage() {
   }, [firestore, user, isUserLoading]);
   const { data: currentPlayer } = useDoc<Player>(playerRef);
 
-  const teamsQuery = useMemoFirebase(() => collection(firestore, "teams"), [firestore]);
+  const teamsQuery = useMemoFirebase(() => {
+    if (isUserLoading || !user) return null;
+    return collection(firestore, "teams");
+  }, [firestore, user, isUserLoading]);
   const { data: teams } = useCollection<Team>(teamsQuery);
   
   const [formData, setFormData] = useState<{
@@ -877,7 +880,11 @@ export default function PlayersPage() {
 function TeamManagementUI() {
   const firestore = useFirestore();
   const { dict, language } = useTranslation();
-  const teamsQuery = useMemoFirebase(() => collection(firestore, "teams"), [firestore]);
+  const { user, isUserLoading } = useUser();
+  const teamsQuery = useMemoFirebase(() => {
+    if (isUserLoading || !user) return null;
+    return collection(firestore, "teams");
+  }, [firestore, user, isUserLoading]);
   const { data: teams } = useCollection<Team>(teamsQuery);
   const { toast } = useToast();
 

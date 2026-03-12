@@ -183,7 +183,10 @@ export default function DashboardPage() {
   const { data: matchedProfiles } = useCollection<Player>(emailMatchQuery);
   const preEnteredProfile = matchedProfiles?.find(p => p.id !== user?.uid);
 
-  const teamsQuery = useMemoFirebase(() => collection(firestore, "teams"), [firestore]);
+  const teamsQuery = useMemoFirebase(() => {
+    if (isUserLoading || !user) return null;
+    return collection(firestore, "teams");
+  }, [firestore, user, isUserLoading]);
   const { data: teams } = useCollection<Team>(teamsQuery);
 
   const gamesQuery = useMemoFirebase(() => {

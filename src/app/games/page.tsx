@@ -85,7 +85,10 @@ export default function GamesPage() {
   }, [firestore, user, isUserLoading]);
   const { data: currentPlayer } = useDoc<Player>(playerRef);
 
-  const teamsQuery = useMemoFirebase(() => collection(firestore, "teams"), [firestore]);
+  const teamsQuery = useMemoFirebase(() => {
+    if (isUserLoading || !user) return null;
+    return collection(firestore, "teams");
+  }, [firestore, user, isUserLoading]);
   const { data: teams } = useCollection<Team>(teamsQuery);
 
   const [formData, setFormData] = useState<{
