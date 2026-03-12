@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from "react";
@@ -272,7 +271,7 @@ export default function GamesPage() {
 
   const getKitLabel = (kitId: string) => {
     const kit = kits?.find(k => k.id === kitId);
-    if (!kit) return dict.common.tbd;
+    if (!kit) return kitId && !kitId.includes('/') ? kitId : dict.common.tbd;
     const name = language === 'zh' ? kit.nameZh || kit.name : kit.name;
     const color = language === 'zh' ? kit.colorZh || kit.color : kit.color;
     return color ? `${name} (${color})` : name;

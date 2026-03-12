@@ -45,7 +45,6 @@ function KitBadge({ kitId, isAlternative = false }: { kitId: string, isAlternati
   const firestore = useFirestore();
   const { dict, language } = useTranslation();
   
-  // Guard against legacy IDs that contain slashes which would break Firestore path segments
   const kitRef = useMemoFirebase(() => {
     if (!kitId || kitId.includes('/')) return null;
     return doc(firestore, "kits", kitId);
@@ -56,7 +55,6 @@ function KitBadge({ kitId, isAlternative = false }: { kitId: string, isAlternati
   if (isLoading) return <div className="h-4 w-16 animate-pulse bg-muted rounded" />;
   
   if (!kit) {
-    // If it's legacy data (contains a slash or not found), show the ID as text if it looks like a description
     if (kitId && kitId.length > 0) {
       return (
         <Badge 
@@ -88,7 +86,7 @@ function KitBadge({ kitId, isAlternative = false }: { kitId: string, isAlternati
           <Shirt className="h-3.5 w-3.5" />
           {isAlternative && <span className="text-[9px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>}
           {kitName}
-          {kitColor && <span className="opacity-80 font-normal ml-0.5">({kitColor})</span>}
+          {kitColor && <span className="opacity-80 font-normal ml-1">({kitColor})</span>}
         </Badge>
       </PopoverTrigger>
       <PopoverContent className="w-64 p-3 shadow-xl rounded-xl">
