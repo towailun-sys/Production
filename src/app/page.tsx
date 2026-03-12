@@ -42,14 +42,18 @@ import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/e
 import { useTranslation } from "@/components/language-provider";
 import Image from "next/image";
 
-function KitBadge({ kitId, isAlternative = false }: { kitId: string | null | undefined, isAlternative?: boolean }) {
+export function KitBadge({ kitId, isAlternative = false }: { kitId: string | null | undefined, isAlternative?: boolean }) {
   const firestore = useFirestore();
   const { dict, language } = useTranslation();
   
+  // Normalize kitId for consistent check
+  const effectiveKitId = (!kitId || kitId === 'none') ? null : kitId;
+  
   const kitRef = useMemoFirebase(() => {
-    if (!kitId || kitId === 'none' || kitId.includes('/')) return null;
-    return doc(firestore, "kits", kitId);
-  }, [firestore, kitId]);
+    // If it looks like a path or is null, don't try to fetch as a kit ID
+    if (!effectiveKitId || effectiveKitId.includes('/')) return null;
+    return doc(firestore, "kits", effectiveKitId);
+  }, [firestore, effectiveKitId]);
   
   const { data: kit, isLoading } = useDoc<Kit>(kitRef);
 
@@ -107,8 +111,8 @@ function KitBadge({ kitId, isAlternative = false }: { kitId: string | null | und
     );
   }
 
-  // Case 2: Kit ID is a legacy description string
-  if (kitId && kitId !== 'none' && kitId.length > 0) {
+  // Case 2: Kit ID is actually a legacy description string
+  if (effectiveKitId && effectiveKitId.length > 0 && effectiveKitId.length < 50) {
     return (
       <Badge 
         variant="outline" 
@@ -116,12 +120,12 @@ function KitBadge({ kitId, isAlternative = false }: { kitId: string | null | und
       >
         <Shirt className="h-3.5 w-3.5" />
         {isAlternative && <span className="text-[9px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>}
-        {kitId}
+        {effectiveKitId}
       </Badge>
     );
   }
 
-  // Case 3: No kit assigned (TBD)
+  // Case 3: No kit assigned (TBD) - only show for primary kits
   if (!isAlternative) {
     return (
       <Badge 
@@ -286,7 +290,7 @@ export default function DashboardPage() {
       collection(firestore, "games"),
       where("date", ">=", now),
       orderBy("date", "asc"),
-      limit(15)
+      limit(30)
     );
   }, [firestore, user, isUserLoading]);
 
@@ -553,7 +557,7 @@ export default function DashboardPage() {
                               )}
                               <div className="flex flex-wrap gap-3">
                                 <KitBadge kitId={game.kitColors} />
-                                {game.alternativeKitColors && game.alternativeKitColors !== "none" && <KitBadge kitId={game.alternativeKitColors} isAlternative />}
+                                <KitBadge kitId={game.alternativeKitColors} isAlternative />
                               </div>
                               {game.additionalDetails && (
                                 <Popover>
@@ -642,4 +646,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

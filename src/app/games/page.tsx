@@ -60,6 +60,7 @@ import Link from "next/link";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useTranslation } from "@/components/language-provider";
+import { KitBadge } from "@/app/page";
 
 export default function GamesPage() {
   const { user, isUserLoading } = useUser();
@@ -268,15 +269,6 @@ export default function GamesPage() {
     const team = teams?.find(t => t.id === teamId);
     if (!team) return teamId;
     return language === 'zh' ? team.nameZh : team.name;
-  };
-
-  const getKitLabel = (kitId: string) => {
-    if (!kitId || kitId === "none") return dict.common.tbd;
-    const kit = kits?.find(k => k.id === kitId);
-    if (!kit) return kitId && !kitId.includes('/') ? kitId : dict.common.tbd;
-    const name = language === 'zh' ? kit.nameZh || kit.name : kit.name;
-    const color = language === 'zh' ? kit.colorZh || kit.color : kit.color;
-    return color ? `${name} (${color})` : name;
   };
 
   if (isUserLoading) {
@@ -542,17 +534,8 @@ export default function GamesPage() {
                             </div>
                           )}
                           <div className="flex flex-wrap gap-4">
-                            <div className="flex items-center gap-2 font-bold text-primary">
-                              <Shirt className="h-4 w-4 shrink-0" />
-                              {getKitLabel(game.kitColors)}
-                            </div>
-                            {game.alternativeKitColors && game.alternativeKitColors !== "none" && (
-                              <div className="flex items-center gap-2 font-bold text-muted-foreground opacity-80">
-                                <Shirt className="h-4 w-4 shrink-0" />
-                                <span className="text-[10px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>
-                                {getKitLabel(game.alternativeKitColors)}
-                              </div>
-                            )}
+                            <KitBadge kitId={game.kitColors} />
+                            <KitBadge kitId={game.alternativeKitColors} isAlternative />
                           </div>
                         </div>
                       </div>
@@ -659,11 +642,11 @@ export default function GamesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="edit-startTime" className="text-xs uppercase tracking-wider">{dict.games.dialog.start}</Label>
-                  <Input id="edit-startTime" type="time" className="h-11" value={formData.startTime} onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} />
+                  <Input id="edit-startTime" type="time" className="h-11" value={formData.date && formData.startTime ? formData.startTime : ""} onChange={(e) => setFormData({ ...formData, startTime: e.target.value })} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-endTime" className="text-xs uppercase tracking-wider">{dict.games.dialog.end}</Label>
-                  <Input id="edit-endTime" type="time" className="h-11" value={formData.endTime} onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} />
+                  <Input id="edit-endTime" type="time" className="h-11" value={formData.date && formData.endTime ? formData.endTime : ""} onChange={(e) => setFormData({ ...formData, endTime: e.target.value })} />
                 </div>
               </div>
               <div className="grid gap-2">
@@ -765,4 +748,3 @@ export default function GamesPage() {
     </div>
   );
 }
-

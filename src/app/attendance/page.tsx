@@ -48,101 +48,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useTranslation } from "@/components/language-provider";
 import Image from "next/image";
-
-function KitBadge({ kitId, isAlternative = false }: { kitId: string | null | undefined, isAlternative?: boolean }) {
-  const firestore = useFirestore();
-  const { dict, language } = useTranslation();
-  
-  const kitRef = useMemoFirebase(() => {
-    if (!kitId || kitId === 'none' || kitId.includes('/')) return null;
-    return doc(firestore, "kits", kitId);
-  }, [firestore, kitId]);
-  
-  const { data: kit, isLoading } = useDoc<Kit>(kitRef);
-
-  if (isLoading) return <div className="h-4 w-16 animate-pulse bg-muted rounded" />;
-  
-  // Case 1: Kit found in Firestore
-  if (kit) {
-    const kitName = language === 'zh' ? kit.nameZh || kit.name : kit.name;
-    const kitColor = language === 'zh' ? kit.colorZh || kit.color : kit.color;
-
-    return (
-      <Popover>
-        <PopoverTrigger asChild>
-          <Badge 
-            variant="outline" 
-            className={cn(
-              "text-[10px] font-bold flex items-center gap-1.5 cursor-pointer hover:bg-muted/10 py-1 transition-colors", 
-              "text-primary border-primary/30"
-            )}
-          >
-            <Shirt className="h-3.5 w-3.5" />
-            {isAlternative && <span className="text-[9px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>}
-            {kitName}
-            {kitColor && <span className="opacity-80 font-normal ml-1">({kitColor})</span>}
-          </Badge>
-        </PopoverTrigger>
-        <PopoverContent className="w-64 p-3 shadow-2xl rounded-xl">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Shirt className="h-4 w-4" />
-                <span className="text-[10px] font-bold uppercase tracking-widest">{dict.players.kits.viewImage}</span>
-              </div>
-              <Badge variant="outline" className="text-[9px] font-bold">{kitName}</Badge>
-            </div>
-            <div className="relative aspect-[4/5] w-full rounded-lg overflow-hidden border bg-muted">
-              {kit.imageUrl ? (
-                <Image 
-                  src={kit.imageUrl} 
-                  alt={kitName} 
-                  fill 
-                  className="object-cover"
-                  sizes="256px"
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
-                  <ImageIcon className="h-8 w-8 opacity-20" />
-                  <span className="text-[10px]">No image available</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </PopoverContent>
-      </Popover>
-    );
-  }
-
-  // Case 2: Legacy kit description
-  if (kitId && kitId !== 'none' && kitId.length > 0) {
-    return (
-      <Badge 
-        variant="outline" 
-        className="text-[10px] font-bold flex items-center gap-1.5 opacity-60 py-1"
-      >
-        <Shirt className="h-3.5 w-3.5" />
-        {isAlternative && <span className="text-[9px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>}
-        {kitId}
-      </Badge>
-    );
-  }
-
-  // Case 3: No kit assigned (TBD)
-  if (!isAlternative) {
-    return (
-      <Badge 
-        variant="outline" 
-        className="text-[10px] font-bold opacity-30 py-1 border-dashed"
-      >
-        <Shirt className="h-3.5 w-3.5" />
-        <span className="ml-1.5">{dict.common.tbd}</span>
-      </Badge>
-    );
-  }
-
-  return null;
-}
+import { KitBadge } from "@/app/page";
 
 export default function AttendancePage() {
   const searchParams = useSearchParams();
@@ -297,7 +203,7 @@ export default function AttendancePage() {
                 {dict.common.gameTypes[specificGame.type] || specificGame.type}
               </Badge>
               <KitBadge kitId={specificGame.kitColors} />
-              {specificGame.alternativeKitColors && specificGame.alternativeKitColors !== "none" && <KitBadge kitId={specificGame.alternativeKitColors} isAlternative />}
+              <KitBadge kitId={specificGame.alternativeKitColors} isAlternative />
               {specificGame.additionalDetails && (
                 <Popover>
                   <PopoverTrigger asChild>
@@ -675,7 +581,7 @@ function AttendanceCard({
               </div>
               <div className="flex flex-col gap-3">
                 <KitBadge kitId={game.kitColors} />
-                {game.alternativeKitColors && game.alternativeKitColors !== "none" && <KitBadge kitId={game.alternativeKitColors} isAlternative />}
+                <KitBadge kitId={game.alternativeKitColors} isAlternative />
               </div>
             </div>
           </div>
@@ -714,4 +620,3 @@ function AttendanceCard({
     </Card>
   );
 }
-
