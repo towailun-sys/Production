@@ -6,6 +6,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { 
   Calendar, 
   MapPin, 
   Clock,
@@ -454,6 +459,25 @@ export default function DashboardPage() {
                                   {dict.common.kits[game.kitColors as keyof typeof dict.common.kits] || game.kitColors}
                                 </span>
                               )}
+                              {game.additionalDetails && (
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full bg-primary/10 text-primary hover:bg-primary/20 shrink-0">
+                                      <Info className="h-4 w-4" />
+                                    </Button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-80 p-4 shadow-xl">
+                                    <div className="space-y-2">
+                                      <div className="flex items-center gap-2 text-[10px] font-bold text-primary uppercase tracking-widest">
+                                        <Info className="h-3 w-3" /> {dict.attendance.detailsLabel}
+                                      </div>
+                                      <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
+                                        {game.additionalDetails}
+                                      </p>
+                                    </div>
+                                  </PopoverContent>
+                                </Popover>
+                              )}
                             </div>
                             
                             <div className="space-y-1">
@@ -470,15 +494,6 @@ export default function DashboardPage() {
                               <div className="flex items-start gap-2 text-primary font-bold text-[11px] md:text-xs pt-1">
                                 <Banknote className="h-3.5 w-3.5 shrink-0 mt-0.5" />
                                 <span className="whitespace-pre-wrap leading-normal">{game.fee}</span>
-                              </div>
-                            )}
-
-                            {game.additionalDetails && (
-                              <div className="mt-3 p-3 bg-primary/5 border-l-4 border-primary/30 rounded-r-xl flex items-start gap-3 shadow-sm">
-                                <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-                                <div className="text-[11px] md:text-xs text-foreground leading-relaxed whitespace-pre-wrap">
-                                  {game.additionalDetails}
-                                </div>
                               </div>
                             )}
                             
