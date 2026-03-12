@@ -47,11 +47,11 @@ const baseDict = {
     }
   },
   nav: {
-    title: "歡樂時光足球會",
-    dashboard: "賽程",
-    attendance: "我出席的",
-    players: "陣容",
-    games: "場次",
+    title: "Happy Hour Football Club",
+    dashboard: "Schedule",
+    attendance: "My Attendance",
+    players: "Squad",
+    games: "Games",
     signIn: "Sign In",
     signOut: "Log Out",
     language: "Language"
