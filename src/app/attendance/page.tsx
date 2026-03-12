@@ -191,12 +191,20 @@ export default function AttendancePage() {
           <header className="mb-8">
             <div className="flex flex-wrap items-center gap-3 mb-3">
               <Badge 
-                variant="outline"
                 className={cn(
-                  "font-bold border-none text-white bg-primary px-3 py-1 text-[10px] md:text-xs"
+                  "font-bold bg-primary text-white px-3 py-1 text-[10px] md:text-xs border-none"
                 )}
               >
                 {getTeamName(specificGame.team)}
+              </Badge>
+              <Badge variant="outline" className={cn(
+                "font-bold px-3 py-1 border-none text-[10px] md:text-xs uppercase tracking-wider",
+                specificGame.type === 'League' ? "bg-primary text-white" : 
+                specificGame.type === 'Training' ? "bg-accent text-white" :
+                specificGame.type === 'Internal' ? "bg-indigo-600 text-white" :
+                "bg-muted text-foreground"
+              )}>
+                {dict.common.gameTypes[specificGame.type] || specificGame.type}
               </Badge>
               {specificGame.kitColors && (
                 <Badge variant="outline" className={cn("font-bold gap-1.5 py-1", KIT_COLORS[specificGame.kitColors] || "text-muted-foreground")}>
@@ -210,22 +218,24 @@ export default function AttendancePage() {
                 ? dict.common.gameTypes[specificGame.type] 
                 : `${dict.common.matchVs} ${specificGame.opponent || dict.common.tbd}`}
             </h1>
-            <div className="flex flex-wrap gap-x-6 gap-y-3 text-muted-foreground text-xs md:text-sm mb-3">
-              <span className="flex items-center gap-2 font-medium"><Calendar className="h-4 w-4 text-primary shrink-0" /> {formatGameDate(specificGame.date)}</span>
-              <span className="flex items-center gap-2 font-medium"><Clock className="h-4 w-4 text-primary shrink-0" /> {specificGame.startTime} - {specificGame.endTime}</span>
-              {specificGame.coach && (
-                <span className="flex items-center gap-2 font-medium"><UserRound className="h-4 w-4 text-primary shrink-0" /> {specificGame.coach}</span>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-wrap gap-x-6 gap-y-3 text-muted-foreground text-xs md:text-sm">
+                <span className="flex items-center gap-2 font-medium"><Calendar className="h-4 w-4 text-primary shrink-0" /> {formatGameDate(specificGame.date)}</span>
+                <span className="flex items-center gap-2 font-medium"><Clock className="h-4 w-4 text-primary shrink-0" /> {specificGame.startTime} - {specificGame.endTime}</span>
+                {specificGame.coach && (
+                  <span className="flex items-center gap-2 font-medium"><UserRound className="h-4 w-4 text-primary shrink-0" /> {specificGame.coach}</span>
+                )}
+              </div>
+              <div className="flex items-center gap-2 font-medium text-muted-foreground text-xs md:text-sm">
+                <MapPin className="h-4 w-4 text-primary shrink-0" /> {specificGame.location}
+              </div>
+              {specificGame.fee && (
+                <div className="flex items-start gap-2 text-primary font-bold text-xs md:text-sm">
+                  <Banknote className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span className="whitespace-pre-wrap">{specificGame.fee}</span>
+                </div>
               )}
             </div>
-            <div className="flex items-center gap-2 font-medium text-muted-foreground text-xs md:text-sm mb-4">
-              <MapPin className="h-4 w-4 text-primary shrink-0" /> {specificGame.location}
-            </div>
-            {specificGame.fee && (
-              <div className="mt-4 flex items-start gap-2 text-primary font-bold text-xs md:text-sm">
-                <Banknote className="h-4 w-4 shrink-0 mt-0.5" />
-                <span className="whitespace-pre-wrap">{specificGame.fee}</span>
-              </div>
-            )}
             {specificGame.additionalDetails && (
               <div className="mt-6 p-4 bg-muted/20 border-l-4 border-primary/40 rounded-xl max-w-2xl shadow-sm">
                 <div className="flex items-center gap-2 text-[10px] font-bold text-muted-foreground mb-2 uppercase tracking-widest">
@@ -483,14 +493,24 @@ function AttendanceCard({
     <Card className="border-none shadow-lg overflow-hidden transition-all rounded-2xl ring-2 ring-emerald-500 bg-emerald-50/10">
       <CardHeader className="border-b bg-white/50 pb-5 pt-6 px-6">
         <div className="flex items-center justify-between gap-4">
-          <Badge 
-            variant="outline"
-            className={cn(
-              "font-bold border-none text-white bg-primary px-3 py-0.5 text-[10px]"
-            )}
-          >
-            {getTeamName(game.team)}
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge 
+              className={cn(
+                "font-bold border-none text-white bg-primary px-3 py-0.5 text-[10px]"
+              )}
+            >
+              {getTeamName(game.team)}
+            </Badge>
+            <Badge variant="outline" className={cn(
+              "font-bold px-3 py-0.5 border-none text-[10px] uppercase tracking-wider",
+              game.type === 'League' ? "bg-primary text-white" : 
+              game.type === 'Training' ? "bg-accent text-white" :
+              game.type === 'Internal' ? "bg-indigo-600 text-white" :
+              "bg-muted text-foreground"
+            )}>
+              {dict.common.gameTypes[game.type] || game.type}
+            </Badge>
+          </div>
           <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600">
             <Check className="h-3.5 w-3.5" />
             {dict.common.confirm}
@@ -504,7 +524,7 @@ function AttendanceCard({
       </CardHeader>
       <CardContent className="pt-6 px-6 pb-6 space-y-6">
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 flex-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 flex-1">
             <div className="flex items-start gap-4 text-muted-foreground">
               <div className="bg-primary/10 p-2.5 rounded-full shrink-0">
                 <Calendar className="h-5 w-5 text-primary" />
@@ -583,4 +603,3 @@ function AttendanceCard({
     </Card>
   );
 }
-

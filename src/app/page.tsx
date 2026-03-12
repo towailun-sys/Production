@@ -432,6 +432,15 @@ export default function DashboardPage() {
                           <div className="p-5 md:p-6 flex-1 space-y-4">
                             <div className="flex flex-wrap items-center gap-3">
                               <Badge className="text-[10px] md:text-xs font-bold bg-primary text-white px-3 py-0.5 border-none">{getTeamName(game.team)}</Badge>
+                              <Badge variant="outline" className={cn(
+                                "font-bold px-2 py-0.5 border-none text-[10px] uppercase tracking-wider",
+                                game.type === 'League' ? "bg-primary text-white" : 
+                                game.type === 'Training' ? "bg-accent text-white" :
+                                game.type === 'Internal' ? "bg-indigo-600 text-white" :
+                                "bg-muted text-foreground"
+                              )}>
+                                {dict.common.gameTypes[game.type] || game.type}
+                              </Badge>
                               <span className="text-xs md:text-sm font-bold text-muted-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{game.startTime} - {game.endTime}</span>
                               {game.coach && (
                                 <span className="text-[10px] md:text-xs font-bold text-muted-foreground flex items-center gap-1.5">
