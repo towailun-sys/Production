@@ -1029,7 +1029,7 @@ function KitManagementUI() {
   const { data: kits } = useCollection<Kit>(kitsQuery);
   const { toast } = useToast();
 
-  const [kitForm, setKitForm] = useState<Partial<Kit>>({ name: "", nameZh: "", color: "", colorZh: "", imageUrl: "", colorClass: "text-primary" });
+  const [kitForm, setKitForm] = useState<Partial<Kit>>({ name: "", nameZh: "", color: "", colorZh: "", imageUrl: "" });
   const [editingKitId, setEditingKitId] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
@@ -1085,7 +1085,7 @@ function KitManagementUI() {
       } satisfies SecurityRuleContext));
     });
 
-    setKitForm({ name: "", nameZh: "", color: "", colorZh: "", imageUrl: "", colorClass: "text-primary" });
+    setKitForm({ name: "", nameZh: "", color: "", colorZh: "", imageUrl: "" });
     setEditingKitId(null);
     toast({ title: editingKitId ? "Kit Updated" : "Kit Added" });
   };
@@ -1096,14 +1096,13 @@ function KitManagementUI() {
       nameZh: kit.nameZh || "",
       color: kit.color || "",
       colorZh: kit.colorZh || "",
-      imageUrl: kit.imageUrl,
-      colorClass: kit.colorClass || "text-primary"
+      imageUrl: kit.imageUrl
     });
     setEditingKitId(kit.id);
   };
 
   const cancelEdit = () => {
-    setKitForm({ name: "", nameZh: "", color: "", colorZh: "", imageUrl: "", colorClass: "text-primary" });
+    setKitForm({ name: "", nameZh: "", color: "", colorZh: "", imageUrl: "" });
     setEditingKitId(null);
   };
 
@@ -1203,14 +1202,6 @@ function KitManagementUI() {
           </div>
         </div>
 
-        <div className="grid gap-1.5">
-          <Label className="font-bold text-[10px] uppercase tracking-widest text-muted-foreground">{dict.players.kits.colorClass}</Label>
-          <Input 
-            placeholder="text-pink-500" 
-            value={kitForm.colorClass} 
-            onChange={(e) => setKitForm({ ...kitForm, colorClass: e.target.value })} 
-          />
-        </div>
         <Button onClick={handleSaveKit} size="sm" className="w-full gap-2 font-bold bg-primary h-11 shadow-sm mt-2" disabled={isUploading || !kitForm.imageUrl}>
           {editingKitId ? <Pencil className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
           {editingKitId ? dict.players.kits.update : dict.players.kits.add}
@@ -1230,7 +1221,7 @@ function KitManagementUI() {
                   <Image src={kit.imageUrl} alt={kit.name} fill className="object-cover" />
                 </div>
                 <div>
-                  <div className={cn("font-bold text-sm", kit.colorClass)}>
+                  <div className="font-bold text-sm text-primary">
                     {language === 'zh' ? kit.nameZh || kit.name : kit.name}
                     {language === 'zh' && kit.colorZh && <span className="opacity-70 font-normal ml-1">({kit.colorZh})</span>}
                     {language === 'en' && kit.color && <span className="opacity-70 font-normal ml-1">({kit.color})</span>}

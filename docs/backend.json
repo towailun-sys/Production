@@ -55,10 +55,6 @@
         "imageUrl": {
           "type": "string",
           "description": "URL or Data URI to the kit reference image."
-        },
-        "colorClass": {
-          "type": "string",
-          "description": "Tailwind color class for the badge (e.g., text-pink-500)."
         }
       },
       "required": [

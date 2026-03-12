@@ -131,34 +131,10 @@ const baseDict = {
       colorEn: "Color (English)",
       colorZh: "Color (Chinese)",
       imageUrl: "Image URL",
-      colorClass: "Color (e.g. text-pink-500)",
       add: "Add Kit",
       update: "Update Kit",
       noKits: "No kits defined yet.",
       viewImage: "View Reference Image"
-    }
-  },
-  games: {
-    title: "Schedule",
-    subtitle: "Plan and manage upcoming events.",
-    scheduleGame: "Schedule Event",
-    dialog: {
-      addTitle: "Schedule New Event",
-      editTitle: "Edit Event",
-      type: "Event Type",
-      team: "Assign Team",
-      date: "Date",
-      start: "Start Time",
-      end: "End Time",
-      location: "Location",
-      opponent: "Opponent",
-      coach: "Coach",
-      fee: "Fee",
-      kit: "Primary Kit",
-      alternativeKit: "Alternative Kit",
-      details: "Extra Details",
-      create: "Create Event",
-      update: "Save Changes"
     }
   },
   attendance: {
@@ -309,7 +285,6 @@ const zhDict: typeof baseDict = {
       colorEn: "顏色 (英文)",
       colorZh: "顏色 (中文)",
       imageUrl: "圖片網址",
-      colorClass: "顏色代碼 (如 text-pink-500)",
       add: "新增球衣",
       update: "更新球衣",
       noKits: "尚未定義任何球衣。",

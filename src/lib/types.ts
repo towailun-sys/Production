@@ -15,7 +15,6 @@ export interface Kit {
   color?: string;
   colorZh?: string;
   imageUrl: string;
-  colorClass?: string;
 }
 
 export interface Player {
