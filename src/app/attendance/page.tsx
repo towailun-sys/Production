@@ -34,7 +34,7 @@ import { Game, AttendanceStatus, Player, Attendance, Team, Kit } from "@/lib/typ
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, query, orderBy, doc, setDoc } from "firebase/firestore";
+import { collection, query, orderBy, doc, setDoc, where } from "firebase/firestore";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -73,7 +73,12 @@ export default function AttendancePage() {
 
   const gamesQuery = useMemoFirebase(() => {
     if (isUserLoading || !user || gameId) return null;
-    return query(collection(firestore, "games"), orderBy("date", "asc"));
+    const today = new Date().toISOString().split('T')[0];
+    return query(
+      collection(firestore, "games"), 
+      where("date", ">=", today),
+      orderBy("date", "asc")
+    );
   }, [firestore, user, gameId, isUserLoading]);
 
   const { data: games, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
@@ -293,7 +298,7 @@ function ConfirmedAttendanceList({ games, userId, teams }: { games: Game[], user
       {games.length === 0 ? (
         <Card className="p-16 text-center border-dashed border-2 rounded-2xl flex flex-col items-center gap-4">
           <CalendarCheck className="h-12 w-12 text-muted-foreground/30" />
-          <p className="text-muted-foreground font-medium">No confirmed fixtures found in your list.</p>
+          <p className="text-muted-foreground font-medium">No upcoming confirmed fixtures found in your list.</p>
         </Card>
       ) : (
         <div className="space-y-6">
