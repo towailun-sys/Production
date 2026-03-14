@@ -353,10 +353,13 @@ export default function DashboardPage() {
   useEffect(() => {
     if (user) {
       const playersRef = collection(firestore, "players");
-      // Use limit(1) to check for existence efficiently
-      getDocs(query(playersRef, limit(1))).then(snapshot => {
-        setIsFirstRunCheck(snapshot.empty);
-      });
+      getDocs(query(playersRef, limit(1)))
+        .then(snapshot => {
+          setIsFirstRunCheck(snapshot.empty);
+        })
+        .catch(() => {
+          setIsFirstRunCheck(false);
+        });
     } else if (!isUserLoading) {
       setIsFirstRunCheck(false);
     }
@@ -375,14 +378,17 @@ export default function DashboardPage() {
   const { data: matchedProfiles, isLoading: isMatchedProfilesLoading } = useCollection<Player>(emailMatchQuery);
   const preEnteredProfile = matchedProfiles?.find(p => p.id !== user?.uid);
 
+  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true);
+  const isCheckingAuth = !!user && !isAuthorized;
+
   const teamsQuery = useMemoFirebase(() => {
-    if (isUserLoading || !user) return null;
+    if (!isAuthorized) return null;
     return collection(firestore, "teams");
-  }, [firestore, user, isUserLoading]);
+  }, [firestore, isAuthorized]);
   const { data: teams } = useCollection<Team>(teamsQuery);
 
   const gamesQuery = useMemoFirebase(() => {
-    if (isUserLoading || !user) return null;
+    if (!isAuthorized) return null;
     const now = new Date();
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     
@@ -392,18 +398,19 @@ export default function DashboardPage() {
       orderBy("date", "asc"),
       limit(30)
     );
-  }, [firestore, user, isUserLoading]);
+  }, [firestore, isAuthorized]);
 
   const { data: upcomingGames, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
   
   const playersQuery = useMemoFirebase(() => {
-    if (isUserLoading || !user) return null;
+    if (!isAuthorized) return null;
     return collection(firestore, "players");
-  }, [firestore, user, isUserLoading]);
+  }, [firestore, isAuthorized]);
   
   const { data: players } = useCollection<Player>(playersQuery);
 
   const handleLogin = async () => {
+    if (isLoggingIn) return;
     setIsLoggingIn(true);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
@@ -430,10 +437,6 @@ export default function DashboardPage() {
       }
 
       router.push('/');
-      toast({
-        title: language === 'zh' ? "登入成功" : "Signed in successfully",
-        description: language === 'zh' ? `歡迎回到 ${dict.nav.title}。` : `Welcome back to ${dict.nav.title}.`,
-      });
     } catch (error: any) {
       if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
         toast({
@@ -446,24 +449,13 @@ export default function DashboardPage() {
     }
   };
 
-  // REQUISITE: Synchronous Authorization Protection to avoid content flash
-  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true);
-  const isCheckingAuth = !!user && !isAuthorized;
-
-  // AGGRESSIVE: Automatic Sign-out for Unauthorized Sessions
   useEffect(() => {
     if (user && !isProfileLoading && !isMatchedProfilesLoading && isFirstRunCheck === false) {
       if (!currentPlayer && (!matchedProfiles || matchedProfiles.length === 0)) {
-        signOut(auth).then(() => {
-          toast({
-            variant: "destructive",
-            title: dict.nav.unauthorizedEmailTitle,
-            description: dict.nav.unauthorizedEmailDesc,
-          });
-        });
+        signOut(auth);
       }
     }
-  }, [user, currentPlayer, matchedProfiles, isFirstRunCheck, isProfileLoading, isMatchedProfilesLoading, auth, toast, dict.nav]);
+  }, [user, currentPlayer, matchedProfiles, isFirstRunCheck, isProfileLoading, isMatchedProfilesLoading, auth]);
 
   const handleClaimProfile = () => {
     if (!user || !preEnteredProfile) return;
@@ -484,7 +476,6 @@ export default function DashboardPage() {
         deleteDoc(oldDocRef).catch(() => {});
         toast({ title: "Profile Claimed!" });
       })
-      .catch(async () => {})
       .finally(() => {
         setIsLinking(false);
       });
@@ -517,7 +508,6 @@ export default function DashboardPage() {
       .then(() => {
         toast({ title: "Admin Rights Granted" });
       })
-      .catch(async () => {})
       .finally(() => {
         setIsClaimingAdmin(false);
       });
@@ -574,7 +564,7 @@ export default function DashboardPage() {
       number: (currentPlayer?.number !== undefined && currentPlayer?.number !== null) ? currentPlayer.number : 10
     }, { merge: true });
 
-    toast({ title: "Seeding Complete", description: "Sample teams, kits, and games created." });
+    toast({ title: "Seeding Complete" });
     setIsSeeding(false);
   };
 
@@ -692,7 +682,7 @@ export default function DashboardPage() {
                 <div className="grid gap-6">
                   {isGamesLoading ? <div className="p-12 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div> : filteredGames.length === 0 ? <Card className="p-12 text-center border-dashed border-2 text-muted-foreground">{dict.dashboard.noGames}</Card> : (
                     filteredGames.map((game) => (
-                      <Card key={game.id} className="border-none shadow-md overflow-hidden border-l-4 border-primary transition-all active:scale-[0.98] sm:active:scale-100">
+                      <Card key={game.id} className="border-none shadow-md overflow-hidden border-l-4 border-primary transition-all">
                         <CardContent className="p-0 flex flex-col md:flex-row">
                           <div className="p-5 md:p-6 flex-1 space-y-4">
                             <div className="flex flex-wrap items-center gap-3">
@@ -706,7 +696,7 @@ export default function DashboardPage() {
                               )}>
                                 {dict.common.gameTypes[game.type] || game.type}
                               </Badge>
-                              <span className="text-xs md:text-sm font-bold text-muted-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{game.startTime} - {game.endTime}</span>
+                              <span className="text-xs md:sm font-bold text-muted-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{game.startTime} - {game.endTime}</span>
                               {game.coach && (
                                 <span className="text-[10px] md:text-xs font-bold text-muted-foreground flex items-center gap-1.5">
                                   <UserRound className="h-3.5 w-3.5 text-primary" />

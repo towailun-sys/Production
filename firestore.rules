@@ -14,8 +14,6 @@ service cloud.firestore {
 
     /** 
      * Robust isAdmin check. 
-     * Checks if the user has an admin role in a dedicated collection 
-     * or if their player profile has the isAdmin flag.
      */
     function isAdmin() {
       return isSignedIn() && (
@@ -27,7 +25,7 @@ service cloud.firestore {
 
     // --- Collection Rules ---
 
-    // Player profiles: Everyone can read.
+    // Player profiles: Any signed-in user can read to allow for login validation and roster viewing.
     // Owners and admins can write.
     match /players/{playerId} {
       allow get, list: if isSignedIn();
@@ -64,7 +62,6 @@ service cloud.firestore {
     match /users/{userId}/game_attendances/{attendanceId} {
       allow get, list: if isOwner(userId) || isAdmin();
       allow write: if (isOwner(userId) && request.resource.data.playerId == userId) || isAdmin();
-      // Allow delete if owner or admin
       allow delete: if isOwner(userId) || isAdmin();
     }
 
