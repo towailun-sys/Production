@@ -39,7 +39,8 @@ import {
   ImageIcon,
   LogIn,
   Fingerprint,
-  Copy
+  Copy,
+  Users
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, Attendance, AttendanceStatus, Team, Kit } from "@/lib/types";
