@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -49,6 +50,7 @@ export function MainNav() {
   }, [pathname]);
 
   const handleLogin = async () => {
+    setIsOpen(false);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({
       prompt: 'select_account'
@@ -57,28 +59,28 @@ export function MainNav() {
     try {
       await signInWithPopup(auth, provider);
       toast({
-        title: "Signed in successfully",
-        description: `Welcome back to ${dict.nav.title}.`,
+        title: language === 'zh' ? "登入成功" : "Signed in successfully",
+        description: language === 'zh' ? `歡迎回到 ${dict.nav.title}。` : `Welcome back to ${dict.nav.title}.`,
       });
     } catch (error: any) {
       if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
         return;
       }
-      console.error("Login failed:", error);
       toast({
         variant: "destructive",
-        title: "Sign in failed",
+        title: language === 'zh' ? "登入失敗" : "Sign in failed",
         description: error.message || "Could not complete Google authentication.",
       });
     }
   };
 
   const handleLogout = async () => {
+    setIsOpen(false);
     try {
       await signOut(auth);
       toast({
-        title: "Signed out",
-        description: "You have been logged out safely.",
+        title: language === 'zh' ? "已登出" : "Signed out",
+        description: language === 'zh' ? "你已安全登出。" : "You have been logged out safely.",
       });
     } catch (error) {
       console.error("Logout failed:", error);

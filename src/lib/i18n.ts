@@ -47,7 +47,7 @@ const baseDict = {
     }
   },
   nav: {
-    title: "Happy Hour Football Club",
+    title: "歡樂時光足球會",
     dashboard: "Upcoming Fixture",
     attendance: "My Attendance",
     players: "Squad",
@@ -156,7 +156,7 @@ const baseDict = {
     }
   },
   games: {
-    title: "Upcoming Fixtures",
+    title: "Fixtures",
     subtitle: "Plan and manage upcoming fixtures.",
     scheduleGame: "Schedule Upcoming Fixture",
     manageEvent: "Manage Event",

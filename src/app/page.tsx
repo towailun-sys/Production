@@ -29,13 +29,15 @@ import {
   Shirt,
   Banknote,
   Info,
-  Image as ImageIcon
+  Image as ImageIcon,
+  LogIn
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, Attendance, AttendanceStatus, Team, Kit } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, useAuth } from "@/firebase";
 import { collection, query, orderBy, limit, where, doc, setDoc, deleteDoc } from "firebase/firestore";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
@@ -324,6 +326,7 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
 
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
+  const auth = useAuth();
   const firestore = useFirestore();
   const { toast } = useToast();
   const { language, dict } = useTranslation();
@@ -372,6 +375,25 @@ export default function DashboardPage() {
   
   const { data: players } = useCollection<Player>(playersQuery);
 
+  const handleLogin = async () => {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    try {
+      await signInWithPopup(auth, provider);
+      toast({
+        title: language === 'zh' ? "登入成功" : "Signed in successfully",
+        description: language === 'zh' ? `歡迎回到 ${dict.nav.title}。` : `Welcome back to ${dict.nav.title}.`,
+      });
+    } catch (error: any) {
+      if (error.code !== 'auth/popup-closed-by-user') {
+        toast({
+          variant: "destructive",
+          title: language === 'zh' ? "登入失敗" : "Sign in failed",
+        });
+      }
+    }
+  };
+
   const handleClaimProfile = () => {
     if (!user || !preEnteredProfile) return;
     setIsLinking(true);
@@ -388,7 +410,6 @@ export default function DashboardPage() {
 
     setDoc(newDocRef, claimData)
       .then(() => {
-        // After successfully creating the new document, delete the old one.
         deleteDoc(oldDocRef).catch((error) => {
           errorEmitter.emit('permission-error', new FirestorePermissionError({
             path: oldDocRef.path,
@@ -570,6 +591,10 @@ export default function DashboardPage() {
             <Lock className="h-10 w-10 text-primary mb-4" />
             <h2 className="text-xl md:text-2xl font-headline mb-2">{dict.attendance.signinRequired}</h2>
             <div className="text-muted-foreground text-sm max-w-sm">{dict.attendance.signinRequired}</div>
+            <Button onClick={handleLogin} className="mt-6 bg-primary hover:bg-primary/90 gap-2 font-bold h-11 px-6 shadow-md rounded-xl">
+              <LogIn className="h-4 w-4" />
+              {dict.nav.signIn}
+            </Button>
           </div>
         ) : (
           <div className="grid gap-8 lg:grid-cols-4">
