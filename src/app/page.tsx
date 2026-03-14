@@ -386,20 +386,8 @@ export default function DashboardPage() {
   const isSuperAdminEmailCheck = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
   
   const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || (matchedProfiles !== null && !isMatchedProfilesLoading)) && isFirstRunCheck !== null;
-  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRun === true || isSuperAdminEmailCheck);
+  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmailCheck);
   const isCheckingAuth = !!user && !isAuthDetermined;
-
-  useEffect(() => {
-    if (isAuthDetermined && user && !isAuthorized) {
-      signOut(auth).then(() => {
-        toast({
-          variant: "destructive",
-          title: dict.nav.unauthorizedEmailTitle,
-          description: dict.nav.unauthorizedEmailDesc,
-        });
-      });
-    }
-  }, [isAuthDetermined, user, isAuthorized, auth, toast, dict.nav]);
 
   const teamsQuery = useMemoFirebase(() => {
     if (!currentPlayer || !isAuthorized || isCheckingAuth) return null;

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
@@ -91,21 +92,9 @@ function AttendanceContent() {
 
   const isSuperAdminEmailCheck = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
   
-  const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || matchedProfiles !== null) && isFirstRunCheck !== null;
+  const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || (matchedProfiles !== null && !isMatchedProfilesLoading)) && isFirstRunCheck !== null;
   const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmailCheck);
   const isAuthChecking = !!user && !isAuthDetermined;
-
-  useEffect(() => {
-    if (isAuthDetermined && user && !isAuthorized) {
-      signOut(auth).then(() => {
-        toast({
-          variant: "destructive",
-          title: dict.nav.unauthorizedEmailTitle,
-          description: dict.nav.unauthorizedEmailDesc,
-        });
-      });
-    }
-  }, [isAuthDetermined, user, isAuthorized, auth, toast, dict.nav]);
 
   const teamsQuery = useMemoFirebase(() => {
     if (!currentPlayer || !isAuthorized || isAuthChecking) return null;
@@ -556,13 +545,15 @@ function GameRosterList({
           </div>
         </CardContent>
       </Card>
-      <Dialog open={isGuestDialogOpen} onOpenChange={setIsGuestDialogOpen}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader><DialogTitle className="font-headline">{dict.attendance.addGuest}</DialogTitle></DialogHeader>
-          <div className="grid gap-4 py-4"><div className="grid gap-2"><Label htmlFor="guestName" className="text-xs uppercase tracking-wider">{dict.attendance.guestName}</Label><Input id="guestName" value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Name" className="h-11" /></div></div>
-          <DialogFooter><Button onClick={handleAddGuest} className="w-full font-bold h-11 bg-primary">{dict.common.save}</Button></DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <div className="sm:max-w-[400px]">
+        <Dialog open={isGuestDialogOpen} onOpenChange={setIsGuestDialogOpen}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader><DialogTitle className="font-headline">{dict.attendance.addGuest}</DialogTitle></DialogHeader>
+            <div className="grid gap-4 py-4"><div className="grid gap-2"><Label htmlFor="guestName" className="text-xs uppercase tracking-wider">{dict.attendance.guestName}</Label><Input id="guestName" value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Name" className="h-11" /></div></div>
+            <DialogFooter><Button onClick={handleAddGuest} className="w-full font-bold h-11 bg-primary">{dict.common.save}</Button></DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
     </div>
   );
 }

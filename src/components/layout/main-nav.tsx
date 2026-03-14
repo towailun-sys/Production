@@ -35,7 +35,6 @@ import { useTranslation } from "@/components/language-provider";
 import { Player } from "@/lib/types";
 import { SUPER_ADMIN_EMAILS } from "@/lib/constants";
 import Image from "next/image";
-import placeholderData from "@/app/lib/placeholder-images.json";
 import HHFCLogo from "@/app/lib/images/HHFCLogo.jpg";
 
 export function MainNav() {
@@ -50,8 +49,6 @@ export function MainNav() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const { language, setLanguage, dict } = useTranslation();
-
-  const logoData = placeholderData.placeholderImages.find(img => img.id === 'team-logo');
 
   useEffect(() => {
     setMounted(true);
@@ -149,7 +146,7 @@ export function MainNav() {
             <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-white/20 bg-white group-hover:border-accent transition-colors flex items-center justify-center">
               <Image 
                 src={HHFCLogo} 
-                alt={logoData?.description || "HHFC Logo"} 
+                alt="HHFC Logo" 
                 width={40} 
                 height={40} 
                 className="object-cover"
