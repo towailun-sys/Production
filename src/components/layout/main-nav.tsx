@@ -85,8 +85,6 @@ export function MainNav() {
 
   const isUserSuperAdmin = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
   
-  // ROBUST PATIENT AUTHORIZATION GUARD:
-  // We explicitly wait for matchedProfiles to be NON-NULL before concluding someone is unauthorized.
   const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || matchedProfiles !== null) && isFirstRun !== null;
   const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRun === true || isUserSuperAdmin);
   const isAuthChecking = !!user && !isAuthDetermined;
@@ -130,7 +128,8 @@ export function MainNav() {
     { href: "/games", label: dict.nav.games, icon: Calendar, active: pathname === "/games", adminOnly: true },
   ];
 
-  const routes = (isAuthorized && !isAuthChecking) ? baseRoutes.filter(route => {
+  // Protected links only visible to users with a CLAIMED profile record
+  const routes = (currentPlayer && isAuthorized && !isAuthChecking) ? baseRoutes.filter(route => {
     if (route.adminOnly) return currentPlayer?.isAdmin;
     return true;
   }) : [];

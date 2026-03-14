@@ -91,8 +91,6 @@ function AttendanceContent() {
 
   const isSuperAdminEmailCheck = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
   
-  // ROBUST PATIENT AUTHORIZATION GUARD:
-  // We explicitly wait for matchedProfiles to be NON-NULL before concluding someone is unauthorized.
   const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || matchedProfiles !== null) && isFirstRunCheck !== null;
   const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmailCheck);
   const isAuthChecking = !!user && !isAuthDetermined;
@@ -108,6 +106,30 @@ function AttendanceContent() {
       });
     }
   }, [isAuthDetermined, user, isAuthorized, auth, toast, dict.nav]);
+
+  const teamsQuery = useMemoFirebase(() => {
+    if (!currentPlayer || !isAuthorized || isAuthChecking) return null;
+    return collection(firestore, "teams");
+  }, [firestore, isAuthorized, isAuthChecking, currentPlayer]);
+  const { data: teams } = useCollection<Team>(teamsQuery);
+
+  const gameRef = useMemoFirebase(() => {
+    if (!currentPlayer || !isAuthorized || isAuthChecking || !gameId) return null;
+    return doc(firestore, "games", gameId);
+  }, [firestore, isAuthorized, isAuthChecking, gameId, currentPlayer]);
+  const { data: specificGame, isLoading: isGameLoading } = useDoc<Game>(gameRef);
+
+  const gamesQuery = useMemoFirebase(() => {
+    if (!currentPlayer || !isAuthorized || isAuthChecking || gameId) return null;
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    return query(
+      collection(firestore, "games"), 
+      where("date", ">=", todayStr),
+      orderBy("date", "asc")
+    );
+  }, [firestore, isAuthorized, isAuthChecking, gameId, currentPlayer]);
+  const { data: games, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
 
   const handleLogin = async () => {
     if (isLoggingIn) return;
@@ -128,30 +150,6 @@ function AttendanceContent() {
       setIsLoggingIn(false);
     }
   };
-
-  const teamsQuery = useMemoFirebase(() => {
-    if (!isAuthorized || isAuthChecking) return null;
-    return collection(firestore, "teams");
-  }, [firestore, isAuthorized, isAuthChecking]);
-  const { data: teams } = useCollection<Team>(teamsQuery);
-
-  const gameRef = useMemoFirebase(() => {
-    if (!isAuthorized || isAuthChecking || !gameId) return null;
-    return doc(firestore, "games", gameId);
-  }, [firestore, isAuthorized, isAuthChecking, gameId]);
-  const { data: specificGame, isLoading: isGameLoading } = useDoc<Game>(gameRef);
-
-  const gamesQuery = useMemoFirebase(() => {
-    if (!isAuthorized || isAuthChecking || gameId) return null;
-    const now = new Date();
-    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    return query(
-      collection(firestore, "games"), 
-      where("date", ">=", todayStr),
-      orderBy("date", "asc")
-    );
-  }, [firestore, isAuthorized, isAuthChecking, gameId]);
-  const { data: games, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
 
   const handleStatusChange = (gameId: string, status: AttendanceStatus, targetPlayerId?: string) => {
     if (!user) return;
@@ -207,7 +205,7 @@ function AttendanceContent() {
     );
   }
 
-  if (!user) {
+  if (!user || !currentPlayer) {
     return (
       <div className="min-h-screen bg-background">
         <MainNav />
@@ -215,14 +213,20 @@ function AttendanceContent() {
           <div className="bg-muted p-6 rounded-full mb-6">
             <Lock className="h-12 w-12 text-muted-foreground" />
           </div>
-          <h1 className="text-2xl md:text-3xl font-headline mb-4">{dict.attendance.signinRequired}</h1>
+          <h1 className="text-2xl md:text-3xl font-headline mb-4">{!user ? dict.attendance.signinRequired : dict.dashboard.pendingProfileTitle}</h1>
           <p className="text-muted-foreground max-w-md mb-8 text-sm md:text-base">
-            {dict.attendance.signinDesc}
+            {!user ? dict.attendance.signinDesc : dict.dashboard.pendingProfileDesc}
           </p>
-          <Button onClick={handleLogin} disabled={isLoggingIn} className="bg-primary hover:bg-primary/90 gap-2 font-bold h-11 px-8 shadow-md rounded-xl">
-            {isLoggingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
-            {dict.nav.signIn}
-          </Button>
+          {!user ? (
+            <Button onClick={handleLogin} disabled={isLoggingIn} className="bg-primary hover:bg-primary/90 gap-2 font-bold h-11 px-8 shadow-md rounded-xl">
+              {isLoggingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
+              {dict.nav.signIn}
+            </Button>
+          ) : (
+            <Button variant="outline" className="font-bold h-11 px-8 rounded-xl" asChild>
+              <Link href="/">{dict.dashboard.claimProfileBtn}</Link>
+            </Button>
+          )}
         </main>
       </div>
     );
