@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, Fragment } from "react";
+import React, { useState, Fragment, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { MainNav } from "@/components/layout/main-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -350,6 +350,18 @@ export default function DashboardPage() {
   const [isClaimingAdmin, setIsClaimingAdmin] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isFirstRunCheck, setIsFirstRunCheck] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      const playersRef = collection(firestore, "players");
+      getDocs(query(playersRef, where("id", "!=", ""))).then(snapshot => {
+        setIsFirstRunCheck(snapshot.empty);
+      });
+    } else if (!isUserLoading) {
+      setIsFirstRunCheck(false);
+    }
+  }, [user, firestore, isUserLoading]);
 
   const playerRef = useMemoFirebase(() => {
     if (isUserLoading || !user) return null;
@@ -399,13 +411,11 @@ export default function DashboardPage() {
     try {
       const result = await signInWithPopup(auth, provider);
 
-      // Strict Email Validation Check
       if (result.user.email) {
         const playersRef = collection(firestore, "players");
         const q = query(playersRef, where("email", "==", result.user.email));
         const snapshot = await getDocs(q);
 
-        // Allow first user exception if database is empty
         const allPlayersSnapshot = await getDocs(query(playersRef, where("id", "!=", "")));
         const isFirstRun = allPlayersSnapshot.empty;
 
@@ -420,7 +430,7 @@ export default function DashboardPage() {
         }
       }
 
-      router.push('/'); // Force landing page after login
+      router.push('/');
       toast({
         title: language === 'zh' ? "登入成功" : "Signed in successfully",
         description: language === 'zh' ? `歡迎回到 ${dict.nav.title}。` : `Welcome back to ${dict.nav.title}.`,
@@ -456,8 +466,7 @@ export default function DashboardPage() {
         deleteDoc(oldDocRef).catch(() => {});
         toast({ title: "Profile Claimed!" });
       })
-      .catch(async () => {
-      })
+      .catch(async () => {})
       .finally(() => {
         setIsLinking(false);
       });
@@ -567,7 +576,11 @@ export default function DashboardPage() {
     return language === 'zh' ? team.nameZh : team.name;
   };
 
-  if (isUserLoading || (user && isProfileLoading)) {
+  // Block rendering until authorization status is confirmed
+  const isAuthChecking = user && (isProfileLoading || isFirstRunCheck === null);
+  const isUnauthorizedFlashCheck = user && !currentPlayer && !preEnteredProfile && isFirstRunCheck === false;
+
+  if (isUserLoading || isAuthChecking || isUnauthorizedFlashCheck) {
     return (
       <div className="min-h-screen bg-background pb-12 flex flex-col items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
