@@ -482,8 +482,8 @@ const zhDict: typeof baseDict = {
     deploymentNoteDesc: "如果 Google 登入視窗沒有彈出，請確保已在 Firebase 控制台的「驗證 > 設定」下將你的 App Hosting 域名添加到 \"授權網域\" 列表中。",
     toasts: {
       statusUpdated: "狀態已更新",
-      statusDesc: (status: string) => `出席情況已設置為 ${status}。`,
-      confirmDesc: "我們會見到你！",
+      statusDesc: (status: string) => `出席情況已設置為 ${status === 'Declined' ? '不能出席' : status}。`,
+      confirmDesc: "到時見！",
       updateDesc: "出席狀態已更新",
       guestAdded: "客籍球員已新增",
       guestAddedDesc: "客籍球員已添加到名單中。"
