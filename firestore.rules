@@ -23,11 +23,12 @@ service cloud.firestore {
     // --- Collection Rules ---
 
     // Global Read: Allow all signed-in squad members to read data for transparency.
+    // This also covers collection group queries for attendanceRecords if they are nested anywhere.
     match /{path=**} {
-      allow read: if isSignedIn();
+      allow read, list: if isSignedIn();
     }
 
-    // Collection Group Rule: Required for queries across all 'attendanceRecords' subcollections.
+    // Explicit Collection Group Rule: Required for queries across all 'attendanceRecords' subcollections.
     match /{path=**}/attendanceRecords/{recordId} {
       allow read, list: if isSignedIn();
     }
