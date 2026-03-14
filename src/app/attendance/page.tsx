@@ -8,7 +8,7 @@ import { collection, query, where, orderBy } from "firebase/firestore";
 import { Game, Attendance } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MapPin, CalendarDays, Banknote, UserRound, History, Loader2, Info } from "lucide-react";
+import { Clock, MapPin, CalendarDays, Banknote, UserRound, History, Loader2, Info, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { KitBadge } from "@/app/page";
 
@@ -45,6 +45,15 @@ export default function AttendancePage() {
   const upcomingConfirmed = confirmedGames.filter(g => g.date >= todayStr);
   const pastConfirmed = confirmedGames.filter(g => g.date < todayStr);
 
+  const formatGameDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    if (language === 'zh') {
+      const weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+      return `${date.getMonth() + 1}月${date.getDate()}日 ${weekdays[date.getDay()]}`;
+    }
+    return date.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' });
+  };
+
   const renderGameCard = (game: Game, isOutdated: boolean) => (
     <Card 
       key={game.id} 
@@ -54,21 +63,9 @@ export default function AttendancePage() {
       )}
     >
       <CardContent className="p-5 md:p-6">
-        <div className="flex flex-col md:flex-row gap-6">
-          <div className={cn(
-            "flex flex-row md:flex-col items-center justify-center p-4 rounded-2xl min-w-[100px] border gap-3 md:gap-1",
-            isOutdated ? "bg-muted text-muted-foreground" : "bg-primary/5 text-primary border-primary/10"
-          )}>
-            <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">
-              {new Date(game.date).toLocaleString('default', { month: 'short' })}
-            </span>
-            <span className="text-3xl font-bold font-headline leading-none">
-              {new Date(game.date).getDate()}
-            </span>
-          </div>
-
+        <div className="flex flex-col gap-4">
           <div className="flex-1 space-y-4">
-            <div className="space-y-2">
+            <div className="space-y-3">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className={cn(
                   "font-bold px-2 py-0.5 border-none text-[10px] uppercase tracking-wider",
@@ -90,17 +87,21 @@ export default function AttendancePage() {
                   ? dict.common.gameTypes[game.type] 
                   : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-xs md:text-sm text-muted-foreground">
-                <div className="flex items-center gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-xs md:text-sm text-muted-foreground">
+                <div className="flex items-center gap-2.5">
+                  <Calendar className="h-4 w-4 text-primary shrink-0" />
+                  {formatGameDate(game.date)}
+                </div>
+                <div className="flex items-center gap-2.5">
                   <Clock className="h-4 w-4 text-primary shrink-0" />
                   {game.startTime} - {game.endTime}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2.5">
                   <MapPin className="h-4 w-4 text-primary shrink-0" />
                   {game.location}
                 </div>
                 {game.coach && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2.5">
                     <UserRound className="h-4 w-4 text-primary shrink-0" />
                     {game.coach}
                   </div>
@@ -120,9 +121,12 @@ export default function AttendancePage() {
             )}
 
             {game.additionalDetails && (
-              <div className="flex items-start gap-2 text-[11px] text-muted-foreground mt-3 bg-muted/20 p-3 rounded-xl border border-dashed">
-                <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-destructive" />
-                <p className="leading-relaxed whitespace-pre-wrap">{game.additionalDetails}</p>
+              <div className="flex items-start gap-2 text-[11px] text-muted-foreground mt-1 bg-muted/30 p-4 rounded-xl border border-dashed border-primary/20">
+                <Info className="h-4 w-4 mt-0.5 shrink-0 text-primary/60" />
+                <div className="space-y-1">
+                  <div className="text-[10px] font-bold uppercase tracking-widest opacity-60">{dict.attendance.detailsLabel}</div>
+                  <p className="leading-relaxed whitespace-pre-wrap font-medium">{game.additionalDetails}</p>
+                </div>
               </div>
             )}
           </div>
