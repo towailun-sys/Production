@@ -79,7 +79,9 @@ export function MainNav() {
 
   const emailMatchQuery = useMemoFirebase(() => {
     if (!user || currentPlayer) return null;
-    return query(collection(firestore, "players"), where("email", "==", user.email), limit(1));
+    // Normalize email for search
+    const normalizedEmail = user.email?.trim().toLowerCase() || "";
+    return query(collection(firestore, "players"), where("email", "==", normalizedEmail), limit(1));
   }, [firestore, user, currentPlayer]);
   const { data: matchedProfiles, isLoading: isMatchedProfilesLoading } = useCollection<Player>(emailMatchQuery);
 
@@ -96,13 +98,16 @@ export function MainNav() {
       const result = await signInWithPopup(auth, provider);
       
       if (result.user.email) {
+        // Normalize email: trim and lowercase
+        const normalizedEmail = result.user.email.trim().toLowerCase();
+        
         const playersRef = collection(firestore, "players");
-        const q = query(playersRef, where("email", "==", result.user.email));
+        const q = query(playersRef, where("email", "==", normalizedEmail));
         const snapshot = await getDocs(q);
         
         const allPlayersSnapshot = await getDocs(query(playersRef, limit(1)));
         const isFirstRunNow = allPlayersSnapshot.empty;
-        const isUserSuperAdmin = SUPER_ADMIN_EMAILS.includes(result.user.email);
+        const isUserSuperAdmin = SUPER_ADMIN_EMAILS.includes(normalizedEmail);
 
         if (snapshot.empty && !isFirstRunNow && !isUserSuperAdmin) {
           await signOut(auth);
@@ -176,7 +181,8 @@ export function MainNav() {
   ];
 
   // GUARD: super admins fallback
-  const isUserSuperAdmin = !!user?.email && SUPER_ADMIN_EMAILS.includes(user.email);
+  const normalizedUserEmail = user?.email?.trim().toLowerCase() || "";
+  const isUserSuperAdmin = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
   const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRun === true || isUserSuperAdmin);
   const isAuthChecking = !!user && !isAuthorized;
 

@@ -374,13 +374,16 @@ export default function DashboardPage() {
 
   const emailMatchQuery = useMemoFirebase(() => {
     if (isUserLoading || !user || currentPlayer) return null;
-    return query(collection(firestore, "players"), where("email", "==", user.email), limit(1));
+    // Use normalized email for search
+    const normalizedEmail = user.email?.trim().toLowerCase() || "";
+    return query(collection(firestore, "players"), where("email", "==", normalizedEmail), limit(1));
   }, [firestore, user, currentPlayer, isUserLoading]);
   const { data: matchedProfiles, isLoading: isMatchedProfilesLoading } = useCollection<Player>(emailMatchQuery);
   const preEnteredProfile = matchedProfiles?.find(p => p.id !== user?.uid);
 
   // Critical Guard: super admin emails are always authorized to see the dashboard (to seed/claim admin)
-  const isSuperAdminEmailCheck = !!user?.email && SUPER_ADMIN_EMAILS.includes(user.email);
+  const normalizedUserEmail = user?.email?.trim().toLowerCase() || "";
+  const isSuperAdminEmailCheck = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
   const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmailCheck);
   const isCheckingAuth = !!user && !isAuthorized;
 
@@ -421,13 +424,16 @@ export default function DashboardPage() {
       const result = await signInWithPopup(auth, provider);
 
       if (result.user.email) {
+        // Normalize email: trim and lowercase
+        const normalizedEmail = result.user.email.trim().toLowerCase();
+        
         const playersRef = collection(firestore, "players");
-        const q = query(playersRef, where("email", "==", result.user.email));
+        const q = query(playersRef, where("email", "==", normalizedEmail));
         const snapshot = await getDocs(q);
 
         const allPlayersSnapshot = await getDocs(query(playersRef, limit(1)));
         const isFirstRun = allPlayersSnapshot.empty;
-        const isUserSuperAdmin = SUPER_ADMIN_EMAILS.includes(result.user.email);
+        const isUserSuperAdmin = SUPER_ADMIN_EMAILS.includes(normalizedEmail);
 
         if (snapshot.empty && !isFirstRun && !isUserSuperAdmin) {
           await signOut(auth);
@@ -455,7 +461,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (user && !isProfileLoading && !isMatchedProfilesLoading && isFirstRunCheck === false) {
-      const isUserSuperAdmin = SUPER_ADMIN_EMAILS.includes(user.email || "");
+      const normalizedEmail = user.email?.trim().toLowerCase() || "";
+      const isUserSuperAdmin = SUPER_ADMIN_EMAILS.includes(normalizedEmail);
       if (!currentPlayer && (!matchedProfiles || matchedProfiles.length === 0) && !isUserSuperAdmin) {
         signOut(auth);
       }
@@ -469,10 +476,12 @@ export default function DashboardPage() {
     const newDocRef = doc(firestore, "players", user.uid);
     const oldDocRef = doc(firestore, "players", preEnteredProfile.id);
     
+    const normalizedEmail = user.email?.trim().toLowerCase() || "";
+
     const claimData = {
       ...preEnteredProfile,
       id: user.uid,
-      email: user.email,
+      email: normalizedEmail,
       isLinked: true 
     };
 
@@ -491,17 +500,18 @@ export default function DashboardPage() {
     setIsClaimingAdmin(true);
     
     const adminRef = doc(firestore, "players", user.uid);
+    const normalizedEmail = user.email?.trim().toLowerCase() || "";
     
     const adminData: Partial<Player> = {
       id: user.uid,
       isAdmin: true,
-      isLinked: true
+      isLinked: true,
+      email: normalizedEmail
     };
 
     if (!currentPlayer) {
       Object.assign(adminData, {
         name: user.displayName || "Admin User",
-        email: user.email || "",
         status: "Active",
         teams: [],
         preferredPositions: ["MF", "FW"],
@@ -627,7 +637,7 @@ export default function DashboardPage() {
                 </Button>
               </>
             )}
-            {user && (!currentPlayer || !currentPlayer.isAdmin) && (SUPER_ADMIN_EMAILS.includes(user.email || "") || isFirstRunCheck === true) && (
+            {user && (!currentPlayer || !currentPlayer.isAdmin) && (normalizedUserEmail && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail) || isFirstRunCheck === true) && (
               <Button variant="outline" size="sm" className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold text-xs" onClick={handleClaimAdmin} disabled={isClaimingAdmin}>
                 {isClaimingAdmin ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="mr-2 h-3.5 w-3.5" />}
                 {dict.dashboard.claimAdmin}
@@ -739,7 +749,7 @@ export default function DashboardPage() {
                               </h3>
                               <div className="grid gap-2 text-xs md:text-sm text-muted-foreground">
                                 <div className="flex items-center gap-2.5"><Calendar className="h-4 w-4 text-primary shrink-0" />{formatGameDate(game.date)}</div>
-                                <div className="flex items-center gap-2.5"><MapPin className="h-4 w-4 text-primary shrink-0" />{formatGameDate(game.date)}</div>
+                                <div className="flex items-center gap-2.5"><MapPin className="h-4 w-4 text-primary shrink-0" />{game.location}</div>
                               </div>
                             </div>
 

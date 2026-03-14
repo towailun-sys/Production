@@ -97,13 +97,16 @@ function AttendanceContent() {
       const result = await signInWithPopup(auth, provider);
 
       if (result.user.email) {
+        // Normalize email: trim and lowercase
+        const normalizedEmail = result.user.email.trim().toLowerCase();
+        
         const playersRef = collection(firestore, "players");
-        const q = query(playersRef, where("email", "==", result.user.email));
+        const q = query(playersRef, where("email", "==", normalizedEmail));
         const snapshot = await getDocs(q);
 
         const allPlayersSnapshot = await getDocs(query(playersRef, limit(1)));
         const isFirstRun = allPlayersSnapshot.empty;
-        const isUserSuperAdmin = SUPER_ADMIN_EMAILS.includes(result.user.email);
+        const isUserSuperAdmin = SUPER_ADMIN_EMAILS.includes(normalizedEmail);
 
         if (snapshot.empty && !isFirstRun && !isUserSuperAdmin) {
           await signOut(auth);
@@ -137,12 +140,15 @@ function AttendanceContent() {
 
   const emailMatchQuery = useMemoFirebase(() => {
     if (!user || currentPlayer) return null;
-    return query(collection(firestore, "players"), where("email", "==", user.email), limit(1));
+    // Normalize email for search
+    const normalizedEmail = user.email?.trim().toLowerCase() || "";
+    return query(collection(firestore, "players"), where("email", "==", normalizedEmail), limit(1));
   }, [firestore, user, currentPlayer]);
   const { data: matchedProfiles, isLoading: isMatchedProfilesLoading } = useCollection<Player>(emailMatchQuery);
 
   // Guard: super admins check
-  const isSuperAdminEmailCheck = !!user?.email && SUPER_ADMIN_EMAILS.includes(user.email);
+  const normalizedUserEmail = user?.email?.trim().toLowerCase() || "";
+  const isSuperAdminEmailCheck = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
   const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmailCheck);
   const isAuthChecking = !!user && !isAuthorized;
 
@@ -574,7 +580,7 @@ function GameRosterList({
                       )}>
                         {hasNumber ? player.number : player.name[0]}
                         {player.isCaptain && (
-                          <div className="absolute -top-1 -right-1 bg-accent text-accent-foreground rounded-full p-0.5 shadow-sm border border-white">
+                          <div className="absolute -top-1.5 -right-1.5 bg-accent text-accent-foreground rounded-full p-1 shadow-md border-2 border-white">
                             <Crown className="h-3 w-3" />
                           </div>
                         )}

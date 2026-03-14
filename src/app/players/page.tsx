@@ -204,12 +204,15 @@ export default function PlayersPage() {
     const playerId = formData.id || doc(collection(firestore, "players")).id;
     const playerRef = doc(firestore, "players", playerId);
     
+    // Normalize email: trim and lowercase
+    const normalizedEmail = formData.email?.trim().toLowerCase() || "";
+
     const finalData = {
       id: playerId,
       name: formData.name,
       nickname: formData.nickname || "",
       number: formData.number !== "" ? parseInt(formData.number) : null,
-      email: formData.email || "",
+      email: normalizedEmail,
       mobileNumber: formData.mobileNumber || "",
       preferredPositions: formData.preferredPositions,
       teams: formData.teams,
@@ -269,12 +272,16 @@ export default function PlayersPage() {
     }
 
     const playerRef = doc(firestore, "players", editingPlayer.id);
+    
+    // Normalize email: trim and lowercase
+    const normalizedEmail = formData.email?.trim().toLowerCase() || "";
+
     const updateData = {
       id: editingPlayer.id,
       name: formData.name,
       nickname: formData.nickname || "",
       number: formData.number !== "" ? parseInt(formData.number) : null,
-      email: formData.email || "",
+      email: normalizedEmail,
       mobileNumber: formData.mobileNumber || "",
       preferredPositions: formData.preferredPositions,
       teams: formData.teams,
