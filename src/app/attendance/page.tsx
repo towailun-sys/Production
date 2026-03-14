@@ -84,21 +84,14 @@ function AttendanceContent() {
   const { data: currentPlayer, isLoading: isProfileLoading } = useDoc<Player>(playerRef);
 
   const normalizedUserEmail = user?.email?.trim().toLowerCase() || "";
-  const emailMatchQuery = useMemoFirebase(() => {
-    if (!user || currentPlayer) return null;
-    return query(collection(firestore, "players"), where("email", "==", normalizedUserEmail), limit(1));
-  }, [firestore, user, currentPlayer, normalizedUserEmail]);
-  const { data: matchedProfiles, isLoading: isMatchedProfilesLoading } = useCollection<Player>(emailMatchQuery);
-
   const isSuperAdminEmailCheck = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
   
-  const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || (matchedProfiles !== null && !isMatchedProfilesLoading)) && isFirstRunCheck !== null;
-  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmailCheck);
+  const isAuthDetermined = !isUserLoading && !isProfileLoading && isFirstRunCheck !== null;
+  const isAuthorized = !!user && (!!currentPlayer || isFirstRunCheck === true || isSuperAdminEmailCheck);
   const isAuthChecking = !!user && !isAuthDetermined;
 
   const userConfirmedAttendanceQuery = useMemoFirebase(() => {
     if (!user || !isAuthorized || isAuthChecking) return null;
-    // Collection Group query to find all attendance records for this player across all games
     return query(
       collectionGroup(firestore, "attendanceRecords"),
       where("playerId", "==", user.uid),
@@ -307,7 +300,6 @@ function AttendanceContent() {
     );
   }
 
-  // Logic: Only show games where the current user has confirmed their attendance.
   const joinedGameIds = new Set(userAttendances?.map(a => a.gameId) || []);
   const joinedGames = (allGames || []).filter(g => joinedGameIds.has(g.id));
 

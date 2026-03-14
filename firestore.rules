@@ -22,8 +22,7 @@ service cloud.firestore {
 
     // --- Collection Rules ---
 
-    // Global Read: Allow all signed-in squad members to read data for transparency.
-    // This also covers collection group queries for attendanceRecords if they are nested anywhere.
+    // Global Read: Allow all signed-in squad members to read data for transparency and roster management.
     match /{path=**} {
       allow read, list: if isSignedIn();
     }
@@ -35,9 +34,7 @@ service cloud.firestore {
 
     // Restricted Writes: Only owners or admins can modify data.
     match /players/{playerId} {
-      allow create: if isOwner(playerId) || isAdmin();
-      allow update: if isOwner(playerId) || isAdmin();
-      allow delete: if isAdmin();
+      allow write: if isOwner(playerId) || isAdmin();
     }
 
     match /teams/{teamId} {
@@ -53,7 +50,7 @@ service cloud.firestore {
     }
 
     match /games/{gameId}/attendanceRecords/{playerId} {
-      allow write, delete: if isOwner(playerId) || isAdmin();
+      allow write: if isOwner(playerId) || isAdmin();
     }
 
     match /users/{userId}/game_attendances/{attendanceId} {
