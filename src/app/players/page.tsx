@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { MainNav } from "@/components/layout/main-nav";
 import { Button } from "@/components/ui/button";
 import { 
@@ -1032,6 +1032,7 @@ function TeamManagementUI() {
   const [name, setName] = useState("");
   const [nameZh, setNameZh] = useState("");
   const [editingTeam, setEditingTeam] = useState<Team | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const teamsQuery = useMemoFirebase(() => collection(firestore, "teams"), [firestore]);
   const { data: teams } = useCollection<Team>(teamsQuery);
@@ -1057,6 +1058,8 @@ function TeamManagementUI() {
     setEditingTeam(team);
     setName(team.name);
     setNameZh(team.nameZh || "");
+    // Scroll to the top of the dialog content for mobile users
+    containerRef.current?.closest('[role="dialog"]')?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const resetForm = () => {
@@ -1071,7 +1074,7 @@ function TeamManagementUI() {
   };
 
   return (
-    <div className="space-y-6 py-4">
+    <div ref={containerRef} className="space-y-6 py-4">
       <div className="grid gap-4 p-4 border rounded-xl bg-muted/20">
         <div className="grid gap-2">
           <Label className="text-xs uppercase">{dict.players.teams.nameEn}</Label>
@@ -1082,12 +1085,12 @@ function TeamManagementUI() {
           <Input value={nameZh} onChange={(e) => setNameZh(e.target.value)} placeholder="隊伍 A" />
         </div>
         <div className="flex gap-2">
-          <Button onClick={handleSaveTeam} className="flex-1 font-bold">
+          <Button onClick={handleSaveTeam} className="flex-1 font-bold h-11">
             {editingTeam ? <Pencil className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
             {editingTeam ? dict.players.teams.update : dict.players.teams.add}
           </Button>
           {editingTeam && (
-            <Button variant="outline" onClick={resetForm} className="font-bold">
+            <Button variant="outline" onClick={resetForm} className="font-bold h-11">
               {dict.common.cancel}
             </Button>
           )}
@@ -1096,17 +1099,17 @@ function TeamManagementUI() {
 
       <div className="space-y-2">
         {teams?.map((team) => (
-          <div key={team.id} className="flex items-center justify-between p-3 border rounded-lg bg-white shadow-sm group">
+          <div key={team.id} className="flex items-center justify-between p-4 border rounded-lg bg-white shadow-sm group">
             <div className="flex flex-col">
               <span className="font-bold text-sm">{team.name}</span>
               <span className="text-xs text-muted-foreground">{team.nameZh}</span>
             </div>
-            <div className="flex gap-1">
-              <Button variant="ghost" size="icon" onClick={() => handleEditClick(team)} className="h-8 w-8 text-primary hover:bg-primary/10">
-                <Pencil className="h-4 w-4" />
+            <div className="flex gap-2">
+              <Button variant="ghost" size="icon" onClick={() => handleEditClick(team)} className="h-10 w-10 text-primary hover:bg-primary/10">
+                <Pencil className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={() => handleDeleteTeam(team.id)} className="text-destructive h-8 w-8 hover:bg-destructive/10">
-                <Trash2 className="h-4 w-4" />
+              <Button variant="ghost" size="icon" onClick={() => handleDeleteTeam(team.id)} className="text-destructive h-10 w-10 hover:bg-destructive/10">
+                <Trash2 className="h-5 w-5" />
               </Button>
             </div>
           </div>
@@ -1123,6 +1126,7 @@ function KitManagementUI() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const { dict, language } = useTranslation();
+  const containerRef = useRef<HTMLDivElement>(null);
   
   const [formData, setFormData] = useState({
     name: "",
@@ -1180,6 +1184,8 @@ function KitManagementUI() {
       colorZh: kit.colorZh || "",
       imageUrl: kit.imageUrl || ""
     });
+    // Scroll to the top of the dialog content for mobile users
+    containerRef.current?.closest('[role="dialog"]')?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const resetForm = () => {
@@ -1193,7 +1199,7 @@ function KitManagementUI() {
   };
 
   return (
-    <div className="space-y-6 py-4">
+    <div ref={containerRef} className="space-y-6 py-4">
       <div className="grid gap-4 p-4 border rounded-xl bg-muted/20">
         <div className="grid grid-cols-2 gap-4">
           <div className="grid gap-2">
@@ -1250,12 +1256,12 @@ function KitManagementUI() {
         )}
 
         <div className="flex gap-2">
-          <Button onClick={handleSaveKit} className="flex-1 font-bold">
+          <Button onClick={handleSaveKit} className="flex-1 font-bold h-11">
             {editingKit ? <Pencil className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
             {editingKit ? dict.players.kits.update : dict.players.kits.add}
           </Button>
           {editingKit && (
-            <Button variant="outline" onClick={resetForm} className="font-bold">
+            <Button variant="outline" onClick={resetForm} className="font-bold h-11">
               {dict.common.cancel}
             </Button>
           )}
@@ -1264,10 +1270,10 @@ function KitManagementUI() {
 
       <div className="space-y-3">
         {kits?.map((kit) => (
-          <div key={kit.id} className="flex items-center gap-4 p-3 border rounded-lg bg-white shadow-sm group">
-            <div className="h-12 w-10 shrink-0 relative bg-muted rounded overflow-hidden border">
+          <div key={kit.id} className="flex items-center gap-4 p-4 border rounded-lg bg-white shadow-sm group">
+            <div className="h-14 w-11 shrink-0 relative bg-muted rounded overflow-hidden border">
               {kit.imageUrl ? (
-                <Image src={kit.imageUrl} alt={kit.name} fill className="object-cover" sizes="40px" unoptimized={kit.imageUrl.startsWith('data:')} />
+                <Image src={kit.imageUrl} alt={kit.name} fill className="object-cover" sizes="50px" unoptimized={kit.imageUrl.startsWith('data:')} />
               ) : (
                 <ImageIcon className="h-4 w-4 m-auto text-muted-foreground opacity-20" />
               )}
@@ -1278,12 +1284,12 @@ function KitManagementUI() {
                 {kit.color} / {kit.colorZh}
               </div>
             </div>
-            <div className="flex gap-1">
-              <Button variant="ghost" size="icon" onClick={() => handleEditClick(kit)} className="h-8 w-8 text-primary hover:bg-primary/10">
-                <Pencil className="h-4 w-4" />
+            <div className="flex gap-2">
+              <Button variant="ghost" size="icon" onClick={() => handleEditClick(kit)} className="h-10 w-10 text-primary hover:bg-primary/10">
+                <Pencil className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={() => handleDeleteKit(kit.id)} className="text-destructive h-8 w-8 hover:bg-destructive/10">
-                <Trash2 className="h-4 w-4" />
+              <Button variant="ghost" size="icon" onClick={() => handleDeleteKit(kit.id)} className="text-destructive h-10 w-10 hover:bg-destructive/10">
+                <Trash2 className="h-5 w-5" />
               </Button>
             </div>
           </div>

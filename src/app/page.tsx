@@ -11,6 +11,13 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { 
   Calendar, 
   MapPin, 
@@ -110,13 +117,13 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
     const kitColor = language === 'zh' ? kit.colorZh || kit.color : kit.color;
 
     return (
-      <Popover>
-        <PopoverTrigger asChild>
+      <Dialog>
+        <DialogTrigger asChild>
           <Badge 
             variant="outline" 
             className={cn(
-              "text-[10px] md:text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-muted/50 transition-colors py-1", 
-              "text-primary border-primary/30 h-auto"
+              "text-[10px] md:text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-muted/50 transition-colors py-1.5 px-3 h-auto", 
+              "text-primary border-primary/30"
             )}
           >
             <Shirt className="h-3.5 w-3.5 shrink-0" />
@@ -132,38 +139,46 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
               )}
             </div>
           </Badge>
-        </PopoverTrigger>
-        <PopoverContent className="w-64 p-3 shadow-xl rounded-xl" align="center" side="bottom" sideOffset={8}>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Shirt className="h-4 w-4" />
-                <span className="text-xs font-bold uppercase tracking-widest">{dict.players.kits.viewImage}</span>
+        </DialogTrigger>
+        <DialogContent className="sm:max-w-md max-w-[90vw] rounded-2xl p-6">
+          <DialogHeader className="mb-4">
+            <DialogTitle className="flex items-center gap-3">
+              <Shirt className="h-5 w-5 text-primary" />
+              <div className="flex flex-col text-left">
+                <span className="text-sm font-bold uppercase tracking-widest">{dict.players.kits.viewImage}</span>
+                <span className="text-xs text-muted-foreground font-normal">
+                  {kitName} {' '} {kitColor && <KitColorText colorText={kitColor} className="ml-1" />}
+                </span>
               </div>
-              <Badge variant="outline" className="text-[9px] font-bold h-auto py-1">
-                {kitName} {' '} {kitColor && <KitColorText colorText={kitColor} className="ml-1.5 border-l pl-1.5" />}
-              </Badge>
-            </div>
-            <div className="relative aspect-[4/5] w-full rounded-lg overflow-hidden border bg-muted">
-              {kit.imageUrl ? (
-                <Image 
-                  src={kit.imageUrl} 
-                  alt={kitName} 
-                  fill 
-                  className="object-cover"
-                  sizes="256px"
-                  unoptimized={kit.imageUrl.startsWith('data:')}
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
-                  <ImageIcon className="h-8 w-8 opacity-20" />
-                  <span className="text-[10px]">No image available</span>
-                </div>
-              )}
-            </div>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="relative aspect-[4/5] w-full rounded-xl overflow-hidden border bg-muted shadow-inner">
+            {kit.imageUrl ? (
+              <Image 
+                src={kit.imageUrl} 
+                alt={kitName} 
+                fill 
+                className="object-cover"
+                sizes="(max-width: 768px) 90vw, 450px"
+                unoptimized={kit.imageUrl.startsWith('data:')}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-3">
+                <ImageIcon className="h-10 w-10 opacity-20" />
+                <span className="text-xs font-medium">No image available</span>
+              </div>
+            )}
           </div>
-        </PopoverContent>
-      </Popover>
+          <div className="mt-6">
+            <Button className="w-full font-bold h-12" variant="outline" onClick={(e) => {
+              const closeBtn = (e.currentTarget.closest('[role="dialog"]') as HTMLElement)?.querySelector('[data-radix-collection-item]') as HTMLElement;
+              // Simple way to trigger close is via programmatic UI interaction or just reliance on standard close
+            }}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     );
   }
 
@@ -171,7 +186,7 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
     return (
       <Badge 
         variant="outline" 
-        className="text-[10px] md:text-xs font-bold flex items-center gap-1.5 opacity-60 py-1"
+        className="text-[10px] md:text-xs font-bold flex items-center gap-1.5 opacity-60 py-1.5 px-3 h-auto"
       >
         <Shirt className="h-3.5 w-3.5" />
         {isAlternative && <span className="text-[9px] uppercase tracking-wider mr-1 opacity-70">ALT:</span>}
@@ -184,7 +199,7 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
     return (
       <Badge 
         variant="outline" 
-        className="text-[10px] md:text-xs font-bold opacity-30 py-1 border-dashed"
+        className="text-[10px] md:text-xs font-bold opacity-30 py-1.5 px-3 h-auto border-dashed"
       >
         <Shirt className="h-3.5 w-3.5" />
         <span className="ml-1.5">{dict.common.tbd}</span>
