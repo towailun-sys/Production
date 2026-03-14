@@ -110,7 +110,7 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
   
   const { data: kit, isLoading } = useDoc<Kit>(kitRef);
 
-  if (isLoading) return <div className="h-4 w-16 animate-pulse bg-muted rounded" />;
+  if (isLoading) return <div className="h-8 w-24 animate-pulse bg-muted rounded-full" />;
   
   if (kit) {
     const kitName = language === 'zh' ? kit.nameZh || kit.name : kit.name;
@@ -119,28 +119,28 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
     return (
       <Dialog>
         <DialogTrigger asChild>
-          <Badge 
+          <Button 
             variant="outline" 
+            size="sm"
             className={cn(
-              "text-[10px] md:text-xs font-bold flex items-center gap-1.5 cursor-pointer hover:bg-muted/50 transition-colors py-1.5 px-3 h-auto", 
-              "text-primary border-primary/30"
+              "text-[10px] md:text-xs font-bold flex h-auto min-h-[32px] items-center gap-2 transition-all hover:bg-primary/10 active:scale-95 py-1.5 px-4", 
+              "text-primary border-primary/30 rounded-full bg-white shadow-sm"
             )}
           >
             <Shirt className="h-3.5 w-3.5 shrink-0" />
-            <div className="flex flex-wrap items-center gap-x-1.5 leading-none">
+            <div className="flex flex-wrap items-center gap-x-1.5 leading-none text-left">
               {isAlternative && <span className="text-[9px] uppercase tracking-wider opacity-70">ALT:</span>}
               <span>{kitName}</span>
-              {' '}
               {kitColor && (
                 <KitColorText 
                   colorText={kitColor} 
-                  className="font-bold" 
+                  className="font-bold opacity-80" 
                 />
               )}
             </div>
-          </Badge>
+          </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-md max-w-[90vw] rounded-2xl p-6">
+        <DialogContent className="sm:max-w-md max-w-[95vw] rounded-2xl p-6">
           <DialogHeader className="mb-4">
             <DialogTitle className="flex items-center gap-3">
               <Shirt className="h-5 w-5 text-primary" />
@@ -170,10 +170,8 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
             )}
           </div>
           <div className="mt-6">
-            <Button className="w-full font-bold h-12" variant="outline" onClick={(e) => {
-              const closeBtn = (e.currentTarget.closest('[role="dialog"]') as HTMLElement)?.querySelector('[data-radix-collection-item]') as HTMLElement;
-            }}>
-              Close
+            <Button className="w-full font-bold h-12" variant="outline" asChild>
+              <DialogTrigger>Close</DialogTrigger>
             </Button>
           </div>
         </DialogContent>
@@ -241,7 +239,7 @@ function UserAttendanceToggle({ gameId, userId }: { gameId: string, userId: stri
       });
 
     toast({
-      title: status === 'Confirmed' ? "You're in!" : "Status updated",
+      title: status === 'Confirmed' ? dict.attendance.toasts.confirmDesc : dict.attendance.toasts.updateDesc,
     });
   };
 

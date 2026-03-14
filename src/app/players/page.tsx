@@ -416,7 +416,7 @@ export default function PlayersPage() {
                     {dict.players.manageKits}
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-[500px] max-h-[85vh] overflow-y-auto">
+                <DialogContent className="max-w-[500px] sm:max-w-[95vw] max-h-[85vh] overflow-y-auto rounded-2xl">
                   <DialogHeader>
                     <DialogTitle className="font-headline">{dict.players.kits.title}</DialogTitle>
                   </DialogHeader>
@@ -432,7 +432,7 @@ export default function PlayersPage() {
                     <span className="sm:hidden">{dict.players.teams.title}</span>
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-h-[85vh] overflow-y-auto">
+                <DialogContent className="max-h-[85vh] sm:max-w-[95vw] overflow-y-auto rounded-2xl">
                   <DialogHeader>
                     <DialogTitle className="font-headline">{dict.players.teams.title}</DialogTitle>
                   </DialogHeader>
@@ -447,7 +447,7 @@ export default function PlayersPage() {
                     {dict.players.addPlayer}
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
+                <DialogContent className="sm:max-w-[425px] sm:max-w-[95vw] max-h-[90vh] overflow-y-auto rounded-2xl">
                   <DialogHeader>
                     <DialogTitle className="font-headline text-xl">{dict.players.dialog.addTitle}</DialogTitle>
                   </DialogHeader>
@@ -612,7 +612,7 @@ export default function PlayersPage() {
         </div>
 
         <Dialog open={isEditOpen} onOpenChange={(open) => { if(!open) { setIsEditOpen(false); resetForm(); setEditingPlayer(null); } }}>
-          <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
+          <DialogContent className="sm:max-w-[425px] sm:max-w-[95vw] max-h-[90vh] overflow-y-auto rounded-2xl">
             <DialogHeader>
               <DialogTitle className="font-headline text-xl">{dict.players.dialog.editTitle}</DialogTitle>
             </DialogHeader>
@@ -948,8 +948,8 @@ export default function PlayersPage() {
                               {currentPlayer?.isAdmin && (
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-primary/5">
-                                      <MoreVertical className="h-5 w-5 text-muted-foreground" />
+                                    <Button variant="ghost" size="icon" className="h-10 w-10 rounded-full hover:bg-primary/5 active:bg-primary/10 transition-colors">
+                                      <MoreVertical className="h-6 w-6 text-muted-foreground" />
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="w-56">
@@ -1075,11 +1075,11 @@ function TeamManagementUI() {
       <div className="grid gap-4 p-4 border rounded-xl bg-muted/20">
         <div className="grid gap-2">
           <Label className="text-xs uppercase">{dict.players.teams.nameEn}</Label>
-          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Team A" />
+          <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Team A" className="h-11" />
         </div>
         <div className="grid gap-2">
           <Label className="text-xs uppercase">{dict.players.teams.nameZh}</Label>
-          <Input value={nameZh} onChange={(e) => setNameZh(e.target.value)} placeholder="隊伍 A" />
+          <Input value={nameZh} onChange={(e) => setNameZh(e.target.value)} placeholder="隊伍 A" className="h-11" />
         </div>
         <div className="flex gap-2">
           <Button onClick={handleSaveTeam} className="flex-1 font-bold h-11">
@@ -1102,10 +1102,10 @@ function TeamManagementUI() {
               <span className="text-xs text-muted-foreground">{team.nameZh}</span>
             </div>
             <div className="flex gap-2">
-              <Button variant="ghost" size="icon" onClick={() => handleEditClick(team)} className="h-11 w-11 text-primary hover:bg-primary/10">
+              <Button variant="ghost" size="icon" onClick={() => handleEditClick(team)} className="h-11 w-11 text-primary hover:bg-primary/10 transition-colors">
                 <Pencil className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={() => handleDeleteTeam(team.id)} className="text-destructive h-11 w-11 hover:bg-destructive/10">
+              <Button variant="ghost" size="icon" onClick={() => handleDeleteTeam(team.id)} className="text-destructive h-11 w-11 hover:bg-destructive/10 transition-colors">
                 <Trash2 className="h-5 w-5" />
               </Button>
             </div>
@@ -1178,7 +1178,10 @@ function KitManagementUI() {
       colorZh: kit.colorZh || "",
       imageUrl: kit.imageUrl || ""
     });
-    containerRef.current?.parentElement?.scrollTo({ top: 0, behavior: 'smooth' });
+    // Ensure scroll to top on mobile so form is visible
+    setTimeout(() => {
+      containerRef.current?.parentElement?.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
   };
 
   const resetForm = () => {
@@ -1197,21 +1200,21 @@ function KitManagementUI() {
         <div className="grid grid-cols-2 gap-4">
           <div className="grid gap-2">
             <Label className="text-xs uppercase">{dict.players.kits.nameEn}</Label>
-            <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Home 1" />
+            <Input value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} placeholder="Home 1" className="h-11" />
           </div>
           <div className="grid gap-2">
             <Label className="text-xs uppercase">{dict.players.kits.nameZh}</Label>
-            <Input value={formData.nameZh} onChange={(e) => setFormData({ ...formData, nameZh: e.target.value })} placeholder="主場 1" />
+            <Input value={formData.nameZh} onChange={(e) => setFormData({ ...formData, nameZh: e.target.value })} placeholder="主場 1" className="h-11" />
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="grid gap-2">
             <Label className="text-xs uppercase">{dict.players.kits.colorEn}</Label>
-            <Input value={formData.color} onChange={(e) => setFormData({ ...formData, color: e.target.value })} placeholder="Pink / Grey" />
+            <Input value={formData.color} onChange={(e) => setFormData({ ...formData, color: e.target.value })} placeholder="Pink / Grey" className="h-11" />
           </div>
           <div className="grid gap-2">
             <Label className="text-xs uppercase">{dict.players.kits.colorZh}</Label>
-            <Input value={formData.colorZh} onChange={(e) => setFormData({ ...formData, colorZh: e.target.value })} placeholder="粉紅 / 灰" />
+            <Input value={formData.colorZh} onChange={(e) => setFormData({ ...formData, colorZh: e.target.value })} placeholder="粉紅 / 灰" className="h-11" />
           </div>
         </div>
         
@@ -1222,7 +1225,7 @@ function KitManagementUI() {
               type="file" 
               accept="image/*" 
               onChange={handleFileChange}
-              className="cursor-pointer file:bg-primary file:text-white file:border-none file:rounded-md file:px-3 file:py-1 file:mr-4 file:font-bold h-11"
+              className="cursor-pointer file:bg-primary file:text-white file:border-none file:rounded-md file:px-4 file:py-1 file:mr-4 file:font-bold h-12"
             />
           </div>
         </div>
@@ -1240,7 +1243,7 @@ function KitManagementUI() {
             <Button 
               variant="destructive" 
               size="icon" 
-              className="absolute top-1 right-1 h-7 w-7 rounded-full opacity-90 shadow-md"
+              className="absolute top-1 right-1 h-8 w-8 rounded-full opacity-90 shadow-md"
               onClick={() => setFormData({ ...formData, imageUrl: "" })}
             >
               <X className="h-4 w-4" />
@@ -1249,12 +1252,12 @@ function KitManagementUI() {
         )}
 
         <div className="flex gap-2">
-          <Button onClick={handleSaveKit} className="flex-1 font-bold h-11">
+          <Button onClick={handleSaveKit} className="flex-1 font-bold h-12">
             {editingKit ? <Pencil className="h-4 w-4 mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
             {editingKit ? dict.players.kits.update : dict.players.kits.add}
           </Button>
           {editingKit && (
-            <Button variant="outline" onClick={resetForm} className="font-bold h-11">
+            <Button variant="outline" onClick={resetForm} className="font-bold h-12">
               {dict.common.cancel}
             </Button>
           )}
@@ -1278,10 +1281,10 @@ function KitManagementUI() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="ghost" size="icon" onClick={() => handleEditClick(kit)} className="h-11 w-11 text-primary hover:bg-primary/10">
+              <Button variant="ghost" size="icon" onClick={() => handleEditClick(kit)} className="h-11 w-11 text-primary hover:bg-primary/10 transition-colors">
                 <Pencil className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={() => handleDeleteKit(kit.id)} className="text-destructive h-11 w-11 hover:bg-destructive/10">
+              <Button variant="ghost" size="icon" onClick={() => handleDeleteKit(kit.id)} className="text-destructive h-11 w-11 hover:bg-destructive/10 transition-colors">
                 <Trash2 className="h-5 w-5" />
               </Button>
             </div>
