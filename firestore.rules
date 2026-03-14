@@ -22,7 +22,6 @@ service cloud.firestore {
 
     // --- Collection Rules ---
 
-    // Root-level allow for signed-in users
     match /players/{playerId} {
       allow read, list: if isSignedIn();
       allow write: if isOwner(playerId) || isAdmin();
@@ -53,7 +52,7 @@ service cloud.firestore {
     }
 
     // --- Collection Group Rules ---
-    // Required for finding a specific player's attendance across all games.
+    // Specifically allow players to find their own confirmed attendance across all games.
     match /{path=**}/attendanceRecords/{recordId} {
       allow read, list: if isSignedIn();
     }
