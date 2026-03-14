@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -133,12 +132,13 @@ export function MainNav() {
     },
   ];
 
-  const routes = baseRoutes.filter(route => {
+  // Hide all routes if user is not signed in
+  const routes = user ? baseRoutes.filter(route => {
     if (route.adminOnly) {
       return currentPlayer?.isAdmin;
     }
     return true;
-  });
+  }) : [];
 
   if (!mounted) return (
     <nav className="sticky top-0 z-50 w-full border-b bg-primary h-16 shadow-lg" />
