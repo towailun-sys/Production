@@ -2,7 +2,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { 
   Users, 
@@ -37,6 +37,7 @@ import { Player } from "@/lib/types";
 
 export function MainNav() {
   const pathname = usePathname();
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -73,6 +74,7 @@ export function MainNav() {
     try {
       await signInWithPopup(auth, provider);
       setIsOpen(false);
+      router.push('/'); // Force landing page after login
       toast({
         title: language === 'zh' ? "登入成功" : "Signed in successfully",
         description: language === 'zh' ? `歡迎回到 ${dict.nav.title}。` : `Welcome back to ${dict.nav.title}.`,

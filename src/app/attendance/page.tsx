@@ -2,7 +2,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { MainNav } from "@/components/layout/main-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -63,6 +63,7 @@ import { KitBadge } from "@/app/page";
 
 function AttendanceContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const gameId = searchParams.get("gameId");
   const { toast } = useToast();
   const auth = useAuth();
@@ -78,6 +79,7 @@ function AttendanceContent() {
     provider.setCustomParameters({ prompt: 'select_account' });
     try {
       await signInWithPopup(auth, provider);
+      router.push('/'); // Force landing page after login
     } catch (error: any) {
       if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
         toast({

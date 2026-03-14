@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, Fragment } from "react";
+import { useRouter } from "next/navigation";
 import { MainNav } from "@/components/layout/main-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -340,6 +341,7 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const router = useRouter();
   const firestore = useFirestore();
   const { toast } = useToast();
   const { language, dict } = useTranslation();
@@ -396,6 +398,7 @@ export default function DashboardPage() {
     provider.setCustomParameters({ prompt: 'select_account' });
     try {
       await signInWithPopup(auth, provider);
+      router.push('/'); // Force landing page after login
       toast({
         title: language === 'zh' ? "登入成功" : "Signed in successfully",
         description: language === 'zh' ? `歡迎回到 ${dict.nav.title}。` : `Welcome back to ${dict.nav.title}.`,
@@ -635,13 +638,6 @@ export default function DashboardPage() {
                       </Badge>
                     )}
                   </h2>
-                  {currentPlayer?.isAdmin && (
-                    <Link href="/games">
-                      <Button variant="ghost" size="sm" className="text-primary gap-1 font-bold p-0 sm:px-3 sm:py-2 hover:bg-transparent sm:hover:bg-muted/50">
-                        {dict.dashboard.fullSchedule} <ArrowRight className="h-4 w-4" />
-                      </Button>
-                    </Link>
-                  )}
                 </div>
 
                 <div className="grid gap-6">
