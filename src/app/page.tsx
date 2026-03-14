@@ -38,18 +38,24 @@ import {
   LogIn,
   Fingerprint,
   Copy,
-  Users
+  Users,
+  CheckCircle2,
+  XCircle,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
 import Link from "next/link";
-import { Game, Player, Team, Kit } from "@/lib/types";
+import { Game, Player, Team, Kit, Attendance } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, useAuth } from "@/firebase";
-import { collection, query, orderBy, limit, where, doc, setDoc, deleteDoc, getDocs } from "firebase/firestore";
+import { collection, query, orderBy, limit, where, doc, setDoc, deleteDoc, getDocs, serverTimestamp } from "firebase/firestore";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/components/language-provider";
 import Image from "next/image";
 import { SUPER_ADMIN_EMAILS } from "@/lib/constants";
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 
 const getColorHex = (name: string) => {
   const n = name.toLowerCase().trim();
@@ -205,6 +211,132 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
   }
 
   return null;
+}
+
+function GameAttendanceSection({ 
+  game, 
+  user, 
+  allPlayers 
+}: { 
+  game: Game; 
+  user: any; 
+  allPlayers: Player[] | null 
+}) {
+  const firestore = useFirestore();
+  const { dict, language } = useTranslation();
+  const { toast } = useToast();
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const attendanceQuery = useMemoFirebase(() => {
+    return collection(firestore, "games", game.id, "attendanceRecords");
+  }, [firestore, game.id]);
+  const { data: attendanceRecords, isLoading } = useCollection<Attendance>(attendanceQuery);
+
+  const myRecord = attendanceRecords?.find(r => r.id === user.uid);
+  const confirmedRecords = attendanceRecords?.filter(r => r.status === 'Confirmed') || [];
+
+  const handleUpdateStatus = (status: 'Confirmed' | 'Declined') => {
+    const recordRef = doc(firestore, "games", game.id, "attendanceRecords", user.uid);
+    const data = {
+      id: user.uid,
+      gameId: game.id,
+      playerId: user.uid,
+      status: status,
+      lastUpdated: new Date().toISOString()
+    };
+    
+    setDoc(recordRef, data, { merge: true }).catch(err => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: recordRef.path,
+        operation: 'write',
+        requestResourceData: data
+      } satisfies SecurityRuleContext));
+    });
+
+    toast({
+      title: status === 'Confirmed' ? dict.attendance.toasts.statusUpdated : dict.attendance.toasts.updateDesc,
+      description: status === 'Confirmed' ? dict.attendance.toasts.confirmDesc : dict.attendance.toasts.statusDesc(status),
+    });
+  };
+
+  if (isLoading) return <div className="h-20 w-full animate-pulse bg-muted rounded-xl mt-4" />;
+
+  return (
+    <div className="mt-6 space-y-4 pt-6 border-t border-dashed">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Badge variant={myRecord?.status === 'Confirmed' ? 'default' : 'outline'} className={cn(
+            "h-10 px-4 font-bold rounded-xl flex items-center gap-2 cursor-pointer transition-all hover:scale-105 active:scale-95",
+            myRecord?.status === 'Confirmed' ? "bg-primary text-white shadow-md" : "border-primary/20 text-muted-foreground"
+          )} onClick={() => handleUpdateStatus('Confirmed')}>
+            <CheckCircle2 className="h-4 w-4" />
+            {dict.common.join}
+          </Badge>
+          <Badge variant={myRecord?.status === 'Declined' ? 'destructive' : 'outline'} className={cn(
+            "h-10 px-4 font-bold rounded-xl flex items-center gap-2 cursor-pointer transition-all hover:scale-105 active:scale-95",
+            myRecord?.status === 'Declined' ? "bg-destructive text-white shadow-md" : "border-destructive/20 text-muted-foreground"
+          )} onClick={() => handleUpdateStatus('Declined')}>
+            <XCircle className="h-4 w-4" />
+            {dict.common.decline}
+          </Badge>
+        </div>
+        
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          className="text-primary font-bold gap-2 hover:bg-primary/5 rounded-full"
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          <Users className="h-4 w-4" />
+          {dict.dashboard.confirmedSquad} ({confirmedRecords.length})
+          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </Button>
+      </div>
+
+      {isExpanded && (
+        <Card className="border-none bg-primary/5 shadow-inner rounded-2xl overflow-hidden">
+          <CardHeader className="py-4 px-5 border-b border-primary/10">
+            <CardTitle className="text-sm font-bold flex items-center gap-2 text-primary uppercase tracking-widest">
+              <Users className="h-4 w-4" />
+              {dict.dashboard.confirmedSquad} ({confirmedRecords.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            {confirmedRecords.length === 0 ? (
+              <div className="p-8 text-center text-muted-foreground text-xs italic">
+                {dict.dashboard.noConfirmations}
+              </div>
+            ) : (
+              <div className="divide-y divide-primary/5 max-h-[300px] overflow-y-auto custom-scrollbar">
+                {confirmedRecords.map((record) => {
+                  const p = allPlayers?.find(player => player.id === record.playerId);
+                  if (!p) return null;
+                  
+                  return (
+                    <div key={record.id} className="flex items-center gap-3 p-4 hover:bg-primary/10 transition-colors">
+                      <div className="h-8 w-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-[11px] border border-primary/10 shrink-0">
+                        {p.number !== undefined && p.number !== null ? p.number : p.name[0]}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-bold truncate text-foreground">{p.nickname || p.name}</div>
+                        <div className="flex gap-1 mt-1">
+                          {p.preferredPositions?.map(pos => (
+                            <Badge key={pos} variant="outline" className="text-[9px] h-4 px-1 py-0 border-primary/20 bg-primary/5 text-primary">
+                              {dict.common.positions[pos.toLowerCase() as keyof typeof dict.common.positions] || pos}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
 }
 
 export default function DashboardPage() {
@@ -534,7 +666,7 @@ export default function DashboardPage() {
                       ) : (
                         filteredGames.map((game) => (
                           <Card key={game.id} className="border-none shadow-md overflow-hidden border-l-4 border-primary transition-all">
-                            <CardContent className="p-0 flex flex-col md:flex-row">
+                            <CardContent className="p-0 flex flex-col">
                               <div className="p-5 md:p-6 flex-1 space-y-4">
                                 <div className="flex flex-wrap items-center gap-3">
                                   <Badge className="text-[10px] md:text-xs font-bold bg-primary text-white px-3 py-0.5 border-none">{getTeamName(game.team)}</Badge>
@@ -589,6 +721,12 @@ export default function DashboardPage() {
                                     <span className="whitespace-pre-wrap leading-normal">{game.fee}</span>
                                   </div>
                                 )}
+
+                                <GameAttendanceSection 
+                                  game={game} 
+                                  user={user} 
+                                  allPlayers={players} 
+                                />
                               </div>
                             </CardContent>
                           </Card>
