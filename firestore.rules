@@ -14,6 +14,8 @@ service cloud.firestore {
 
     /** 
      * Robust isAdmin check. 
+     * Checks if the user's UID is in the roles_admin collection 
+     * or if their player profile has isAdmin set to true.
      */
     function isAdmin() {
       return isSignedIn() && (
@@ -26,7 +28,6 @@ service cloud.firestore {
     // --- Collection Rules ---
 
     // Player profiles: Any signed-in user can read to allow for login validation and roster viewing.
-    // Owners and admins can write.
     match /players/{playerId} {
       allow get, list: if isSignedIn();
       allow create: if isOwner(playerId) || isAdmin();
@@ -34,51 +35,50 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // Teams: Public read for signed-in members, managed by admins.
+    // Teams: Public read for members, managed by admins.
     match /teams/{teamId} {
       allow get, list: if isSignedIn();
       allow write: if isAdmin();
     }
 
-    // Kits: Public read for signed-in members, managed by admins.
+    // Kits: Public read for members, managed by admins.
     match /kits/{kitId} {
       allow get, list: if isSignedIn();
       allow write: if isAdmin();
     }
 
-    // Games: Public read for signed-in members, managed by admins.
+    // Games: Public read for members, managed by admins.
     match /games/{gameId} {
       allow get, list: if isSignedIn();
       allow write: if isAdmin();
     }
 
-    // Attendance Records: Stored inside games for easy roster viewing.
+    // Attendance Records: Stored inside games.
     match /games/{gameId}/attendanceRecords/{playerId} {
       allow get, list: if isSignedIn();
       allow write, delete: if isOwner(playerId) || isAdmin();
     }
 
     // Support for Collection Group queries on attendanceRecords.
-    // This is critical for the "My Attendance" view to filter by playerId across all games.
+    // This allows the "My Attendance" view to efficiently find records across all games.
     match /{path=**}/attendanceRecords/{recordId} {
-      // Allow list operations if the user is filtering by their own ID or is an admin.
       allow list: if isSignedIn() && (
-        resource.data.playerId == request.auth.uid || 
-        recordId == request.auth.uid || 
-        isAdmin()
+        isAdmin() || 
+        recordId == request.auth.uid ||
+        (resource != null && resource.data.playerId == request.auth.uid)
       );
       allow get: if isSignedIn();
       allow write, delete: if isOwner(recordId) || isAdmin();
     }
 
-    // User-centric attendance path for "My Attendance" view (legacy/additional support).
+    // User-centric attendance path (legacy/additional support).
     match /users/{userId}/game_attendances/{attendanceId} {
       allow get, list: if isOwner(userId) || isAdmin();
       allow write: if (isOwner(userId) && request.resource.data.playerId == userId) || isAdmin();
       allow delete: if isOwner(userId) || isAdmin();
     }
 
-    // System roles (Read-only for signed-in, managed by service accounts/external).
+    // System roles.
     match /roles_admin/{userId} {
       allow get: if isSignedIn();
       allow write: if false; 

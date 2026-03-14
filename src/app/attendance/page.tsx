@@ -339,8 +339,8 @@ function AttendanceContent() {
                         {game.type === 'Training' || game.type === 'Internal' ? dict.common.gameTypes[game.type] : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
                       </h3>
                       <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {game.startTime} - {game.endTime}</span>
-                        <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {game.location}</span>
+                        <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {game.startTime} - {game.endTime}</span>
+                        <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {game.location}</span>
                       </div>
                     </div>
                     <div className="shrink-0 w-full md:w-auto">
