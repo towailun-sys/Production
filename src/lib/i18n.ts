@@ -63,7 +63,9 @@ const baseDict = {
     signInWelcome: (club: string) => `Welcome back to ${club}.`,
     signInError: "Sign in failed",
     signOutSuccess: "Signed out",
-    signOutMessage: "You have been logged out safely."
+    signOutMessage: "You have been logged out safely.",
+    unauthorizedEmailTitle: "Access Denied",
+    unauthorizedEmailDesc: "Your email is not registered in the squad list. Please contact the administrator."
   },
   dashboard: {
     welcome: "Welcome back",
@@ -305,7 +307,9 @@ const zhDict: typeof baseDict = {
     signInWelcome: (club: string) => `歡迎回到 ${club}。`,
     signInError: "登入失敗",
     signOutSuccess: "已登出",
-    signOutMessage: "你已安全登出。"
+    signOutMessage: "你已安全登出。",
+    unauthorizedEmailTitle: "拒絕存取",
+    unauthorizedEmailDesc: "你的電郵未在球員名單中登記。請聯絡管理員。"
   },
   dashboard: {
     welcome: "歡迎",

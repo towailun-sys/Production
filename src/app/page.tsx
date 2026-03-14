@@ -44,8 +44,8 @@ import Link from "next/link";
 import { Game, Player, Attendance, AttendanceStatus, Team, Kit } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, useAuth } from "@/firebase";
-import { collection, query, orderBy, limit, where, doc, setDoc, deleteDoc } from "firebase/firestore";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { collection, query, orderBy, limit, where, doc, setDoc, deleteDoc, getDocs } from "firebase/firestore";
+import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
@@ -397,7 +397,29 @@ export default function DashboardPage() {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+
+      // Strict Email Validation Check
+      if (result.user.email) {
+        const playersRef = collection(firestore, "players");
+        const q = query(playersRef, where("email", "==", result.user.email));
+        const snapshot = await getDocs(q);
+
+        // Allow first user exception if database is empty
+        const allPlayersSnapshot = await getDocs(query(playersRef, where("id", "!=", "")));
+        const isFirstRun = allPlayersSnapshot.empty;
+
+        if (snapshot.empty && !isFirstRun) {
+          await signOut(auth);
+          toast({
+            variant: "destructive",
+            title: dict.nav.unauthorizedEmailTitle,
+            description: dict.nav.unauthorizedEmailDesc,
+          });
+          return;
+        }
+      }
+
       router.push('/'); // Force landing page after login
       toast({
         title: language === 'zh' ? "登入成功" : "Signed in successfully",

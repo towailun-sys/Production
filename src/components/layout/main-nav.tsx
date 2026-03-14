@@ -20,7 +20,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useUser, useAuth, useFirestore, useMemoFirebase, useDoc } from "@/firebase";
 import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
-import { doc } from "firebase/firestore";
+import { doc, collection, query, where, getDocs } from "firebase/firestore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -72,7 +72,30 @@ export function MainNav() {
     });
     
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+      
+      // Strict Email Validation Check
+      if (result.user.email) {
+        const playersRef = collection(firestore, "players");
+        const q = query(playersRef, where("email", "==", result.user.email));
+        const snapshot = await getDocs(q);
+        
+        // Check if the players collection is entirely empty (first run exception)
+        const allPlayersSnapshot = await getDocs(query(playersRef, where("id", "!=", "")));
+        const isFirstRun = allPlayersSnapshot.empty;
+
+        if (snapshot.empty && !isFirstRun) {
+          // Email not found in players list and it's not the first run, kick out
+          await signOut(auth);
+          toast({
+            variant: "destructive",
+            title: dict.nav.unauthorizedEmailTitle,
+            description: dict.nav.unauthorizedEmailDesc,
+          });
+          return;
+        }
+      }
+
       setIsOpen(false);
       router.push('/'); // Force landing page after login
       toast({
@@ -84,7 +107,7 @@ export function MainNav() {
         toast({
           variant: "destructive",
           title: dict.nav.signInError,
-          description: error.message || "Could not complete Google authentication. Please check if the domain is authorized in Firebase.",
+          description: error.message || "Could not complete Google authentication.",
         });
       }
     } finally {

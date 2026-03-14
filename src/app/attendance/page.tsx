@@ -36,8 +36,8 @@ import { Game, AttendanceStatus, Player, Attendance, Team } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, useAuth } from "@/firebase";
-import { collection, query, orderBy, doc, setDoc, where, deleteDoc } from "firebase/firestore";
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { collection, query, orderBy, doc, setDoc, where, deleteDoc, getDocs } from "firebase/firestore";
+import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -78,7 +78,29 @@ function AttendanceContent() {
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     try {
-      await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, provider);
+
+      // Strict Email Validation Check
+      if (result.user.email) {
+        const playersRef = collection(firestore, "players");
+        const q = query(playersRef, where("email", "==", result.user.email));
+        const snapshot = await getDocs(q);
+
+        // Allow first user exception if database is empty
+        const allPlayersSnapshot = await getDocs(query(playersRef, where("id", "!=", "")));
+        const isFirstRun = allPlayersSnapshot.empty;
+
+        if (snapshot.empty && !isFirstRun) {
+          await signOut(auth);
+          toast({
+            variant: "destructive",
+            title: dict.nav.unauthorizedEmailTitle,
+            description: dict.nav.unauthorizedEmailDesc,
+          });
+          return;
+        }
+      }
+
       router.push('/'); // Force landing page after login
     } catch (error: any) {
       if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
@@ -197,6 +219,14 @@ function AttendanceContent() {
             {isLoggingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
             {dict.nav.signIn}
           </Button>
+          <div className="mt-8 p-4 bg-primary/5 rounded-xl border border-primary/10 max-w-md mx-auto">
+            <p className="text-xs font-bold text-primary mb-2 flex items-center gap-2 justify-center">
+              <Info className="h-4 w-4" /> {dict.attendance.deploymentNoteTitle}
+            </p>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              If the Google Sign-In window does not appear, please ensure your App Hosting domain is added to the <strong>"Authorized Domains"</strong> list in the Firebase Console under <em>Authentication &gt; Settings</em>.
+            </p>
+          </div>
         </main>
       </div>
     );
