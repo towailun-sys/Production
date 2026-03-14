@@ -372,24 +372,25 @@ export default function DashboardPage() {
   }, [firestore, user]);
   const { data: currentPlayer, isLoading: isProfileLoading } = useDoc<Player>(playerRef);
 
+  const normalizedUserEmail = user?.email?.trim().toLowerCase() || "";
   const emailMatchQuery = useMemoFirebase(() => {
     if (!user || currentPlayer) return null;
-    const normalizedEmail = user.email?.trim().toLowerCase() || "";
-    return query(collection(firestore, "players"), where("email", "==", normalizedEmail), limit(1));
-  }, [firestore, user, currentPlayer]);
+    return query(collection(firestore, "players"), where("email", "==", normalizedUserEmail), limit(1));
+  }, [firestore, user, currentPlayer, normalizedUserEmail]);
   const { data: matchedProfiles, isLoading: isMatchedProfilesLoading } = useCollection<Player>(emailMatchQuery);
   const preEnteredProfile = matchedProfiles?.find(p => p.id !== user?.uid);
 
-  const normalizedUserEmail = user?.email?.trim().toLowerCase() || "";
   const isSuperAdminEmailCheck = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
   
-  // WAIT FOR LOADING to avoid flashing/kicking valid users
-  const isAuthorizationDetermined = !isUserLoading && !isProfileLoading && !isMatchedProfilesLoading && isFirstRunCheck !== null;
+  // ROBUST PATIENT AUTHORIZATION GUARD:
+  // We explicitly wait for matchedProfiles to be NON-NULL before concluding someone is unauthorized.
+  // This avoids the one-frame race condition in useCollection.
+  const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || matchedProfiles !== null) && isFirstRunCheck !== null;
   const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmailCheck);
-  const isCheckingAuth = !!user && !isAuthorizationDetermined;
+  const isCheckingAuth = !!user && !isAuthDetermined;
 
   useEffect(() => {
-    if (isAuthorizationDetermined && user && !isAuthorized) {
+    if (isAuthDetermined && user && !isAuthorized) {
       signOut(auth).then(() => {
         toast({
           variant: "destructive",
@@ -398,7 +399,7 @@ export default function DashboardPage() {
         });
       });
     }
-  }, [isAuthorizationDetermined, user, isAuthorized, auth, toast, dict.nav]);
+  }, [isAuthDetermined, user, isAuthorized, auth, toast, dict.nav]);
 
   const teamsQuery = useMemoFirebase(() => {
     if (!isAuthorized || isCheckingAuth) return null;
@@ -428,7 +429,7 @@ export default function DashboardPage() {
 
   const handleLogin = async () => {
     if (isLoggingIn) return;
-    setIsLoggingIn(false);
+    setIsLoggingIn(true);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     try {

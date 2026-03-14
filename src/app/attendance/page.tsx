@@ -7,11 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { 
   Check, 
   X, 
   Clock, 
@@ -23,11 +18,6 @@ import {
   MoreVertical,
   Loader2,
   Crown,
-  Info,
-  CalendarCheck,
-  Shirt,
-  UserRound,
-  Banknote,
   UserPlus,
   LogIn
 } from "lucide-react";
@@ -43,8 +33,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import {
   Dialog,
@@ -94,23 +82,23 @@ function AttendanceContent() {
   }, [firestore, user]);
   const { data: currentPlayer, isLoading: isProfileLoading } = useDoc<Player>(playerRef);
 
+  const normalizedUserEmail = user?.email?.trim().toLowerCase() || "";
   const emailMatchQuery = useMemoFirebase(() => {
     if (!user || currentPlayer) return null;
-    const normalizedEmail = user.email?.trim().toLowerCase() || "";
-    return query(collection(firestore, "players"), where("email", "==", normalizedEmail), limit(1));
-  }, [firestore, user, currentPlayer]);
+    return query(collection(firestore, "players"), where("email", "==", normalizedUserEmail), limit(1));
+  }, [firestore, user, currentPlayer, normalizedUserEmail]);
   const { data: matchedProfiles, isLoading: isMatchedProfilesLoading } = useCollection<Player>(emailMatchQuery);
 
-  const normalizedUserEmail = user?.email?.trim().toLowerCase() || "";
   const isSuperAdminEmailCheck = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
   
-  // WAIT FOR LOADING to avoid flashing/kicking valid users
-  const isAuthorizationDetermined = !isUserLoading && !isProfileLoading && !isMatchedProfilesLoading && isFirstRunCheck !== null;
+  // ROBUST PATIENT AUTHORIZATION GUARD:
+  // We explicitly wait for matchedProfiles to be NON-NULL before concluding someone is unauthorized.
+  const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || matchedProfiles !== null) && isFirstRunCheck !== null;
   const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmailCheck);
-  const isAuthChecking = !!user && !isAuthorizationDetermined;
+  const isAuthChecking = !!user && !isAuthDetermined;
 
   useEffect(() => {
-    if (isAuthorizationDetermined && user && !isAuthorized) {
+    if (isAuthDetermined && user && !isAuthorized) {
       signOut(auth).then(() => {
         toast({
           variant: "destructive",
@@ -119,7 +107,7 @@ function AttendanceContent() {
         });
       });
     }
-  }, [isAuthorizationDetermined, user, isAuthorized, auth, toast, dict.nav]);
+  }, [isAuthDetermined, user, isAuthorized, auth, toast, dict.nav]);
 
   const handleLogin = async () => {
     if (isLoggingIn) return;
@@ -354,7 +342,7 @@ function ConfirmedAttendanceList({ games, userId, teams }: { games: Game[], user
     <div className="space-y-6">
       {games.length === 0 ? (
         <Card className="p-16 text-center border-dashed border-2 rounded-2xl flex flex-col items-center gap-4">
-          <CalendarCheck className="h-12 w-12 text-muted-foreground/30" />
+          <Users className="h-12 w-12 text-muted-foreground/30" />
           <p className="text-muted-foreground font-medium">{dict.attendance.noConfirmedFixtures}</p>
         </Card>
       ) : (
@@ -374,7 +362,7 @@ function ConfirmedGameItem({ game, userId, teams }: { game: Game, userId: string
   const { data: attendance, isLoading } = useDoc<Attendance>(attendanceRef);
   if (isLoading) return <Card className="h-48 animate-pulse bg-muted/50 rounded-2xl" />;
   if (attendance?.status !== 'Confirmed') return null;
-  return <KitBadge kitId={null} />; // Just a placeholder, we use the actual card in attendance/page.tsx logic
+  return null; // Placeholder implementation, actual logic handled by ConfirmedAttendanceList mapping
 }
 
 function GameRosterList({ 

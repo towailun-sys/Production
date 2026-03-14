@@ -31,7 +31,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/components/language-provider";
-import Image from "next/image";
 import { Player } from "@/lib/types";
 import { SUPER_ADMIN_EMAILS } from "@/lib/constants";
 
@@ -77,18 +76,18 @@ export function MainNav() {
   }, [firestore, user]);
   const { data: currentPlayer, isLoading: isProfileLoading } = useDoc<Player>(playerRef);
 
+  const normalizedUserEmail = user?.email?.trim().toLowerCase() || "";
   const emailMatchQuery = useMemoFirebase(() => {
     if (!user || currentPlayer) return null;
-    const normalizedEmail = user.email?.trim().toLowerCase() || "";
-    return query(collection(firestore, "players"), where("email", "==", normalizedEmail), limit(1));
-  }, [firestore, user, currentPlayer]);
+    return query(collection(firestore, "players"), where("email", "==", normalizedUserEmail), limit(1));
+  }, [firestore, user, currentPlayer, normalizedUserEmail]);
   const { data: matchedProfiles, isLoading: isMatchedProfilesLoading } = useCollection<Player>(emailMatchQuery);
 
-  const normalizedUserEmail = user?.email?.trim().toLowerCase() || "";
   const isUserSuperAdmin = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
   
-  // Patient authorization check
-  const isAuthDetermined = !isUserLoading && !isProfileLoading && !isMatchedProfilesLoading && isFirstRun !== null;
+  // ROBUST PATIENT AUTHORIZATION GUARD:
+  // We explicitly wait for matchedProfiles to be NON-NULL before concluding someone is unauthorized.
+  const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || matchedProfiles !== null) && isFirstRun !== null;
   const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRun === true || isUserSuperAdmin);
   const isAuthChecking = !!user && !isAuthDetermined;
 
