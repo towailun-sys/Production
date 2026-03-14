@@ -297,27 +297,24 @@ function GameAttendanceSection({
             {dict.dashboard.noConfirmations}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-primary/10">
+          <div className="p-4 flex flex-wrap gap-2">
             {confirmedRecords.map((record) => {
               const p = allPlayers?.find(player => player.id === record.playerId);
               if (!p) return null;
               
+              const posStr = p.preferredPositions?.join('/') || '';
+              const numberStr = (p.number !== undefined && p.number !== null) ? `#${p.number}` : '';
+              
               return (
-                <div key={record.id} className="flex items-center gap-3 p-3 bg-white hover:bg-primary/5 transition-colors">
-                  <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[11px] border border-primary/5 shrink-0">
-                    {p.number !== undefined && p.number !== null ? p.number : p.name[0]}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-bold truncate text-foreground leading-none">{p.nickname || p.name}</div>
-                    <div className="flex gap-1 mt-1">
-                      {p.preferredPositions?.slice(0, 1).map(pos => (
-                        <span key={pos} className="text-[9px] font-bold text-primary/60 uppercase">
-                          {dict.common.positions[pos.toLowerCase() as keyof typeof dict.common.positions] || pos}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
+                <Badge 
+                  key={record.id} 
+                  variant="outline" 
+                  className="h-8 px-3 font-bold bg-white text-foreground border-primary/20 shadow-sm hover:bg-primary/5 transition-colors rounded-lg flex items-center gap-1"
+                >
+                  {numberStr && <span className="text-primary font-bold">{numberStr}</span>}
+                  <span className="truncate max-w-[120px]">{p.nickname || p.name}</span>
+                  {posStr && <span className="text-[10px] text-muted-foreground font-medium">({posStr})</span>}
+                </Badge>
               );
             })}
           </div>
@@ -758,4 +755,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
