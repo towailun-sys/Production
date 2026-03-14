@@ -4,7 +4,7 @@
     {
       "id": "team-logo",
       "description": "Happy Hour FC Logo",
-      "imageUrl": "https://placehold.co/200x200/16a34a/ffffff?text=HHFC",
+      "imageUrl": "@/app/lib/images/HHFCLogo.jpg",
       "imageHint": "soccer badge"
     },
     {

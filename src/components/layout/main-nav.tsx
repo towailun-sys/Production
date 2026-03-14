@@ -36,6 +36,7 @@ import { Player } from "@/lib/types";
 import { SUPER_ADMIN_EMAILS } from "@/lib/constants";
 import Image from "next/image";
 import placeholderData from "@/app/lib/placeholder-images.json";
+import HHFCLogo from "@/app/lib/images/HHFCLogo.jpg";
 
 export function MainNav() {
   const pathname = usePathname();
@@ -50,7 +51,7 @@ export function MainNav() {
   const { toast } = useToast();
   const { language, setLanguage, dict } = useTranslation();
 
-  const logoImage = placeholderData.placeholderImages.find(img => img.id === 'team-logo');
+  const logoData = placeholderData.placeholderImages.find(img => img.id === 'team-logo');
 
   useEffect(() => {
     setMounted(true);
@@ -133,7 +134,6 @@ export function MainNav() {
     { href: "/games", label: dict.nav.games, icon: Calendar, active: pathname === "/games", adminOnly: true },
   ];
 
-  // Only show links if the user is linked to a squad record
   const routes = (currentPlayer && isAuthorized && !isAuthChecking) ? baseRoutes.filter(route => {
     if (route.adminOnly) return currentPlayer?.isAdmin;
     return true;
@@ -147,18 +147,14 @@ export function MainNav() {
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-white/20 bg-white group-hover:border-accent transition-colors flex items-center justify-center">
-              {logoImage ? (
-                <Image 
-                  src={logoImage.imageUrl} 
-                  alt={logoImage.description} 
-                  width={40} 
-                  height={40} 
-                  className="object-cover"
-                  data-ai-hint={logoImage.imageHint}
-                />
-              ) : (
-                <div className="font-headline font-bold text-primary text-lg">H</div>
-              )}
+              <Image 
+                src={HHFCLogo} 
+                alt={logoData?.description || "HHFC Logo"} 
+                width={40} 
+                height={40} 
+                className="object-cover"
+                priority
+              />
             </div>
             <span className="font-headline text-lg md:text-xl font-bold tracking-tight whitespace-nowrap">{dict.nav.title}</span>
           </Link>

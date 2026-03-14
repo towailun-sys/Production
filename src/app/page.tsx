@@ -386,7 +386,7 @@ export default function DashboardPage() {
   const isSuperAdminEmailCheck = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
   
   const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || (matchedProfiles !== null && !isMatchedProfilesLoading)) && isFirstRunCheck !== null;
-  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmailCheck);
+  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRun === true || isSuperAdminEmailCheck);
   const isCheckingAuth = !!user && !isAuthDetermined;
 
   useEffect(() => {
@@ -571,32 +571,36 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-background pb-12">
       <MainNav />
       <main className="container mx-auto px-4 py-8 md:py-12">
-        <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-1">
-            <h1 className="text-2xl md:text-4xl font-headline tracking-tight">
-              {user ? (language === 'zh' ? `${dict.dashboard.welcome}，${welcomeName}！` : `${dict.dashboard.welcome}, ${welcomeName}!`) : dict.nav.dashboard}
-            </h1>
-            <div className="text-muted-foreground font-medium text-sm md:text-base">{dict.dashboard.subtitle}</div>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {currentPlayer?.isAdmin && (
-              <>
-                <Button variant="outline" size="sm" className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold text-xs" onClick={handleSeedData}>
-                  <Database className="mr-2 h-3.5 w-3.5" /> {dict.dashboard.seedData}
+        {user && (
+          <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-1">
+              <h1 className="text-2xl md:text-4xl font-headline tracking-tight">
+                {language === 'zh' ? `${dict.dashboard.welcome}，${welcomeName}！` : `${dict.dashboard.welcome}, ${welcomeName}!`}
+              </h1>
+              {currentPlayer && (
+                <div className="text-muted-foreground font-medium text-sm md:text-base">{dict.dashboard.subtitle}</div>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {currentPlayer?.isAdmin && (
+                <>
+                  <Button variant="outline" size="sm" className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold text-xs" onClick={handleSeedData}>
+                    <Database className="mr-2 h-3.5 w-3.5" /> {dict.dashboard.seedData}
+                  </Button>
+                  <Button variant="outline" size="sm" className="border-dashed border-destructive text-destructive hover:bg-destructive/5 font-bold text-xs" onClick={handleToggleAdminRole}>
+                    <UserRound className="mr-2 h-3.5 w-3.5" /> {dict.dashboard.testAsPlayer}
+                  </Button>
+                </>
+              )}
+              {(!currentPlayer || !currentPlayer.isAdmin) && (isSuperAdminEmailCheck || isFirstRunCheck === true) && (
+                <Button variant="outline" size="sm" className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold text-xs" onClick={handleClaimAdmin} disabled={isClaimingAdmin}>
+                  {isClaimingAdmin ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="mr-2 h-3.5 w-3.5" />}
+                  {dict.dashboard.claimAdmin}
                 </Button>
-                <Button variant="outline" size="sm" className="border-dashed border-destructive text-destructive hover:bg-destructive/5 font-bold text-xs" onClick={handleToggleAdminRole}>
-                  <UserRound className="mr-2 h-3.5 w-3.5" /> {dict.dashboard.testAsPlayer}
-                </Button>
-              </>
-            )}
-            {user && (!currentPlayer || !currentPlayer.isAdmin) && (isSuperAdminEmailCheck || isFirstRunCheck === true) && (
-              <Button variant="outline" size="sm" className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold text-xs" onClick={handleClaimAdmin} disabled={isClaimingAdmin}>
-                {isClaimingAdmin ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="mr-2 h-3.5 w-3.5" />}
-                {dict.dashboard.claimAdmin}
-              </Button>
-            )}
-          </div>
-        </header>
+              )}
+            </div>
+          </header>
+        )}
 
         {!user ? (
           <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-muted/20 rounded-3xl border border-dashed border-primary/20">
@@ -611,7 +615,6 @@ export default function DashboardPage() {
         ) : (
           <div className="space-y-8">
             {!currentPlayer ? (
-              /* CLEAN LANDING: Only Claim Profile or Pending message */
               <div className="max-w-3xl mx-auto space-y-8 py-8">
                 {preEnteredProfile ? (
                   <Card className="border-primary border-2 bg-primary/5 shadow-xl">
@@ -656,7 +659,6 @@ export default function DashboardPage() {
                 )}
               </div>
             ) : (
-              /* FULL DASHBOARD: Only visible after claiming profile */
               <div className="grid gap-8 lg:grid-cols-4">
                 <div className="lg:col-span-3 space-y-8">
                   <section>
