@@ -8,7 +8,7 @@ import { collection, query, where, orderBy } from "firebase/firestore";
 import { Game, Attendance } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MapPin, CalendarDays, Banknote, UserRound, History, Loader2 } from "lucide-react";
+import { Clock, MapPin, CalendarDays, Banknote, UserRound, History, Loader2, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { KitBadge } from "@/app/page";
 
@@ -18,7 +18,6 @@ export default function AttendancePage() {
   const { dict, language } = useTranslation();
 
   // 1. Get user's confirmed attendance records from their personal collection
-  // This is much simpler and more robust query than collectionGroup
   const confirmedAttendanceQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
@@ -117,6 +116,13 @@ export default function AttendancePage() {
               <div className="flex items-start gap-2 text-[11px] font-bold p-3 rounded-xl bg-primary/5 border border-primary/10 text-primary">
                 <Banknote className="h-4 w-4 shrink-0" />
                 <span className="whitespace-pre-wrap">{game.fee}</span>
+              </div>
+            )}
+
+            {game.additionalDetails && (
+              <div className="flex items-start gap-2 text-[11px] text-muted-foreground mt-3 bg-muted/20 p-3 rounded-xl border border-dashed">
+                <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-destructive" />
+                <p className="leading-relaxed whitespace-pre-wrap">{game.additionalDetails}</p>
               </div>
             )}
           </div>
