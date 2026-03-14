@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { MainNav } from "@/components/layout/main-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,7 +36,7 @@ import { Game, AttendanceStatus, Player, Attendance, Team } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, useAuth } from "@/firebase";
-import { collection, query, orderBy, doc, setDoc, where, deleteDoc, getDocs } from "firebase/firestore";
+import { collection, query, orderBy, doc, setDoc, where, deleteDoc, getDocs, limit } from "firebase/firestore";
 import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
 import Link from "next/link";
 import {
@@ -71,6 +71,18 @@ function AttendanceContent() {
   const { user, isUserLoading } = useUser();
   const { language, dict } = useTranslation();
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isFirstRunCheck, setIsFirstRunCheck] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      const playersRef = collection(firestore, "players");
+      getDocs(query(playersRef, where("id", "!=", ""))).then(snapshot => {
+        setIsFirstRunCheck(snapshot.empty);
+      });
+    } else {
+      setIsFirstRunCheck(false);
+    }
+  }, [user, firestore]);
 
   const handleLogin = async () => {
     if (isLoggingIn) return;
@@ -80,13 +92,11 @@ function AttendanceContent() {
     try {
       const result = await signInWithPopup(auth, provider);
 
-      // Strict Email Validation Check
       if (result.user.email) {
         const playersRef = collection(firestore, "players");
         const q = query(playersRef, where("email", "==", result.user.email));
         const snapshot = await getDocs(q);
 
-        // Allow first user exception if database is empty
         const allPlayersSnapshot = await getDocs(query(playersRef, where("id", "!=", "")));
         const isFirstRun = allPlayersSnapshot.empty;
 
@@ -101,7 +111,7 @@ function AttendanceContent() {
         }
       }
 
-      router.push('/'); // Force landing page after login
+      router.push('/');
     } catch (error: any) {
       if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
         toast({
@@ -115,22 +125,33 @@ function AttendanceContent() {
     }
   };
 
+  const playerRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(firestore, "players", user.uid);
+  }, [firestore, user]);
+  const { data: currentPlayer, isLoading: isProfileLoading } = useDoc<Player>(playerRef);
+
+  const emailMatchQuery = useMemoFirebase(() => {
+    if (!user || currentPlayer) return null;
+    return query(collection(firestore, "players"), where("email", "==", user.email), limit(1));
+  }, [firestore, user, currentPlayer]);
+  const { data: matchedProfiles, isLoading: isMatchedProfilesLoading } = useCollection<Player>(emailMatchQuery);
+
   const teamsQuery = useMemoFirebase(() => {
-    if (isUserLoading || !user) return null;
+    if (!user) return null;
     return collection(firestore, "teams");
-  }, [firestore, user, isUserLoading]);
+  }, [firestore, user]);
   const { data: teams } = useCollection<Team>(teamsQuery);
 
   const gameRef = useMemoFirebase(() => {
-    if (isUserLoading || !user || !gameId) return null;
+    if (!user || !gameId) return null;
     return doc(firestore, "games", gameId);
-  }, [firestore, user, isUserLoading, gameId]);
+  }, [firestore, user, gameId]);
   
   const { data: specificGame, isLoading: isGameLoading } = useDoc<Game>(gameRef);
 
   const gamesQuery = useMemoFirebase(() => {
-    if (isUserLoading || !user || gameId) return null;
-    // Use local time for strictly filtering past games
+    if (!user || gameId) return null;
     const now = new Date();
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     
@@ -139,7 +160,7 @@ function AttendanceContent() {
       where("date", ">=", todayStr),
       orderBy("date", "asc")
     );
-  }, [firestore, user, gameId, isUserLoading]);
+  }, [firestore, user, gameId]);
 
   const { data: games, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
 
@@ -192,12 +213,29 @@ function AttendanceContent() {
     return date.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' });
   };
 
-  if (isUserLoading) {
+  // Rigorous Guard logic
+  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true);
+  const isAuthChecking = !!user && !isAuthorized;
+
+  useEffect(() => {
+    if (user && !isProfileLoading && !isMatchedProfilesLoading && isFirstRunCheck === false && !isAuthorized) {
+      signOut(auth).then(() => {
+        toast({
+          variant: "destructive",
+          title: dict.nav.unauthorizedEmailTitle,
+          description: dict.nav.unauthorizedEmailDesc,
+        });
+      });
+    }
+  }, [user, isAuthorized, isProfileLoading, isMatchedProfilesLoading, isFirstRunCheck, auth, toast, dict.nav]);
+
+  if (isUserLoading || isAuthChecking) {
     return (
       <div className="min-h-screen bg-background">
         <MainNav />
         <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <div className="mt-4 text-muted-foreground font-medium">{dict.common.loading}</div>
         </main>
       </div>
     );
@@ -224,7 +262,7 @@ function AttendanceContent() {
               <Info className="h-4 w-4" /> {dict.attendance.deploymentNoteTitle}
             </p>
             <p className="text-[10px] text-muted-foreground leading-relaxed">
-              If the Google Sign-In window does not appear, please ensure your App Hosting domain is added to the <strong>"Authorized Domains"</strong> list in the Firebase Console under <em>Authentication &gt; Settings</em>.
+              {dict.attendance.deploymentNoteDesc}
             </p>
           </div>
         </main>

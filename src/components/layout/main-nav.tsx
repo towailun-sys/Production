@@ -62,6 +62,8 @@ export function MainNav() {
       getDocs(query(playersRef, where("id", "!=", ""))).then(snapshot => {
         setIsFirstRun(snapshot.empty);
       });
+    } else {
+      setIsFirstRun(false);
     }
   }, [user, firestore]);
 
@@ -76,7 +78,6 @@ export function MainNav() {
     return query(collection(firestore, "players"), where("email", "==", user.email), limit(1));
   }, [firestore, user, currentPlayer]);
   const { data: matchedProfiles, isLoading: isMatchedProfilesLoading } = useCollection<Player>(emailMatchQuery);
-  const preEnteredProfile = matchedProfiles?.[0];
 
   const handleLogin = async () => {
     if (isLoggingIn) return;
@@ -169,9 +170,9 @@ export function MainNav() {
     },
   ];
 
-  // GUARD: Only show routes if user is authenticated AND authorized (profile exists or first run)
-  const isAuthorized = user && (!!currentPlayer || !!preEnteredProfile || isFirstRun === true);
-  const isAuthChecking = user && (isProfileLoading || isMatchedProfilesLoading || isFirstRun === null);
+  // GUARD: Rigorous check to avoid nav flash
+  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRun === true);
+  const isAuthChecking = !!user && !isAuthorized;
 
   const routes = (isAuthorized && !isAuthChecking) ? baseRoutes.filter(route => {
     if (route.adminOnly) {

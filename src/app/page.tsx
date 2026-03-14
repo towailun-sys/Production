@@ -446,11 +446,14 @@ export default function DashboardPage() {
     }
   };
 
-  // REQUISITE: Automatic Sign-out for Unauthorized Sessions
+  // REQUISITE: Synchronous Authorization Protection to avoid content flash
+  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true);
+  const isCheckingAuth = !!user && !isAuthorized;
+
+  // AGGRESSIVE: Automatic Sign-out for Unauthorized Sessions
   useEffect(() => {
     if (user && !isProfileLoading && !isMatchedProfilesLoading && isFirstRunCheck === false) {
-      // If profile is NOT found AND it's not a first-run setup AND no matched profile to claim
-      if (!currentPlayer && !preEnteredProfile) {
+      if (!currentPlayer && (!matchedProfiles || matchedProfiles.length === 0)) {
         signOut(auth).then(() => {
           toast({
             variant: "destructive",
@@ -460,7 +463,7 @@ export default function DashboardPage() {
         });
       }
     }
-  }, [user, currentPlayer, preEnteredProfile, isFirstRunCheck, isProfileLoading, isMatchedProfilesLoading, auth, toast, dict.nav]);
+  }, [user, currentPlayer, matchedProfiles, isFirstRunCheck, isProfileLoading, isMatchedProfilesLoading, auth, toast, dict.nav]);
 
   const handleClaimProfile = () => {
     if (!user || !preEnteredProfile) return;
@@ -591,11 +594,7 @@ export default function DashboardPage() {
     return language === 'zh' ? team.nameZh : team.name;
   };
 
-  // Block rendering until authorization status is confirmed
-  const isAuthChecking = user && (isProfileLoading || isMatchedProfilesLoading || isFirstRunCheck === null);
-  const isUnauthorizedFlashCheck = user && !currentPlayer && !preEnteredProfile && isFirstRunCheck === false;
-
-  if (isUserLoading || isAuthChecking || isUnauthorizedFlashCheck) {
+  if (isUserLoading || isCheckingAuth) {
     return (
       <div className="min-h-screen bg-background pb-12 flex flex-col items-center justify-center">
         <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
