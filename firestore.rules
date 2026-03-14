@@ -22,44 +22,40 @@ service cloud.firestore {
 
     // --- Collection Rules ---
 
-    // Global Read: Allow all signed-in squad members to read data for transparency and roster management.
-    match /{path=**} {
-      allow read, list: if isSignedIn();
-    }
-
-    // Explicit Collection Group Rule: Required for queries across all 'attendanceRecords' subcollections.
-    match /{path=**}/attendanceRecords/{recordId} {
-      allow read, list: if isSignedIn();
-    }
-
-    // Restricted Writes: Only owners or admins can modify data.
+    // Root-level allow for signed-in users
     match /players/{playerId} {
+      allow read, list: if isSignedIn();
       allow write: if isOwner(playerId) || isAdmin();
     }
 
+    match /games/{gameId} {
+      allow read, list: if isSignedIn();
+      allow write: if isAdmin();
+
+      match /attendanceRecords/{playerId} {
+        allow read, list: if isSignedIn();
+        allow write: if isOwner(playerId) || isAdmin();
+      }
+    }
+
     match /teams/{teamId} {
+      allow read, list: if isSignedIn();
       allow write: if isAdmin();
     }
 
     match /kits/{kitId} {
+      allow read, list: if isSignedIn();
       allow write: if isAdmin();
-    }
-
-    match /games/{gameId} {
-      allow write: if isAdmin();
-    }
-
-    match /games/{gameId}/attendanceRecords/{playerId} {
-      allow write: if isOwner(playerId) || isAdmin();
     }
 
     match /users/{userId}/game_attendances/{attendanceId} {
-      allow write: if (isOwner(userId) && request.resource.data.playerId == userId) || isAdmin();
-      allow delete: if isOwner(userId) || isAdmin();
+      allow read, list, write: if isOwner(userId) || isAdmin();
     }
 
-    match /roles_admin/{userId} {
-      allow write: if false; 
+    // --- Collection Group Rules ---
+    // Required for finding a specific player's attendance across all games.
+    match /{path=**}/attendanceRecords/{recordId} {
+      allow read, list: if isSignedIn();
     }
   }
 }

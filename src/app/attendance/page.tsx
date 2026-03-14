@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { MainNav } from "@/components/layout/main-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,10 @@ import {
   UserPlus,
   LogIn,
   CalendarDays,
-  Shirt
+  Shirt,
+  Banknote,
+  Info,
+  UserRound
 } from "lucide-react";
 import { Game, AttendanceStatus, Player, Attendance, Team, Kit } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -114,13 +117,7 @@ function AttendanceContent() {
 
   const gamesQuery = useMemoFirebase(() => {
     if (!isAuthorized || isAuthChecking) return null;
-    const now = new Date();
-    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    return query(
-      collection(firestore, "games"), 
-      where("date", ">=", todayStr),
-      orderBy("date", "asc")
-    );
+    return collection(firestore, "games");
   }, [firestore, isAuthorized, isAuthChecking]);
   const { data: allGames, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
 
@@ -300,8 +297,8 @@ function AttendanceContent() {
     );
   }
 
-  const joinedGameIds = new Set(userAttendances?.map(a => a.gameId) || []);
-  const joinedGames = (allGames || []).filter(g => joinedGameIds.has(g.id));
+  const confirmedGameIds = new Set(userAttendances?.map(a => a.gameId) || []);
+  const confirmedGames = (allGames || []).filter(g => confirmedGameIds.has(g.id));
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -318,29 +315,39 @@ function AttendanceContent() {
             ))
           ) : (
             <div className="grid gap-6">
-              {joinedGames.map((game) => (
+              {confirmedGames.map((game) => (
                 <Card key={game.id} className="border-none shadow-md overflow-hidden border-l-4 border-primary rounded-2xl">
-                  <CardContent className="p-5 flex flex-col md:flex-row items-center gap-6">
-                    <div className="flex flex-col items-center justify-center bg-muted/30 rounded-xl px-4 py-2 min-w-[80px]">
-                       <span className="text-[10px] font-bold text-muted-foreground uppercase">{new Date(game.date).toLocaleString('default', { month: 'short' })}</span>
-                       <span className="text-2xl font-bold font-headline leading-none">{new Date(game.date).getDate()}</span>
+                  <CardContent className="p-6 flex flex-col md:flex-row items-start gap-6">
+                    <div className="flex flex-col items-center justify-center bg-muted/30 rounded-xl px-4 py-4 min-w-[100px] border">
+                       <span className="text-xs font-bold text-muted-foreground uppercase mb-1">{new Date(game.date).toLocaleString('default', { month: 'short' })}</span>
+                       <span className="text-3xl font-bold font-headline text-primary leading-none">{new Date(game.date).getDate()}</span>
+                       <span className="text-[10px] font-bold text-muted-foreground uppercase mt-1">{new Date(game.date).toLocaleString('default', { weekday: 'short' })}</span>
                     </div>
-                    <div className="flex-1 space-y-3">
+                    <div className="flex-1 space-y-4">
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge className="bg-primary text-white font-bold text-[10px]">{getTeamName(game.team)}</Badge>
                         <Badge variant="outline" className="font-bold text-[10px]">{dict.common.gameTypes[game.type] || game.type}</Badge>
                         <KitBadge kitId={game.kitColors} />
+                        <KitBadge kitId={game.alternativeKitColors} isAlternative />
                       </div>
-                      <h3 className="font-headline font-bold text-lg leading-tight">
+                      <h3 className="font-headline font-bold text-xl leading-tight">
                         {game.type === 'Training' || game.type === 'Internal' ? dict.common.gameTypes[game.type] : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs md:text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1.5 font-medium"><Clock className="h-4 w-4 text-primary" /> {game.startTime} - {game.endTime}</span>
-                        <span className="flex items-center gap-1.5 font-medium"><MapPin className="h-4 w-4 text-primary" /> {game.location}</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-8 text-sm text-muted-foreground">
+                        <span className="flex items-center gap-2 font-medium"><Clock className="h-4 w-4 text-primary" /> {game.startTime} - {game.endTime}</span>
+                        <span className="flex items-center gap-2 font-medium"><MapPin className="h-4 w-4 text-primary" /> {game.location}</span>
+                        {game.coach && <span className="flex items-center gap-2 font-medium"><UserRound className="h-4 w-4 text-primary" /> {game.coach}</span>}
+                        {game.fee && <span className="flex items-center gap-2 font-medium"><Banknote className="h-4 w-4 text-primary" /> {game.fee}</span>}
                       </div>
+                      {game.additionalDetails && (
+                        <div className="bg-primary/5 p-3 rounded-xl border border-dashed border-primary/20 flex gap-2">
+                           <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                           <p className="text-xs text-muted-foreground leading-relaxed whitespace-pre-wrap">{game.additionalDetails}</p>
+                        </div>
+                      )}
                     </div>
-                    <div className="shrink-0 w-full md:w-auto flex flex-col gap-2">
-                      <Button variant="outline" size="sm" className="w-full md:w-auto font-bold border-primary text-primary hover:bg-primary/5 gap-2 h-10 px-6 rounded-xl" asChild>
+                    <div className="shrink-0 w-full md:w-auto flex flex-col gap-2 pt-2 md:pt-0">
+                      <Button variant="outline" size="sm" className="w-full md:w-auto font-bold border-primary text-primary hover:bg-primary/5 gap-2 h-11 px-6 rounded-xl" asChild>
                          <Link href={`/attendance?gameId=${game.id}`}>
                             <Users className="h-4 w-4" />
                             {dict.dashboard.viewRoster}
@@ -350,7 +357,7 @@ function AttendanceContent() {
                   </CardContent>
                 </Card>
               ))}
-              {joinedGames.length === 0 && (
+              {confirmedGames.length === 0 && (
                 <Card className="p-16 text-center border-dashed border-2 rounded-2xl flex flex-col items-center gap-4">
                   <CalendarDays className="h-12 w-12 text-muted-foreground/30" />
                   <p className="text-muted-foreground font-medium">{dict.attendance.noConfirmedFixtures}</p>
