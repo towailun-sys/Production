@@ -72,7 +72,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, doc, deleteDoc, setDoc } from "firebase/firestore";
+import { collection, doc, deleteDoc, setDoc, getDocs } from "firebase/firestore";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useTranslation } from "@/components/language-provider";
@@ -304,6 +304,7 @@ export default function PlayersPage() {
   };
 
   const handleDeletePlayer = (id: string) => {
+    // 1. Delete the primary player document
     const playerRef = doc(firestore, "players", id);
     deleteDoc(playerRef)
       .catch(async (error) => {
@@ -312,6 +313,22 @@ export default function PlayersPage() {
           operation: 'delete'
         } satisfies SecurityRuleContext));
       });
+
+    // 2. Cascade delete attendance records in all games
+    getDocs(collection(firestore, "games")).then((gamesSnapshot) => {
+      gamesSnapshot.forEach((gameDoc) => {
+        const attendanceRef = doc(firestore, "games", gameDoc.id, "attendanceRecords", id);
+        // Silently try to delete to clean up the subcollection for this specific player
+        deleteDoc(attendanceRef).catch(() => {});
+      });
+    });
+
+    // 3. Cleanup user-centric attendance path (/users/{userId}/game_attendances/{attendanceId})
+    getDocs(collection(firestore, "users", id, "game_attendances")).then((attSnapshot) => {
+      attSnapshot.forEach((attDoc) => {
+        deleteDoc(doc(firestore, "users", id, "game_attendances", attDoc.id)).catch(() => {});
+      });
+    });
 
     toast({
       title: dict.players.toasts.removing,
