@@ -87,6 +87,40 @@ const baseDict = {
     fullAccess: "Full Access View",
     teamView: (team: string) => `${team} View`
   },
+  games: {
+    title: "Fixtures",
+    subtitle: "View and manage upcoming matches and training sessions.",
+    scheduleGame: "Schedule Game",
+    manageEvent: "Manage Event",
+    toasts: {
+      missingInfo: "Missing Information",
+      missingInfoDesc: "Please fill in all required fields (date, time, location, team).",
+      saving: "Scheduling Event",
+      savingDesc: "The event is being added to the calendar.",
+      updating: "Updating Event",
+      updatingDesc: "Fixture details have been updated.",
+      removing: "Removing Event",
+      removingDesc: "The event is being removed from the calendar."
+    },
+    dialog: {
+      addTitle: "Schedule New Event",
+      editTitle: "Edit Fixture Details",
+      type: "Event Type",
+      team: "Team",
+      date: "Date",
+      start: "Start Time",
+      end: "End Time",
+      location: "Location",
+      opponent: "Opponent",
+      coach: "Coach",
+      fee: "Match Fee / Cost",
+      kit: "Kit Colors",
+      alternativeKit: "Alternative Kit",
+      details: "Additional Details",
+      create: "Create Event",
+      update: "Update Event"
+    }
+  },
   players: {
     title: "Squad Management",
     subtitle: "Manage your squad and link Google accounts.",
@@ -274,6 +308,40 @@ const zhDict: typeof baseDict = {
     otherTeam: "其他隊伍",
     fullAccess: "管理員全視角",
     teamView: (team: string) => `${team} 視角`
+  },
+  games: {
+    title: "賽程",
+    subtitle: "查看並管理即將舉行的比賽及訓練。",
+    scheduleGame: "安排賽程",
+    manageEvent: "管理活動",
+    toasts: {
+      missingInfo: "資料不全",
+      missingInfoDesc: "請填寫所有必填欄位（日期、時間、地點、隊伍）。",
+      saving: "正在安排活動",
+      savingDesc: "活動正在添加到日曆中。",
+      updating: "正在更新活動",
+      updatingDesc: "賽程詳情已更新。",
+      removing: "正在移除活動",
+      removingDesc: "活動正從日曆中移除。"
+    },
+    dialog: {
+      addTitle: "安排新活動",
+      editTitle: "編輯賽程詳情",
+      type: "活動類型",
+      team: "隊伍",
+      date: "日期",
+      start: "開始時間",
+      end: "結束時間",
+      location: "地點",
+      opponent: "對手",
+      coach: "教練",
+      fee: "費用",
+      kit: "球衣顏色",
+      alternativeKit: "替換球衣顏色",
+      details: "額外詳情",
+      create: "建立活動",
+      update: "更新活動"
+    }
   },
   players: {
     title: "球員管理",
