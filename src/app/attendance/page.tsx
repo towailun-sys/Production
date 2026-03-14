@@ -309,112 +309,49 @@ function AttendanceContent() {
               <Card key={i} className="h-48 animate-pulse bg-muted/50 rounded-2xl" />
             ))
           ) : (
-            <ConfirmedAttendanceList games={games || []} userId={user.uid} teams={teams || []} />
+            <div className="grid gap-6">
+              {(games || []).map((game) => (
+                <Card key={game.id} className="border-none shadow-md overflow-hidden border-l-4 border-primary rounded-2xl">
+                  <CardContent className="p-5 flex flex-col md:flex-row items-center gap-6">
+                    <div className="flex flex-col items-center justify-center bg-muted/30 rounded-xl px-4 py-2 min-w-[80px]">
+                       <span className="text-[10px] font-bold text-muted-foreground uppercase">{new Date(game.date).toLocaleString('default', { month: 'short' })}</span>
+                       <span className="text-2xl font-bold font-headline leading-none">{new Date(game.date).getDate()}</span>
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Badge className="bg-primary text-white font-bold text-[10px]">{getTeamName(game.team)}</Badge>
+                        <Badge variant="outline" className="font-bold text-[10px]">{dict.common.gameTypes[game.type] || game.type}</Badge>
+                      </div>
+                      <h3 className="font-headline font-bold text-lg leading-tight">
+                        {game.type === 'Training' || game.type === 'Internal' ? dict.common.gameTypes[game.type] : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {game.startTime} - {game.endTime}</span>
+                        <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {game.location}</span>
+                      </div>
+                    </div>
+                    <div className="shrink-0 w-full md:w-auto">
+                      <Button variant="outline" size="sm" className="w-full md:w-auto font-bold border-primary text-primary hover:bg-primary/5 gap-2 h-10 px-6 rounded-xl" asChild>
+                         <Link href={`/attendance?gameId=${game.id}`}>
+                            <Users className="h-4 w-4" />
+                            {dict.dashboard.viewRoster}
+                         </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+              {(games || []).length === 0 && (
+                <Card className="p-16 text-center border-dashed border-2 rounded-2xl flex flex-col items-center gap-4">
+                  <CalendarDays className="h-12 w-12 text-muted-foreground/30" />
+                  <p className="text-muted-foreground font-medium">{dict.dashboard.noGames}</p>
+                </Card>
+              )}
+            </div>
           )}
         </div>
       </main>
     </div>
-  );
-}
-
-export default function AttendancePage() {
-  return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-background">
-        <MainNav />
-        <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        </main>
-      </div>
-    }>
-      <AttendanceContent />
-    </Suspense>
-  );
-}
-
-function ConfirmedAttendanceList({ games, userId, teams }: { games: Game[], userId: string, teams: Team[] }) {
-  const { dict } = useTranslation();
-  
-  return (
-    <div className="space-y-6">
-      <div className="grid gap-6">
-        {games.map((game) => (
-          <ConfirmedGameItem key={game.id} game={game} userId={userId} teams={teams} />
-        ))}
-      </div>
-      {/* If no games end up being rendered, show a placeholder */}
-      <div className="hidden only:block">
-        <Card className="p-16 text-center border-dashed border-2 rounded-2xl flex flex-col items-center gap-4">
-          <Users className="h-12 w-12 text-muted-foreground/30" />
-          <p className="text-muted-foreground font-medium">{dict.attendance.noConfirmedFixtures}</p>
-        </Card>
-      </div>
-    </div>
-  );
-}
-
-function ConfirmedGameItem({ game, userId, teams }: { game: Game, userId: string, teams: Team[] }) {
-  const firestore = useFirestore();
-  const { dict, language } = useTranslation();
-  
-  const attendanceRef = useMemoFirebase(() => doc(firestore, "games", game.id, "attendanceRecords", userId), [firestore, game.id, userId]);
-  const { data: attendance, isLoading } = useDoc<Attendance>(attendanceRef);
-
-  if (isLoading) return <Card className="h-32 animate-pulse bg-muted/50 rounded-2xl" />;
-  if (attendance?.status !== 'Confirmed') return null;
-
-  const getTeamName = (teamId: string) => {
-    if (teamId === 'All') return dict.common.teams.All;
-    const team = teams?.find(t => t.id === teamId);
-    if (!team) return teamId;
-    return language === 'zh' ? team.nameZh : team.name;
-  };
-
-  const formatGameDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    if (language === 'zh') {
-      const weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
-      return `${date.getMonth() + 1}月${date.getDate()}日 ${weekdays[date.getDay()]}`;
-    }
-    return date.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' });
-  };
-
-  return (
-    <Card className="border-none shadow-md overflow-hidden border-l-4 border-emerald-500 rounded-2xl transition-all hover:shadow-lg">
-      <CardContent className="p-5 flex flex-col md:flex-row items-center gap-6">
-        <div className="flex flex-col items-center justify-center bg-emerald-50 rounded-xl px-4 py-2 min-w-[80px] border border-emerald-100">
-           <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{new Date(game.date).toLocaleString('default', { month: 'short' })}</span>
-           <span className="text-2xl font-bold font-headline text-emerald-700 leading-none">{new Date(game.date).getDate()}</span>
-        </div>
-        <div className="flex-1 text-center md:text-left space-y-2">
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-            <Badge className="bg-emerald-500 text-white font-bold text-[10px] uppercase tracking-wider border-none">
-              {getTeamName(game.team)}
-            </Badge>
-            <Badge variant="outline" className="font-bold text-[10px] border-emerald-200 text-emerald-600">
-              {dict.common.gameTypes[game.type] || game.type}
-            </Badge>
-          </div>
-          <h3 className="font-headline font-bold text-lg leading-tight">
-            {game.type === 'Training' || game.type === 'Internal' 
-                ? dict.common.gameTypes[game.type] 
-                : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
-          </h3>
-          <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-1 text-xs text-muted-foreground font-medium">
-            <span className="flex items-center gap-1.5"><Clock className="h-3.5 w-3.5 text-emerald-500" /> {game.startTime} - {game.endTime}</span>
-            <span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-emerald-500" /> {game.location}</span>
-          </div>
-        </div>
-        <div className="shrink-0 w-full md:w-auto">
-          <Button variant="outline" size="sm" className="w-full md:w-auto font-bold border-emerald-500 text-emerald-600 hover:bg-emerald-50 gap-2 h-10 px-6 rounded-xl" asChild>
-             <Link href={`/attendance?gameId=${game.id}`}>
-                <Users className="h-4 w-4" />
-                {dict.dashboard.viewRoster}
-             </Link>
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 
@@ -615,5 +552,20 @@ function GameRosterList({
         </Dialog>
       </div>
     </div>
+  );
+}
+
+export default function AttendancePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background">
+        <MainNav />
+        <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </main>
+      </div>
+    }>
+      <AttendanceContent />
+    </Suspense>
   );
 }
