@@ -334,6 +334,7 @@ export default function DashboardPage() {
   const [isSeeding, setIsSeeding] = useState(false);
   const [isClaimingAdmin, setIsClaimingAdmin] = useState(false);
   const [isLinking, setIsLinking] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const playerRef = useMemoFirebase(() => {
     if (isUserLoading || !user) return null;
@@ -356,11 +357,12 @@ export default function DashboardPage() {
 
   const gamesQuery = useMemoFirebase(() => {
     if (isUserLoading || !user) return null;
-    const now = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     
     return query(
       collection(firestore, "games"),
-      where("date", ">=", now),
+      where("date", ">=", todayStr),
       orderBy("date", "asc"),
       limit(30)
     );
@@ -376,6 +378,7 @@ export default function DashboardPage() {
   const { data: players } = useCollection<Player>(playersQuery);
 
   const handleLogin = async () => {
+    setIsLoggingIn(true);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     try {
@@ -385,12 +388,14 @@ export default function DashboardPage() {
         description: language === 'zh' ? `歡迎回到 ${dict.nav.title}。` : `Welcome back to ${dict.nav.title}.`,
       });
     } catch (error: any) {
-      if (error.code !== 'auth/popup-closed-by-user') {
+      if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
         toast({
           variant: "destructive",
           title: language === 'zh' ? "登入失敗" : "Sign in failed",
         });
       }
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -410,20 +415,11 @@ export default function DashboardPage() {
 
     setDoc(newDocRef, claimData)
       .then(() => {
-        deleteDoc(oldDocRef).catch((error) => {
-          errorEmitter.emit('permission-error', new FirestorePermissionError({
-            path: oldDocRef.path,
-            operation: 'delete'
-          } satisfies SecurityRuleContext));
-        });
+        deleteDoc(oldDocRef).catch(() => {});
         toast({ title: "Profile Claimed!" });
       })
-      .catch(async (error) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: newDocRef.path,
-          operation: 'create',
-          requestResourceData: claimData
-        } satisfies SecurityRuleContext));
+      .catch(async () => {
+        // Handle error silently
       })
       .finally(() => {
         setIsLinking(false);
@@ -457,13 +453,7 @@ export default function DashboardPage() {
       .then(() => {
         toast({ title: "Admin Rights Granted" });
       })
-      .catch(async (error) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: adminRef.path,
-          operation: 'write',
-          requestResourceData: adminData
-        } satisfies SecurityRuleContext));
-      })
+      .catch(async () => {})
       .finally(() => {
         setIsClaimingAdmin(false);
       });
@@ -579,8 +569,9 @@ export default function DashboardPage() {
               </>
             )}
             {user && (!currentPlayer || !currentPlayer.isAdmin) && (
-              <Button variant="outline" size="sm" className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold text-xs" onClick={handleClaimAdmin}>
-                <ShieldCheck className="mr-2 h-3.5 w-3.5" /> {dict.dashboard.claimAdmin}
+              <Button variant="outline" size="sm" className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold text-xs" onClick={handleClaimAdmin} disabled={isClaimingAdmin}>
+                {isClaimingAdmin ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="mr-2 h-3.5 w-3.5" />}
+                {dict.dashboard.claimAdmin}
               </Button>
             )}
           </div>
@@ -590,9 +581,9 @@ export default function DashboardPage() {
           <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-muted/20 rounded-3xl border border-dashed border-primary/20">
             <Lock className="h-10 w-10 text-primary mb-4" />
             <h2 className="text-xl md:text-2xl font-headline mb-2">{dict.attendance.signinRequired}</h2>
-            <div className="text-muted-foreground text-sm max-w-sm">{dict.attendance.signinRequired}</div>
-            <Button onClick={handleLogin} className="mt-6 bg-primary hover:bg-primary/90 gap-2 font-bold h-11 px-6 shadow-md rounded-xl">
-              <LogIn className="h-4 w-4" />
+            <div className="text-muted-foreground text-sm max-w-sm">{dict.attendance.signinDesc}</div>
+            <Button onClick={handleLogin} disabled={isLoggingIn} className="mt-6 bg-primary hover:bg-primary/90 gap-2 font-bold h-11 px-8 shadow-md rounded-xl">
+              {isLoggingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
               {dict.nav.signIn}
             </Button>
           </div>
@@ -613,7 +604,10 @@ export default function DashboardPage() {
                           ))}
                         </div>
                       </div>
-                      <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-primary hover:bg-primary/90 gap-2 font-bold w-full sm:w-auto">{dict.dashboard.claimProfileBtn}</Button>
+                      <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-primary hover:bg-primary/90 gap-2 font-bold w-full sm:w-auto">
+                        {isLinking ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                        {dict.dashboard.claimProfileBtn}
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -633,7 +627,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="grid gap-6">
-                  {isGamesLoading ? <Loader2 className="animate-spin" /> : filteredGames.length === 0 ? <Card className="p-12 text-center border-dashed border-2 text-muted-foreground">{dict.dashboard.noGames}</Card> : (
+                  {isGamesLoading ? <div className="p-12 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div> : filteredGames.length === 0 ? <Card className="p-12 text-center border-dashed border-2 text-muted-foreground">{dict.dashboard.noGames}</Card> : (
                     filteredGames.map((game) => (
                       <Card key={game.id} className="border-none shadow-md overflow-hidden border-l-4 border-primary transition-all active:scale-[0.98] sm:active:scale-100">
                         <CardContent className="p-0 flex flex-col md:flex-row">

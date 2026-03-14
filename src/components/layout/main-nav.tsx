@@ -13,7 +13,8 @@ import {
   X,
   LogOut,
   LogIn,
-  Languages
+  Languages,
+  Loader2
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -36,6 +37,7 @@ export function MainNav() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const { toast } = useToast();
@@ -50,7 +52,7 @@ export function MainNav() {
   }, [pathname]);
 
   const handleLogin = async () => {
-    setIsOpen(false);
+    setIsLoggingIn(true);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({
       prompt: 'select_account'
@@ -58,19 +60,21 @@ export function MainNav() {
     
     try {
       await signInWithPopup(auth, provider);
+      setIsOpen(false);
       toast({
         title: language === 'zh' ? "登入成功" : "Signed in successfully",
         description: language === 'zh' ? `歡迎回到 ${dict.nav.title}。` : `Welcome back to ${dict.nav.title}.`,
       });
     } catch (error: any) {
-      if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
-        return;
+      if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+        toast({
+          variant: "destructive",
+          title: language === 'zh' ? "登入失敗" : "Sign in failed",
+          description: error.message || "Could not complete Google authentication.",
+        });
       }
-      toast({
-        variant: "destructive",
-        title: language === 'zh' ? "登入失敗" : "Sign in failed",
-        description: error.message || "Could not complete Google authentication.",
-      });
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -114,6 +118,10 @@ export function MainNav() {
     },
   ];
 
+  if (!mounted) return (
+    <nav className="sticky top-0 z-50 w-full border-b bg-primary h-16 shadow-lg" />
+  );
+
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-primary text-primary-foreground shadow-lg">
       <div className="container mx-auto px-4 sm:px-6">
@@ -140,7 +148,7 @@ export function MainNav() {
           </Link>
 
           <div className="hidden md:flex items-center space-x-6">
-            {mounted && routes.map((route) => (
+            {routes.map((route) => (
               <Link
                 key={route.href}
                 href={route.href}
@@ -159,7 +167,7 @@ export function MainNav() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="text-primary-foreground hover:text-accent hover:bg-white/10 gap-2 font-bold h-9 px-3">
                     <Languages className="h-4 w-4" />
-                    {mounted ? (language === 'en' ? 'EN' : 'ZH') : '...'}
+                    {language === 'en' ? 'EN' : 'ZH'}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
@@ -202,8 +210,14 @@ export function MainNav() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button onClick={handleLogin} variant="outline" size="sm" className="bg-white text-primary hover:bg-accent hover:text-white border-none font-bold gap-2 h-9 px-4">
-                  <LogIn className="h-4 w-4" />
+                <Button 
+                  onClick={handleLogin} 
+                  variant="outline" 
+                  size="sm" 
+                  disabled={isLoggingIn}
+                  className="bg-white text-primary hover:bg-accent hover:text-white border-none font-bold gap-2 h-9 px-4"
+                >
+                  {isLoggingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
                   {dict.nav.signIn}
                 </Button>
               )}
@@ -242,7 +256,7 @@ export function MainNav() {
       {isOpen && (
         <div className="md:hidden border-t bg-primary animate-in slide-in-from-top-4 duration-300 shadow-2xl pb-6">
           <div className="space-y-1.5 px-4 pt-4">
-            {mounted && routes.map((route) => (
+            {routes.map((route) => (
               <Link
                 key={route.href}
                 href={route.href}
@@ -257,8 +271,13 @@ export function MainNav() {
             ))}
             <div className="pt-4 border-t border-white/10 mt-4">
               {!isUserLoading && !user && (
-                <Button onClick={handleLogin} variant="outline" className="w-full bg-white text-primary border-none font-bold h-12 text-base rounded-xl active:scale-[0.98]">
-                  <LogIn className="mr-2 h-5 w-5" />
+                <Button 
+                  onClick={handleLogin} 
+                  variant="outline" 
+                  disabled={isLoggingIn}
+                  className="w-full bg-white text-primary border-none font-bold h-12 text-base rounded-xl active:scale-[0.98]"
+                >
+                  {isLoggingIn ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
                   {dict.nav.signIn}
                 </Button>
               )}

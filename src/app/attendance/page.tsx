@@ -29,12 +29,14 @@ import {
   UserRound,
   Banknote,
   UserPlus,
+  LogIn
 } from "lucide-react";
 import { Game, AttendanceStatus, Player, Attendance, Team } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
-import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
+import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, useAuth } from "@/firebase";
 import { collection, query, orderBy, doc, setDoc, where, deleteDoc } from "firebase/firestore";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -63,9 +65,24 @@ export default function AttendancePage() {
   const searchParams = useSearchParams();
   const gameId = searchParams.get("gameId");
   const { toast } = useToast();
+  const auth = useAuth();
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
   const { language, dict } = useTranslation();
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  const handleLogin = async () => {
+    setIsLoggingIn(true);
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    try {
+      await signInWithPopup(auth, provider);
+    } catch (error) {
+      // Quietly handle cancellation
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
 
   const teamsQuery = useMemoFirebase(() => {
     if (isUserLoading || !user) return null;
@@ -82,10 +99,13 @@ export default function AttendancePage() {
 
   const gamesQuery = useMemoFirebase(() => {
     if (isUserLoading || !user || gameId) return null;
-    const today = new Date().toISOString().split('T')[0];
+    // Use local time for strictly filtering past games
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    
     return query(
       collection(firestore, "games"), 
-      where("date", ">=", today),
+      where("date", ">=", todayStr),
       orderBy("date", "asc")
     );
   }, [firestore, user, gameId, isUserLoading]);
@@ -162,8 +182,12 @@ export default function AttendancePage() {
           </div>
           <h1 className="text-2xl md:text-3xl font-headline mb-4">{dict.attendance.signinRequired}</h1>
           <p className="text-muted-foreground max-w-md mb-8 text-sm md:text-base">
-            {dict.attendance.signinRequired}
+            {dict.attendance.signinDesc}
           </p>
+          <Button onClick={handleLogin} disabled={isLoggingIn} className="bg-primary hover:bg-primary/90 gap-2 font-bold h-11 px-8 shadow-md rounded-xl">
+            {isLoggingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
+            {dict.nav.signIn}
+          </Button>
         </main>
       </div>
     );
