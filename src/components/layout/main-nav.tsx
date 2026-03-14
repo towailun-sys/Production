@@ -13,7 +13,8 @@ import {
   LogOut,
   LogIn,
   Languages,
-  Loader2
+  Loader2,
+  CheckCircle2
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -125,6 +126,7 @@ export function MainNav() {
 
   const baseRoutes = [
     { href: "/", label: dict.nav.dashboard, icon: LayoutDashboard, active: pathname === "/" },
+    { href: "/attendance", label: dict.nav.attendance, icon: CheckCircle2, active: pathname === "/attendance" },
     { href: "/players", label: dict.nav.players, icon: Users, active: pathname === "/players" },
     { href: "/games", label: dict.nav.games, icon: Calendar, active: pathname === "/games", adminOnly: true },
   ];
@@ -228,7 +230,6 @@ export function MainNav() {
               </Link>
             ))}
 
-            {/* Language Switcher for Mobile */}
             <div className="flex items-center gap-4 px-4 py-3 border-t border-white/10 mt-2">
               <Languages className="h-5 w-5 text-accent" />
               <div className="flex gap-2">
