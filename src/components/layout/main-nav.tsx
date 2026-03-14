@@ -1,4 +1,3 @@
-
 "use client";
 
 import Link from "next/link";
@@ -35,6 +34,8 @@ import { useTranslation } from "@/components/language-provider";
 import Image from "next/image";
 import { Player } from "@/lib/types";
 
+const ADMIN_EMAIL = 'towailun@gmail.com';
+
 export function MainNav() {
   const pathname = usePathname();
   const router = useRouter();
@@ -59,9 +60,13 @@ export function MainNav() {
   useEffect(() => {
     if (user) {
       const playersRef = collection(firestore, "players");
-      getDocs(query(playersRef, where("id", "!=", ""))).then(snapshot => {
-        setIsFirstRun(snapshot.empty);
-      });
+      getDocs(query(playersRef, limit(1)))
+        .then(snapshot => {
+          setIsFirstRun(snapshot.empty);
+        })
+        .catch(() => {
+          setIsFirstRun(false);
+        });
     } else {
       setIsFirstRun(false);
     }
@@ -96,10 +101,11 @@ export function MainNav() {
         const q = query(playersRef, where("email", "==", result.user.email));
         const snapshot = await getDocs(q);
         
-        const allPlayersSnapshot = await getDocs(query(playersRef, where("id", "!=", "")));
+        const allPlayersSnapshot = await getDocs(query(playersRef, limit(1)));
         const isFirstRunNow = allPlayersSnapshot.empty;
+        const isUserAdminEmail = result.user.email === ADMIN_EMAIL;
 
-        if (snapshot.empty && !isFirstRunNow) {
+        if (snapshot.empty && !isFirstRunNow && !isUserAdminEmail) {
           await signOut(auth);
           toast({
             variant: "destructive",
@@ -170,8 +176,9 @@ export function MainNav() {
     },
   ];
 
-  // GUARD: Rigorous check to avoid nav flash
-  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRun === true);
+  // GUARD: towailun@gmail.com fallback
+  const isUserAdminEmail = user?.email === ADMIN_EMAIL;
+  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRun === true || isUserAdminEmail);
   const isAuthChecking = !!user && !isAuthorized;
 
   const routes = (isAuthorized && !isAuthChecking) ? baseRoutes.filter(route => {

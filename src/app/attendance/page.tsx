@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
@@ -61,6 +60,8 @@ import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/e
 import { useTranslation } from "@/components/language-provider";
 import { KitBadge } from "@/app/page";
 
+const ADMIN_EMAIL = 'towailun@gmail.com';
+
 function AttendanceContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -76,9 +77,13 @@ function AttendanceContent() {
   useEffect(() => {
     if (user) {
       const playersRef = collection(firestore, "players");
-      getDocs(query(playersRef, where("id", "!=", ""))).then(snapshot => {
-        setIsFirstRunCheck(snapshot.empty);
-      });
+      getDocs(query(playersRef, limit(1)))
+        .then(snapshot => {
+          setIsFirstRunCheck(snapshot.empty);
+        })
+        .catch(() => {
+          setIsFirstRunCheck(false);
+        });
     } else {
       setIsFirstRunCheck(false);
     }
@@ -97,10 +102,11 @@ function AttendanceContent() {
         const q = query(playersRef, where("email", "==", result.user.email));
         const snapshot = await getDocs(q);
 
-        const allPlayersSnapshot = await getDocs(query(playersRef, where("id", "!=", "")));
+        const allPlayersSnapshot = await getDocs(query(playersRef, limit(1)));
         const isFirstRun = allPlayersSnapshot.empty;
+        const isUserAdminEmail = result.user.email === ADMIN_EMAIL;
 
-        if (snapshot.empty && !isFirstRun) {
+        if (snapshot.empty && !isFirstRun && !isUserAdminEmail) {
           await signOut(auth);
           toast({
             variant: "destructive",
@@ -117,7 +123,6 @@ function AttendanceContent() {
         toast({
           variant: "destructive",
           title: language === 'zh' ? "登入失敗" : "Sign in failed",
-          description: "Please check your internet connection or if popups are enabled.",
         });
       }
     } finally {
@@ -137,21 +142,26 @@ function AttendanceContent() {
   }, [firestore, user, currentPlayer]);
   const { data: matchedProfiles, isLoading: isMatchedProfilesLoading } = useCollection<Player>(emailMatchQuery);
 
+  // Guard: towailun@gmail.com fallback
+  const isAdminEmailCheck = user?.email === ADMIN_EMAIL;
+  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isAdminEmailCheck);
+  const isAuthChecking = !!user && !isAuthorized;
+
   const teamsQuery = useMemoFirebase(() => {
-    if (!user) return null;
+    if (!isAuthorized) return null;
     return collection(firestore, "teams");
-  }, [firestore, user]);
+  }, [firestore, isAuthorized]);
   const { data: teams } = useCollection<Team>(teamsQuery);
 
   const gameRef = useMemoFirebase(() => {
-    if (!user || !gameId) return null;
+    if (!isAuthorized || !gameId) return null;
     return doc(firestore, "games", gameId);
-  }, [firestore, user, gameId]);
+  }, [firestore, isAuthorized, gameId]);
   
   const { data: specificGame, isLoading: isGameLoading } = useDoc<Game>(gameRef);
 
   const gamesQuery = useMemoFirebase(() => {
-    if (!user || gameId) return null;
+    if (!isAuthorized || gameId) return null;
     const now = new Date();
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     
@@ -160,7 +170,7 @@ function AttendanceContent() {
       where("date", ">=", todayStr),
       orderBy("date", "asc")
     );
-  }, [firestore, user, gameId]);
+  }, [firestore, isAuthorized, gameId]);
 
   const { data: games, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
 
@@ -213,10 +223,6 @@ function AttendanceContent() {
     return date.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' });
   };
 
-  // Rigorous Guard logic
-  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true);
-  const isAuthChecking = !!user && !isAuthorized;
-
   useEffect(() => {
     if (user && !isProfileLoading && !isMatchedProfilesLoading && isFirstRunCheck === false && !isAuthorized) {
       signOut(auth).then(() => {
@@ -257,14 +263,6 @@ function AttendanceContent() {
             {isLoggingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
             {dict.nav.signIn}
           </Button>
-          <div className="mt-8 p-4 bg-primary/5 rounded-xl border border-primary/10 max-w-md mx-auto">
-            <p className="text-xs font-bold text-primary mb-2 flex items-center gap-2 justify-center">
-              <Info className="h-4 w-4" /> {dict.attendance.deploymentNoteTitle}
-            </p>
-            <p className="text-[10px] text-muted-foreground leading-relaxed">
-              {dict.attendance.deploymentNoteDesc}
-            </p>
-          </div>
         </main>
       </div>
     );
@@ -366,7 +364,7 @@ function AttendanceContent() {
           </header>
 
           <div className="max-w-4xl">
-            <GameRosterList gameId={gameId} teams={teams || []} onStatusChange={handleStatusChange} />
+            <GameRosterList gameId={gameId} teams={teams || []} onStatusChange={handleStatusChange} isAuthorized={isAuthorized} />
           </div>
         </main>
       </div>
@@ -456,11 +454,13 @@ function ConfirmedGameItem({ game, userId, teams }: { game: Game, userId: string
 function GameRosterList({ 
   gameId, 
   teams,
-  onStatusChange 
+  onStatusChange,
+  isAuthorized
 }: { 
   gameId: string;
   teams: Team[];
   onStatusChange: (gameId: string, status: AttendanceStatus, targetPlayerId?: string, isGuest?: boolean) => void;
+  isAuthorized: boolean;
 }) {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
@@ -471,21 +471,21 @@ function GameRosterList({
   const [guestName, setGuestName] = useState("");
 
   const playerRef = useMemoFirebase(() => {
-    if (isUserLoading || !user) return null;
+    if (!isAuthorized || !user) return null;
     return doc(firestore, "players", user.uid);
-  }, [firestore, user, isUserLoading]);
+  }, [firestore, user, isAuthorized]);
   const { data: currentPlayer } = useDoc<Player>(playerRef);
 
   const playersQuery = useMemoFirebase(() => {
-    if (isUserLoading || !user) return null;
+    if (!isAuthorized) return null;
     return collection(firestore, "players");
-  }, [firestore, user, isUserLoading]);
+  }, [firestore, isAuthorized]);
   const { data: players } = useCollection<Player>(playersQuery);
   
   const attendanceQuery = useMemoFirebase(() => {
-    if (isUserLoading || !user) return null;
+    if (!isAuthorized) return null;
     return collection(firestore, "games", gameId, "attendanceRecords");
-  }, [firestore, gameId, user, isUserLoading]);
+  }, [firestore, gameId, isAuthorized]);
   const { data: attendanceDocs } = useCollection<Attendance>(attendanceQuery);
 
   const getStatus = (playerId: string) => {
@@ -690,15 +690,6 @@ function GameRosterList({
           </div>
         </CardContent>
       </Card>
-
-      <div className="mt-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
-        <p className="text-xs font-bold text-primary mb-2 flex items-center gap-2">
-          <Info className="h-4 w-4" /> {dict.attendance.deploymentNoteTitle}
-        </p>
-        <p className="text-[10px] text-muted-foreground leading-relaxed">
-          {dict.attendance.deploymentNoteDesc}
-        </p>
-      </div>
 
       <Dialog open={isGuestDialogOpen} onOpenChange={setIsGuestDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">

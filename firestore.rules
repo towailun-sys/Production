@@ -29,7 +29,7 @@ service cloud.firestore {
     // Owners and admins can write.
     match /players/{playerId} {
       allow get, list: if isSignedIn();
-      allow create: if isSignedIn() && (request.auth.uid == playerId || isAdmin());
+      allow create: if isOwner(playerId) || isAdmin();
       allow update: if isOwner(playerId) || isAdmin();
       allow delete: if isAdmin();
     }

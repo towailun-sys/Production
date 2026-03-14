@@ -50,6 +50,8 @@ import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/e
 import { useTranslation } from "@/components/language-provider";
 import Image from "next/image";
 
+const ADMIN_EMAIL = 'towailun@gmail.com';
+
 const getColorHex = (name: string) => {
   const n = name.toLowerCase().trim();
   const mapping: Record<string, string> = {
@@ -378,7 +380,9 @@ export default function DashboardPage() {
   const { data: matchedProfiles, isLoading: isMatchedProfilesLoading } = useCollection<Player>(emailMatchQuery);
   const preEnteredProfile = matchedProfiles?.find(p => p.id !== user?.uid);
 
-  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true);
+  // Critical Guard: towailun@gmail.com is always authorized to see the dashboard (to seed/claim admin)
+  const isAdminEmail = user?.email === ADMIN_EMAIL;
+  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isAdminEmail);
   const isCheckingAuth = !!user && !isAuthorized;
 
   const teamsQuery = useMemoFirebase(() => {
@@ -424,8 +428,9 @@ export default function DashboardPage() {
 
         const allPlayersSnapshot = await getDocs(query(playersRef, limit(1)));
         const isFirstRun = allPlayersSnapshot.empty;
+        const isUserAdminEmail = result.user.email === ADMIN_EMAIL;
 
-        if (snapshot.empty && !isFirstRun) {
+        if (snapshot.empty && !isFirstRun && !isUserAdminEmail) {
           await signOut(auth);
           toast({
             variant: "destructive",
@@ -451,7 +456,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (user && !isProfileLoading && !isMatchedProfilesLoading && isFirstRunCheck === false) {
-      if (!currentPlayer && (!matchedProfiles || matchedProfiles.length === 0)) {
+      const isUserAdminEmail = user.email === ADMIN_EMAIL;
+      if (!currentPlayer && (!matchedProfiles || matchedProfiles.length === 0) && !isUserAdminEmail) {
         signOut(auth);
       }
     }
@@ -622,7 +628,7 @@ export default function DashboardPage() {
                 </Button>
               </>
             )}
-            {user && (!currentPlayer || !currentPlayer.isAdmin) && (
+            {user && (!currentPlayer || !currentPlayer.isAdmin) && (user.email === ADMIN_EMAIL || isFirstRunCheck === true) && (
               <Button variant="outline" size="sm" className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold text-xs" onClick={handleClaimAdmin} disabled={isClaimingAdmin}>
                 {isClaimingAdmin ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="mr-2 h-3.5 w-3.5" />}
                 {dict.dashboard.claimAdmin}
