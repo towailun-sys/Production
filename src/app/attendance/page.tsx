@@ -60,7 +60,7 @@ import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/e
 import { useTranslation } from "@/components/language-provider";
 import { KitBadge } from "@/app/page";
 
-const ADMIN_EMAIL = 'towailun@gmail.com';
+const SUPER_ADMIN_EMAILS = ['towailun@gmail.com', 'alan941206@gmail.com'];
 
 function AttendanceContent() {
   const searchParams = useSearchParams();
@@ -104,9 +104,9 @@ function AttendanceContent() {
 
         const allPlayersSnapshot = await getDocs(query(playersRef, limit(1)));
         const isFirstRun = allPlayersSnapshot.empty;
-        const isUserAdminEmail = result.user.email === ADMIN_EMAIL;
+        const isUserSuperAdmin = SUPER_ADMIN_EMAILS.includes(result.user.email);
 
-        if (snapshot.empty && !isFirstRun && !isUserAdminEmail) {
+        if (snapshot.empty && !isFirstRun && !isUserSuperAdmin) {
           await signOut(auth);
           toast({
             variant: "destructive",
@@ -142,9 +142,9 @@ function AttendanceContent() {
   }, [firestore, user, currentPlayer]);
   const { data: matchedProfiles, isLoading: isMatchedProfilesLoading } = useCollection<Player>(emailMatchQuery);
 
-  // Guard: towailun@gmail.com fallback
-  const isAdminEmailCheck = user?.email === ADMIN_EMAIL;
-  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isAdminEmailCheck);
+  // Guard: super admins check
+  const isSuperAdminEmailCheck = !!user?.email && SUPER_ADMIN_EMAILS.includes(user.email);
+  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmailCheck);
   const isAuthChecking = !!user && !isAuthorized;
 
   const teamsQuery = useMemoFirebase(() => {

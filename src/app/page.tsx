@@ -50,7 +50,7 @@ import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/e
 import { useTranslation } from "@/components/language-provider";
 import Image from "next/image";
 
-const ADMIN_EMAIL = 'towailun@gmail.com';
+const SUPER_ADMIN_EMAILS = ['towailun@gmail.com', 'alan941206@gmail.com'];
 
 const getColorHex = (name: string) => {
   const n = name.toLowerCase().trim();
@@ -380,9 +380,9 @@ export default function DashboardPage() {
   const { data: matchedProfiles, isLoading: isMatchedProfilesLoading } = useCollection<Player>(emailMatchQuery);
   const preEnteredProfile = matchedProfiles?.find(p => p.id !== user?.uid);
 
-  // Critical Guard: towailun@gmail.com is always authorized to see the dashboard (to seed/claim admin)
-  const isAdminEmail = user?.email === ADMIN_EMAIL;
-  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isAdminEmail);
+  // Critical Guard: super admin emails are always authorized to see the dashboard (to seed/claim admin)
+  const isSuperAdminEmail = !!user?.email && SUPER_ADMIN_EMAILS.includes(user.email);
+  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmail);
   const isCheckingAuth = !!user && !isAuthorized;
 
   const teamsQuery = useMemoFirebase(() => {
@@ -428,9 +428,9 @@ export default function DashboardPage() {
 
         const allPlayersSnapshot = await getDocs(query(playersRef, limit(1)));
         const isFirstRun = allPlayersSnapshot.empty;
-        const isUserAdminEmail = result.user.email === ADMIN_EMAIL;
+        const isUserSuperAdmin = SUPER_ADMIN_EMAILS.includes(result.user.email);
 
-        if (snapshot.empty && !isFirstRun && !isUserAdminEmail) {
+        if (snapshot.empty && !isFirstRun && !isUserSuperAdmin) {
           await signOut(auth);
           toast({
             variant: "destructive",
@@ -456,8 +456,8 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (user && !isProfileLoading && !isMatchedProfilesLoading && isFirstRunCheck === false) {
-      const isUserAdminEmail = user.email === ADMIN_EMAIL;
-      if (!currentPlayer && (!matchedProfiles || matchedProfiles.length === 0) && !isUserAdminEmail) {
+      const isUserSuperAdmin = SUPER_ADMIN_EMAILS.includes(user.email || "");
+      if (!currentPlayer && (!matchedProfiles || matchedProfiles.length === 0) && !isUserSuperAdmin) {
         signOut(auth);
       }
     }
@@ -522,8 +522,8 @@ export default function DashboardPage() {
   const handleToggleAdminRole = () => {
     if (!user || !currentPlayer) return;
     const newAdminStatus = !currentPlayer.isAdmin;
-    const playerRef = doc(firestore, "players", user.uid);
-    setDoc(playerRef, { id: user.uid, isAdmin: newAdminStatus }, { merge: true });
+    const pRef = doc(firestore, "players", user.uid);
+    setDoc(pRef, { id: user.uid, isAdmin: newAdminStatus }, { merge: true });
     toast({ title: newAdminStatus ? "Admin Mode" : "Player Mode" });
   };
 
@@ -562,8 +562,8 @@ export default function DashboardPage() {
       setDoc(doc(firestore, "games", g.id), g);
     });
 
-    const playerRef = doc(firestore, "players", user.uid);
-    setDoc(playerRef, { 
+    const pRef = doc(firestore, "players", user.uid);
+    setDoc(pRef, { 
       id: user.uid,
       teams: ["team-a", "team-b", "team-camp3"],
       status: "Active",
@@ -628,7 +628,7 @@ export default function DashboardPage() {
                 </Button>
               </>
             )}
-            {user && (!currentPlayer || !currentPlayer.isAdmin) && (user.email === ADMIN_EMAIL || isFirstRunCheck === true) && (
+            {user && (!currentPlayer || !currentPlayer.isAdmin) && (SUPER_ADMIN_EMAILS.includes(user.email || "") || isFirstRunCheck === true) && (
               <Button variant="outline" size="sm" className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold text-xs" onClick={handleClaimAdmin} disabled={isClaimingAdmin}>
                 {isClaimingAdmin ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="mr-2 h-3.5 w-3.5" />}
                 {dict.dashboard.claimAdmin}

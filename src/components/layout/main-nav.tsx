@@ -34,7 +34,7 @@ import { useTranslation } from "@/components/language-provider";
 import Image from "next/image";
 import { Player } from "@/lib/types";
 
-const ADMIN_EMAIL = 'towailun@gmail.com';
+const SUPER_ADMIN_EMAILS = ['towailun@gmail.com', 'alan941206@gmail.com'];
 
 export function MainNav() {
   const pathname = usePathname();
@@ -103,9 +103,9 @@ export function MainNav() {
         
         const allPlayersSnapshot = await getDocs(query(playersRef, limit(1)));
         const isFirstRunNow = allPlayersSnapshot.empty;
-        const isUserAdminEmail = result.user.email === ADMIN_EMAIL;
+        const isUserSuperAdmin = SUPER_ADMIN_EMAILS.includes(result.user.email);
 
-        if (snapshot.empty && !isFirstRunNow && !isUserAdminEmail) {
+        if (snapshot.empty && !isFirstRunNow && !isUserSuperAdmin) {
           await signOut(auth);
           toast({
             variant: "destructive",
@@ -176,9 +176,9 @@ export function MainNav() {
     },
   ];
 
-  // GUARD: towailun@gmail.com fallback
-  const isUserAdminEmail = user?.email === ADMIN_EMAIL;
-  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRun === true || isUserAdminEmail);
+  // GUARD: super admins fallback
+  const isUserSuperAdmin = !!user?.email && SUPER_ADMIN_EMAILS.includes(user.email);
+  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRun === true || isUserSuperAdmin);
   const isAuthChecking = !!user && !isAuthorized;
 
   const routes = (isAuthorized && !isAuthChecking) ? baseRoutes.filter(route => {
