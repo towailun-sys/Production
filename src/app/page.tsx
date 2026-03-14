@@ -384,7 +384,6 @@ export default function DashboardPage() {
   
   // ROBUST PATIENT AUTHORIZATION GUARD:
   // We explicitly wait for matchedProfiles to be NON-NULL before concluding someone is unauthorized.
-  // This avoids the one-frame race condition in useCollection.
   const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || matchedProfiles !== null) && isFirstRunCheck !== null;
   const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmailCheck);
   const isCheckingAuth = !!user && !isAuthDetermined;
