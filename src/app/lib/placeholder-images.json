@@ -2,6 +2,12 @@
 {
   "placeholderImages": [
     {
+      "id": "team-logo",
+      "description": "Happy Hour FC Logo",
+      "imageUrl": "https://placehold.co/200x200/16a34a/ffffff?text=HHFC",
+      "imageHint": "soccer badge"
+    },
+    {
       "id": "hero-football",
       "description": "Football stadium at night",
       "imageUrl": "https://picsum.photos/seed/squadflow-1/1200/600",
@@ -18,12 +24,6 @@
       "description": "Football player in action",
       "imageUrl": "https://picsum.photos/seed/squadflow-3/400/400",
       "imageHint": "soccer player"
-    },
-    {
-      "id": "team-logo",
-      "description": "Happy Hour FC Team Logo",
-      "imageUrl": "https://picsum.photos/seed/hhfc-logo/100/100",
-      "imageHint": "soccer logo"
     }
   ]
 }

@@ -133,6 +133,7 @@ export function MainNav() {
     { href: "/games", label: dict.nav.games, icon: Calendar, active: pathname === "/games", adminOnly: true },
   ];
 
+  // Only show links if the user is linked to a squad record
   const routes = (currentPlayer && isAuthorized && !isAuthChecking) ? baseRoutes.filter(route => {
     if (route.adminOnly) return currentPlayer?.isAdmin;
     return true;

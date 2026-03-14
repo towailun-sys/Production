@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, Fragment, useEffect } from "react";
@@ -384,7 +385,7 @@ export default function DashboardPage() {
 
   const isSuperAdminEmailCheck = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
   
-  const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || matchedProfiles !== null) && isFirstRunCheck !== null;
+  const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || (matchedProfiles !== null && !isMatchedProfilesLoading)) && isFirstRunCheck !== null;
   const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmailCheck);
   const isCheckingAuth = !!user && !isAuthDetermined;
 
