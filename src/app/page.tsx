@@ -23,7 +23,6 @@ import {
   Calendar, 
   MapPin, 
   Clock,
-  ArrowRight,
   Trophy,
   Lock,
   Loader2,
@@ -446,6 +445,22 @@ export default function DashboardPage() {
       setIsLoggingIn(false);
     }
   };
+
+  // REQUISITE: Automatic Sign-out for Unauthorized Sessions
+  useEffect(() => {
+    if (user && !isProfileLoading && !isMatchedProfilesLoading && isFirstRunCheck === false) {
+      // If profile is NOT found AND it's not a first-run setup AND no matched profile to claim
+      if (!currentPlayer && !preEnteredProfile) {
+        signOut(auth).then(() => {
+          toast({
+            variant: "destructive",
+            title: dict.nav.unauthorizedEmailTitle,
+            description: dict.nav.unauthorizedEmailDesc,
+          });
+        });
+      }
+    }
+  }, [user, currentPlayer, preEnteredProfile, isFirstRunCheck, isProfileLoading, isMatchedProfilesLoading, auth, toast, dict.nav]);
 
   const handleClaimProfile = () => {
     if (!user || !preEnteredProfile) return;

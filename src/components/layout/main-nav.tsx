@@ -18,9 +18,9 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { useUser, useAuth, useFirestore, useMemoFirebase, useDoc } from "@/firebase";
+import { useUser, useAuth, useFirestore, useMemoFirebase, useDoc, useCollection } from "@/firebase";
 import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
-import { doc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, collection, query, where, getDocs, limit } from "firebase/firestore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -41,6 +41,7 @@ export function MainNav() {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [isFirstRun, setIsFirstRun] = useState<boolean | null>(null);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const firestore = useFirestore();
@@ -55,12 +56,27 @@ export function MainNav() {
     setIsOpen(false);
   }, [pathname]);
 
+  useEffect(() => {
+    if (user) {
+      const playersRef = collection(firestore, "players");
+      getDocs(query(playersRef, where("id", "!=", ""))).then(snapshot => {
+        setIsFirstRun(snapshot.empty);
+      });
+    }
+  }, [user, firestore]);
+
   const playerRef = useMemoFirebase(() => {
     if (!user) return null;
     return doc(firestore, "players", user.uid);
   }, [firestore, user]);
-  
-  const { data: currentPlayer } = useDoc<Player>(playerRef);
+  const { data: currentPlayer, isLoading: isProfileLoading } = useDoc<Player>(playerRef);
+
+  const emailMatchQuery = useMemoFirebase(() => {
+    if (!user || currentPlayer) return null;
+    return query(collection(firestore, "players"), where("email", "==", user.email), limit(1));
+  }, [firestore, user, currentPlayer]);
+  const { data: matchedProfiles, isLoading: isMatchedProfilesLoading } = useCollection<Player>(emailMatchQuery);
+  const preEnteredProfile = matchedProfiles?.[0];
 
   const handleLogin = async () => {
     if (isLoggingIn) return;
@@ -74,18 +90,15 @@ export function MainNav() {
     try {
       const result = await signInWithPopup(auth, provider);
       
-      // Strict Email Validation Check
       if (result.user.email) {
         const playersRef = collection(firestore, "players");
         const q = query(playersRef, where("email", "==", result.user.email));
         const snapshot = await getDocs(q);
         
-        // Check if the players collection is entirely empty (first run exception)
         const allPlayersSnapshot = await getDocs(query(playersRef, where("id", "!=", "")));
-        const isFirstRun = allPlayersSnapshot.empty;
+        const isFirstRunNow = allPlayersSnapshot.empty;
 
-        if (snapshot.empty && !isFirstRun) {
-          // Email not found in players list and it's not the first run, kick out
+        if (snapshot.empty && !isFirstRunNow) {
           await signOut(auth);
           toast({
             variant: "destructive",
@@ -97,7 +110,7 @@ export function MainNav() {
       }
 
       setIsOpen(false);
-      router.push('/'); // Force landing page after login
+      router.push('/');
       toast({
         title: dict.nav.signInSuccess,
         description: dict.nav.signInWelcome(dict.nav.title),
@@ -156,8 +169,11 @@ export function MainNav() {
     },
   ];
 
-  // Hide all routes if user is not signed in
-  const routes = user ? baseRoutes.filter(route => {
+  // GUARD: Only show routes if user is authenticated AND authorized (profile exists or first run)
+  const isAuthorized = user && (!!currentPlayer || !!preEnteredProfile || isFirstRun === true);
+  const isAuthChecking = user && (isProfileLoading || isMatchedProfilesLoading || isFirstRun === null);
+
+  const routes = (isAuthorized && !isAuthChecking) ? baseRoutes.filter(route => {
     if (route.adminOnly) {
       return currentPlayer?.isAdmin;
     }
@@ -227,7 +243,7 @@ export function MainNav() {
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {isUserLoading ? (
+              {isUserLoading || isAuthChecking ? (
                 <div className="h-8 w-8 animate-pulse rounded-full bg-primary-foreground/20" />
               ) : user ? (
                 <DropdownMenu>
