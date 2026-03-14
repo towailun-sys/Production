@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -33,6 +34,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/components/language-provider";
 import { Player } from "@/lib/types";
 import { SUPER_ADMIN_EMAILS } from "@/lib/constants";
+import Image from "next/image";
+import placeholderData from "@/app/lib/placeholder-images.json";
 
 export function MainNav() {
   const pathname = usePathname();
@@ -46,6 +49,8 @@ export function MainNav() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const { language, setLanguage, dict } = useTranslation();
+
+  const logoImage = placeholderData.placeholderImages.find(img => img.id === 'team-logo');
 
   useEffect(() => {
     setMounted(true);
@@ -85,7 +90,7 @@ export function MainNav() {
 
   const isUserSuperAdmin = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
   
-  const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || matchedProfiles !== null) && isFirstRun !== null;
+  const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || (matchedProfiles !== null && !isMatchedProfilesLoading)) && isFirstRun !== null;
   const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRun === true || isUserSuperAdmin);
   const isAuthChecking = !!user && !isAuthDetermined;
 
@@ -128,7 +133,6 @@ export function MainNav() {
     { href: "/games", label: dict.nav.games, icon: Calendar, active: pathname === "/games", adminOnly: true },
   ];
 
-  // Protected links only visible to users with a CLAIMED profile record
   const routes = (currentPlayer && isAuthorized && !isAuthChecking) ? baseRoutes.filter(route => {
     if (route.adminOnly) return currentPlayer?.isAdmin;
     return true;
@@ -142,7 +146,18 @@ export function MainNav() {
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-white/20 bg-white group-hover:border-accent transition-colors flex items-center justify-center">
-              <div className="font-headline font-bold text-primary text-lg">H</div>
+              {logoImage ? (
+                <Image 
+                  src={logoImage.imageUrl} 
+                  alt={logoImage.description} 
+                  width={40} 
+                  height={40} 
+                  className="object-cover"
+                  data-ai-hint={logoImage.imageHint}
+                />
+              ) : (
+                <div className="font-headline font-bold text-primary text-lg">H</div>
+              )}
             </div>
             <span className="font-headline text-lg md:text-xl font-bold tracking-tight whitespace-nowrap">{dict.nav.title}</span>
           </Link>

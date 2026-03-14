@@ -18,6 +18,12 @@
       "description": "Football player in action",
       "imageUrl": "https://picsum.photos/seed/squadflow-3/400/400",
       "imageHint": "soccer player"
+    },
+    {
+      "id": "team-logo",
+      "description": "Happy Hour FC Team Logo",
+      "imageUrl": "https://picsum.photos/seed/hhfc-logo/100/100",
+      "imageHint": "soccer logo"
     }
   ]
 }
