@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Suspense, useState, useEffect } from "react";
@@ -21,16 +20,14 @@ import {
   Crown,
   UserPlus,
   LogIn,
-  Banknote,
-  Info,
   CalendarDays
 } from "lucide-react";
 import { Game, AttendanceStatus, Player, Attendance, Team } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, useAuth } from "@/firebase";
-import { collection, query, orderBy, doc, setDoc, where, deleteDoc, getDocs, limit } from "firebase/firestore";
-import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { collection, query, orderBy, doc, setDoc, where, deleteDoc, getDocs, limit, collectionGroup } from "firebase/firestore";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -99,6 +96,16 @@ function AttendanceContent() {
   const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmailCheck);
   const isAuthChecking = !!user && !isAuthDetermined;
 
+  const userConfirmedAttendanceQuery = useMemoFirebase(() => {
+    if (!user || !isAuthorized || isAuthChecking) return null;
+    return query(
+      collectionGroup(firestore, "attendanceRecords"),
+      where("playerId", "==", user.uid),
+      where("status", "==", "Confirmed")
+    );
+  }, [firestore, user, isAuthorized, isAuthChecking]);
+  const { data: userAttendances } = useCollection<Attendance>(userConfirmedAttendanceQuery);
+
   const teamsQuery = useMemoFirebase(() => {
     if (!currentPlayer || !isAuthorized || isAuthChecking) return null;
     return collection(firestore, "teams");
@@ -130,7 +137,6 @@ function AttendanceContent() {
     provider.setCustomParameters({ prompt: 'select_account' });
     try {
       await signInWithPopup(auth, provider);
-      router.push('/');
     } catch (error: any) {
       if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
         toast({
@@ -215,9 +221,12 @@ function AttendanceContent() {
               {dict.nav.signIn}
             </Button>
           ) : (
-            <Button variant="outline" className="font-bold h-11 px-8 rounded-xl" asChild>
-              <Link href="/">{dict.dashboard.claimProfileBtn}</Link>
-            </Button>
+            <div className="flex flex-col items-center gap-4">
+              <div className="text-xs font-mono bg-muted p-2 rounded border">{user.uid}</div>
+              <Button variant="outline" className="font-bold h-11 px-8 rounded-xl" asChild>
+                <Link href="/">{dict.dashboard.claimProfileBtn}</Link>
+              </Button>
+            </div>
           )}
         </main>
       </div>
@@ -295,6 +304,10 @@ function AttendanceContent() {
     );
   }
 
+  // List View: Only show confirmed games
+  const joinedGameIds = new Set(userAttendances?.map(a => a.gameId) || []);
+  const joinedGames = (games || []).filter(g => joinedGameIds.has(g.id));
+
   return (
     <div className="min-h-screen bg-background pb-12">
       <MainNav />
@@ -310,7 +323,7 @@ function AttendanceContent() {
             ))
           ) : (
             <div className="grid gap-6">
-              {(games || []).map((game) => (
+              {joinedGames.map((game) => (
                 <Card key={game.id} className="border-none shadow-md overflow-hidden border-l-4 border-primary rounded-2xl">
                   <CardContent className="p-5 flex flex-col md:flex-row items-center gap-6">
                     <div className="flex flex-col items-center justify-center bg-muted/30 rounded-xl px-4 py-2 min-w-[80px]">
@@ -341,10 +354,10 @@ function AttendanceContent() {
                   </CardContent>
                 </Card>
               ))}
-              {(games || []).length === 0 && (
+              {joinedGames.length === 0 && (
                 <Card className="p-16 text-center border-dashed border-2 rounded-2xl flex flex-col items-center gap-4">
                   <CalendarDays className="h-12 w-12 text-muted-foreground/30" />
-                  <p className="text-muted-foreground font-medium">{dict.dashboard.noGames}</p>
+                  <p className="text-muted-foreground font-medium">{dict.attendance.noConfirmedFixtures}</p>
                 </Card>
               )}
             </div>

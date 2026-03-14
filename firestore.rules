@@ -58,6 +58,11 @@ service cloud.firestore {
       allow write, delete: if isOwner(playerId) || isAdmin();
     }
 
+    // Support for Collection Group queries on attendance.
+    match /{path=**}/attendanceRecords/{playerId} {
+      allow list: if isSignedIn() && (request.auth.uid == playerId || isAdmin());
+    }
+
     // User-centric attendance path for "My Attendance" view.
     match /users/{userId}/game_attendances/{attendanceId} {
       allow get, list: if isOwner(userId) || isAdmin();

@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, Fragment, useEffect } from "react";
@@ -595,7 +594,7 @@ export default function DashboardPage() {
           <div className="flex flex-col items-center justify-center py-20 px-6 text-center bg-muted/20 rounded-3xl border border-dashed border-primary/20">
             <Lock className="h-10 w-10 text-primary mb-4" />
             <h2 className="text-xl md:text-2xl font-headline mb-2">{dict.attendance.signinRequired}</h2>
-            <div className="text-muted-foreground text-sm max-w-sm">{dict.attendance.signinDesc}</div>
+            <div className="text-muted-foreground text-sm max-w-sm">{dict.attendance.signinRequired}</div>
             <Button onClick={handleLogin} disabled={isLoggingIn} className="mt-6 bg-primary hover:bg-primary/90 gap-2 font-bold h-11 px-8 shadow-md rounded-xl">
               {isLoggingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
               {dict.nav.signIn}
@@ -731,7 +730,12 @@ export default function DashboardPage() {
                                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{dict.attendance.attendingQuestion}</p>
                                   <UserAttendanceToggle gameId={game.id} userId={user.uid} />
                                 </div>
-                                <Link href={`/attendance?gameId=${game.id}`} className="mt-2 sm:mt-0"><Button variant="outline" size="sm" className="w-full text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white gap-2 h-10 md:h-9">{dict.dashboard.viewRoster}</Button></Link>
+                                <Link href={`/attendance?gameId=${game.id}`} className="mt-2 sm:mt-0">
+                                  <Button variant="outline" size="sm" className="w-full text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white gap-2 h-10 md:h-9">
+                                    <Users className="h-4 w-4" />
+                                    {dict.dashboard.viewRoster}
+                                  </Button>
+                                </Link>
                               </div>
                             </CardContent>
                           </Card>
