@@ -40,7 +40,8 @@ import {
   LogIn,
   Fingerprint,
   Copy,
-  CalendarDays
+  CalendarDays,
+  Users
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, Attendance, AttendanceStatus, Team, Kit } from "@/lib/types";
@@ -344,9 +345,6 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
 function CommittedGamesSummary({ games, userId, teams }: { games: Game[], userId: string, teams: Team[] }) {
   const { dict, language } = useTranslation();
   
-  // We need to fetch attendance for all these games to find the confirmed ones
-  // But useCollection/useDoc within a map is expensive.
-  // Instead, let's just render a helper that checks each game.
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
       {games.map(game => (
@@ -388,8 +386,9 @@ function CommittedGameCard({ game, userId, teams }: { game: Game, userId: string
                 ? dict.common.gameTypes[game.type] 
                 : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
           </h4>
-          <Link href={`/attendance?gameId=${game.id}`} className="text-[9px] font-bold text-primary hover:underline flex items-center gap-1 mt-1">
-            <Users className="h-3 w-3" /> {dict.dashboard.viewRoster}
+          <Link href={`/attendance?gameId=${game.id}`} className="text-primary hover:underline flex items-center gap-1 mt-1">
+            <Users className="h-3 w-3" />
+            <span className="text-[9px] font-bold">{dict.dashboard.viewRoster}</span>
           </Link>
         </div>
       </CardContent>
