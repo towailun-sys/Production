@@ -52,6 +52,8 @@ export function MainNav() {
   }, [pathname]);
 
   const handleLogin = async () => {
+    if (isLoggingIn) return;
+    
     setIsLoggingIn(true);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({
@@ -59,6 +61,7 @@ export function MainNav() {
     });
     
     try {
+      // For production mobile stability, ensure we catch any closure immediately
       await signInWithPopup(auth, provider);
       setIsOpen(false);
       toast({
@@ -70,7 +73,7 @@ export function MainNav() {
         toast({
           variant: "destructive",
           title: language === 'zh' ? "登入失敗" : "Sign in failed",
-          description: error.message || "Could not complete Google authentication.",
+          description: error.message || "Could not complete Google authentication. Please check if the domain is authorized in Firebase.",
         });
       }
     } finally {

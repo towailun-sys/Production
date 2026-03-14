@@ -72,13 +72,20 @@ function AttendanceContent() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const handleLogin = async () => {
+    if (isLoggingIn) return;
     setIsLoggingIn(true);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     try {
       await signInWithPopup(auth, provider);
-    } catch (error) {
-      // Quietly handle cancellation
+    } catch (error: any) {
+      if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
+        toast({
+          variant: "destructive",
+          title: language === 'zh' ? "登入失敗" : "Sign in failed",
+          description: "Please check your internet connection or if popups are enabled.",
+        });
+      }
     } finally {
       setIsLoggingIn(false);
     }
@@ -613,6 +620,15 @@ function GameRosterList({
           </div>
         </CardContent>
       </Card>
+
+      <div className="mt-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
+        <p className="text-xs font-bold text-primary mb-2 flex items-center gap-2">
+          <Info className="h-4 w-4" /> Note for Deployment
+        </p>
+        <p className="text-[10px] text-muted-foreground leading-relaxed">
+          If the Google Sign-In window does not appear, please ensure your App Hosting domain is added to the <strong>"Authorized Domains"</strong> list in the Firebase Console under <em>Authentication > Settings</em>.
+        </p>
+      </div>
 
       <Dialog open={isGuestDialogOpen} onOpenChange={setIsGuestDialogOpen}>
         <DialogContent className="sm:max-w-[400px]">
