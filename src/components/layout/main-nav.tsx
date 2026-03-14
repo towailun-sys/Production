@@ -227,6 +227,30 @@ export function MainNav() {
                 {route.label}
               </Link>
             ))}
+
+            {/* Language Switcher for Mobile */}
+            <div className="flex items-center gap-4 px-4 py-3 border-t border-white/10 mt-2">
+              <Languages className="h-5 w-5 text-accent" />
+              <div className="flex gap-2">
+                <Button 
+                  variant={language === 'en' ? 'secondary' : 'ghost'} 
+                  size="sm" 
+                  onClick={() => setLanguage('en')}
+                  className={cn("font-bold text-xs h-8 px-4", language === 'en' ? "bg-white text-primary" : "text-primary-foreground/80 hover:bg-white/10")}
+                >
+                  English
+                </Button>
+                <Button 
+                  variant={language === 'zh' ? 'secondary' : 'ghost'} 
+                  size="sm" 
+                  onClick={() => setLanguage('zh')}
+                  className={cn("font-bold text-xs h-8 px-4", language === 'zh' ? "bg-white text-primary" : "text-primary-foreground/80 hover:bg-white/10")}
+                >
+                  中文
+                </Button>
+              </div>
+            </div>
+
             {!user && !isUserLoading && (
               <Button onClick={handleLogin} variant="outline" disabled={isLoggingIn} className="w-full bg-white text-primary border-none font-bold h-12 text-base mt-4">
                 {dict.nav.signIn}
