@@ -5,12 +5,12 @@ import { MainNav } from "@/components/layout/main-nav";
 import { useTranslation } from "@/components/language-provider";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, where, orderBy } from "firebase/firestore";
-import { Game, Attendance } from "@/lib/types";
+import { Game, Attendance, Player } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, MapPin, CalendarDays, Banknote, UserRound, History, Loader2, Info, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { KitBadge } from "@/app/page";
+import { KitBadge, GameAttendanceSection } from "@/app/page";
 
 export default function AttendancePage() {
   const { user, isUserLoading } = useUser();
@@ -34,6 +34,12 @@ export default function AttendancePage() {
   }, [firestore]);
 
   const { data: games, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
+
+  // 3. Get all players for the squad list
+  const playersQuery = useMemoFirebase(() => {
+    return collection(firestore, "players");
+  }, [firestore]);
+  const { data: players } = useCollection<Player>(playersQuery);
 
   const confirmedGames = (games || []).filter(game => 
     attendanceRecords?.some(record => record.gameId === game.id)
@@ -71,6 +77,7 @@ export default function AttendancePage() {
                   "font-bold px-2 py-0.5 border-none text-[10px] uppercase tracking-wider",
                   game.type === 'League' ? "bg-primary text-white" : 
                   game.type === 'Training' ? "bg-accent text-white" :
+                  game.type === 'Internal' ? "bg-indigo-600 text-white" :
                   "bg-muted text-foreground"
                 )}>
                   {dict.common.gameTypes[game.type] || game.type}
@@ -128,6 +135,15 @@ export default function AttendancePage() {
                   <p className="leading-relaxed whitespace-pre-wrap font-medium">{game.additionalDetails}</p>
                 </div>
               </div>
+            )}
+
+            {/* Confirmed Squad List - Same as Dashboard */}
+            {!isOutdated && (
+              <GameAttendanceSection 
+                game={game} 
+                user={user} 
+                allPlayers={players || []} 
+              />
             )}
           </div>
         </div>

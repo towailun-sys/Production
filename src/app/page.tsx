@@ -209,7 +209,7 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
   return null;
 }
 
-function GameAttendanceSection({ 
+export function GameAttendanceSection({ 
   game, 
   user, 
   allPlayers 
@@ -231,9 +231,7 @@ function GameAttendanceSection({
   const confirmedRecords = attendanceRecords?.filter(r => r.status === 'Confirmed') || [];
 
   const handleUpdateStatus = (status: 'Confirmed' | 'Declined') => {
-    // 1. Write to game's squad list
     const recordRef = doc(firestore, "games", game.id, "attendanceRecords", user.uid);
-    // 2. Write to user's personal history (for the My Attendance page to avoid collection group query)
     const userRecordRef = doc(firestore, "users", user.uid, "game_attendances", game.id);
 
     const data = {
@@ -244,7 +242,6 @@ function GameAttendanceSection({
       lastUpdated: new Date().toISOString()
     };
     
-    // Perform both writes
     setDoc(recordRef, data, { merge: true }).catch(err => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: recordRef.path,
