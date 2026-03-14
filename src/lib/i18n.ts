@@ -16,6 +16,7 @@ const baseDict = {
     join: "Join",
     linked: "Linked",
     team: "Team",
+    outdated: "Outdated",
     teams: {
       All: "For all Team"
     },
@@ -204,7 +205,7 @@ const baseDict = {
   attendance: {
     title: "My Attendance",
     subtitle: "Confirm your availability for upcoming games and training sessions.",
-    rosterTitle: "Squad Roster",
+    rosterTitle: "球員名單",
     backToFixtures: "Back to Fixtures",
     myStatus: "My Status",
     currently: "Currently",
@@ -253,6 +254,7 @@ const zhDict: typeof baseDict = {
     join: "出席",
     linked: "已連結",
     team: "隊伍",
+    outdated: "已過期",
     teams: {
       All: "全部隊伍"
     },
