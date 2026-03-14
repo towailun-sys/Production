@@ -79,53 +79,28 @@ export function MainNav() {
 
   const emailMatchQuery = useMemoFirebase(() => {
     if (!user || currentPlayer) return null;
-    // Normalize email for search
     const normalizedEmail = user.email?.trim().toLowerCase() || "";
     return query(collection(firestore, "players"), where("email", "==", normalizedEmail), limit(1));
   }, [firestore, user, currentPlayer]);
   const { data: matchedProfiles, isLoading: isMatchedProfilesLoading } = useCollection<Player>(emailMatchQuery);
 
+  const normalizedUserEmail = user?.email?.trim().toLowerCase() || "";
+  const isUserSuperAdmin = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
+  
+  // Patient authorization check
+  const isAuthDetermined = !isUserLoading && !isProfileLoading && !isMatchedProfilesLoading && isFirstRun !== null;
+  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRun === true || isUserSuperAdmin);
+  const isAuthChecking = !!user && !isAuthDetermined;
+
   const handleLogin = async () => {
     if (isLoggingIn) return;
-    
     setIsLoggingIn(true);
     const provider = new GoogleAuthProvider();
-    provider.setCustomParameters({
-      prompt: 'select_account'
-    });
-    
+    provider.setCustomParameters({ prompt: 'select_account' });
     try {
-      const result = await signInWithPopup(auth, provider);
-      
-      if (result.user.email) {
-        // Normalize email: trim and lowercase
-        const normalizedEmail = result.user.email.trim().toLowerCase();
-        
-        const playersRef = collection(firestore, "players");
-        const q = query(playersRef, where("email", "==", normalizedEmail));
-        const snapshot = await getDocs(q);
-        
-        const allPlayersSnapshot = await getDocs(query(playersRef, limit(1)));
-        const isFirstRunNow = allPlayersSnapshot.empty;
-        const isUserSuperAdmin = SUPER_ADMIN_EMAILS.includes(normalizedEmail);
-
-        if (snapshot.empty && !isFirstRunNow && !isUserSuperAdmin) {
-          await signOut(auth);
-          toast({
-            variant: "destructive",
-            title: dict.nav.unauthorizedEmailTitle,
-            description: dict.nav.unauthorizedEmailDesc,
-          });
-          return;
-        }
-      }
-
+      await signInWithPopup(auth, provider);
       setIsOpen(false);
       router.push('/');
-      toast({
-        title: dict.nav.signInSuccess,
-        description: dict.nav.signInWelcome(dict.nav.title),
-      });
     } catch (error: any) {
       if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
         toast({
@@ -143,59 +118,25 @@ export function MainNav() {
     setIsOpen(false);
     try {
       await signOut(auth);
-      toast({
-        title: dict.nav.signOutSuccess,
-        description: dict.nav.signOutMessage,
-      });
+      router.push('/');
     } catch (error) {
       console.error("Logout failed:", error);
     }
   };
 
   const baseRoutes = [
-    {
-      href: "/",
-      label: dict.nav.dashboard,
-      icon: LayoutDashboard,
-      active: pathname === "/",
-    },
-    {
-      href: "/attendance",
-      label: dict.nav.attendance,
-      icon: CheckCircle2,
-      active: pathname === "/attendance",
-    },
-    {
-      href: "/players",
-      label: dict.nav.players,
-      icon: Users,
-      active: pathname === "/players",
-    },
-    {
-      href: "/games",
-      label: dict.nav.games,
-      icon: Calendar,
-      active: pathname === "/games",
-      adminOnly: true,
-    },
+    { href: "/", label: dict.nav.dashboard, icon: LayoutDashboard, active: pathname === "/" },
+    { href: "/attendance", label: dict.nav.attendance, icon: CheckCircle2, active: pathname === "/attendance" },
+    { href: "/players", label: dict.nav.players, icon: Users, active: pathname === "/players" },
+    { href: "/games", label: dict.nav.games, icon: Calendar, active: pathname === "/games", adminOnly: true },
   ];
 
-  // GUARD: super admins fallback
-  const normalizedUserEmail = user?.email?.trim().toLowerCase() || "";
-  const isUserSuperAdmin = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
-  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRun === true || isUserSuperAdmin);
-  const isAuthChecking = !!user && !isAuthorized;
-
   const routes = (isAuthorized && !isAuthChecking) ? baseRoutes.filter(route => {
-    if (route.adminOnly) {
-      return currentPlayer?.isAdmin;
-    }
+    if (route.adminOnly) return currentPlayer?.isAdmin;
     return true;
   }) : [];
 
-  if (!mounted) return (
-    <nav className="sticky top-0 z-50 w-full border-b bg-primary h-16 shadow-lg" />
-  );
+  if (!mounted) return <nav className="sticky top-0 z-50 w-full border-b bg-primary h-16 shadow-lg" />;
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-primary text-primary-foreground shadow-lg">
@@ -203,40 +144,18 @@ export function MainNav() {
         <div className="flex h-16 items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="relative h-10 w-10 overflow-hidden rounded-full border-2 border-white/20 bg-white group-hover:border-accent transition-colors flex items-center justify-center">
-              <Image 
-                src="/IMG_8760.jpg" 
-                alt="Club Logo" 
-                fill 
-                className="object-cover"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                }}
-              />
-              <div className="font-headline font-bold text-primary text-lg">
-                H
-              </div>
+              <div className="font-headline font-bold text-primary text-lg">H</div>
             </div>
-            <span className="font-headline text-lg md:text-xl font-bold tracking-tight whitespace-nowrap">
-              {dict.nav.title}
-            </span>
+            <span className="font-headline text-lg md:text-xl font-bold tracking-tight whitespace-nowrap">{dict.nav.title}</span>
           </Link>
 
           <div className="hidden md:flex items-center space-x-6">
             {routes.map((route) => (
-              <Link
-                key={route.href}
-                href={route.href}
-                className={cn(
-                  "flex items-center gap-2 text-sm font-bold transition-all hover:text-accent",
-                  route.active ? "text-accent scale-105" : "text-primary-foreground/80"
-                )}
-              >
+              <Link key={route.href} href={route.href} className={cn("flex items-center gap-2 text-sm font-bold transition-all hover:text-accent", route.active ? "text-accent scale-105" : "text-primary-foreground/80")}>
                 <route.icon className="h-4 w-4" />
                 {route.label}
               </Link>
             ))}
-
             <div className="ml-4 flex items-center gap-4 border-l border-primary-foreground/20 pl-6">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -246,13 +165,8 @@ export function MainNav() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-40">
-                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{dict.nav.language}</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={() => setLanguage('en')} className={cn("py-2.5", language === 'en' && "bg-accent/10 font-bold")}>
-                    English
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLanguage('zh')} className={cn("py-2.5", language === 'zh' && "bg-accent/10 font-bold")}>
-                    中文 (Chinese)
-                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage('en')}>English</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguage('zh')}>中文</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -264,9 +178,7 @@ export function MainNav() {
                     <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 overflow-hidden border-2 border-accent/30 hover:border-accent transition-all">
                       <Avatar className="h-full w-full">
                         <AvatarImage src={user.photoURL || ""} alt={user.displayName || "User"} />
-                        <AvatarFallback className="bg-accent text-accent-foreground text-xs font-bold">
-                          {user.displayName?.split(' ').map(n => n[0]).join('') || "U"}
-                        </AvatarFallback>
+                        <AvatarFallback className="bg-accent text-accent-foreground text-xs font-bold">{user.displayName?.[0] || "U"}</AvatarFallback>
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
@@ -285,13 +197,7 @@ export function MainNav() {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                <Button 
-                  onClick={handleLogin} 
-                  variant="outline" 
-                  size="sm" 
-                  disabled={isLoggingIn}
-                  className="bg-white text-primary hover:bg-accent hover:text-white border-none font-bold gap-2 h-9 px-4"
-                >
+                <Button onClick={handleLogin} variant="outline" size="sm" disabled={isLoggingIn} className="bg-white text-primary hover:bg-accent hover:text-white border-none font-bold gap-2 h-9 px-4">
                   {isLoggingIn ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogIn className="h-4 w-4" />}
                   {dict.nav.signIn}
                 </Button>
@@ -300,27 +206,6 @@ export function MainNav() {
           </div>
 
           <div className="md:hidden flex items-center gap-3">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-primary-foreground h-9 w-9 hover:bg-white/10">
-                  <Languages className="h-5 w-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-32">
-                <DropdownMenuItem onClick={() => setLanguage('en')} className="font-bold py-3">English</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setLanguage('zh')} className="font-bold py-3">中文</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            
-            {user && (
-              <Avatar className="h-9 w-9 border-2 border-accent shrink-0">
-                <AvatarImage src={user.photoURL || ""} alt={user.displayName || "User"} />
-                <AvatarFallback className="bg-accent text-accent-foreground text-[10px] font-bold">
-                  {user.displayName?.split(' ').map(n => n[0]).join('') || "U"}
-                </AvatarFallback>
-              </Avatar>
-            )}
-            
             <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)} className="text-primary-foreground h-9 w-9 hover:bg-white/10 shrink-0">
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
@@ -329,40 +214,25 @@ export function MainNav() {
       </div>
 
       {isOpen && (
-        <div className="md:hidden border-t bg-primary animate-in slide-in-from-top-4 duration-300 shadow-2xl pb-6">
+        <div className="md:hidden border-t bg-primary pb-6">
           <div className="space-y-1.5 px-4 pt-4">
             {routes.map((route) => (
-              <Link
-                key={route.href}
-                href={route.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-bold transition-all active:bg-white/10",
-                  route.active ? "bg-white/20 text-accent shadow-inner" : "text-primary-foreground/90 hover:bg-white/5"
-                )}
-              >
-                <route.icon className={cn("h-5 w-5 shrink-0", route.active ? "text-accent" : "text-primary-foreground/60")} />
+              <Link key={route.href} href={route.href} className={cn("flex items-center gap-3 rounded-xl px-4 py-3.5 text-base font-bold transition-all", route.active ? "bg-white/20 text-accent" : "text-primary-foreground/90")}>
+                <route.icon className="h-5 w-5" />
                 {route.label}
               </Link>
             ))}
-            <div className="pt-4 border-t border-white/10 mt-4">
-              {!isUserLoading && !user && (
-                <Button 
-                  onClick={handleLogin} 
-                  variant="outline" 
-                  disabled={isLoggingIn}
-                  className="w-full bg-white text-primary border-none font-bold h-12 text-base rounded-xl active:scale-[0.98]"
-                >
-                  {isLoggingIn ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <LogIn className="mr-2 h-5 w-5" />}
-                  {dict.nav.signIn}
-                </Button>
-              )}
-              {user && (
-                <Button onClick={handleLogout} variant="ghost" className="w-full text-primary-foreground/80 hover:text-white justify-start gap-3 px-4 h-12 font-bold active:bg-white/5 rounded-xl">
-                  <LogOut className="h-5 w-5 text-destructive" />
-                  {dict.nav.signOut}
-                </Button>
-              )}
-            </div>
+            {!user && !isUserLoading && (
+              <Button onClick={handleLogin} variant="outline" disabled={isLoggingIn} className="w-full bg-white text-primary border-none font-bold h-12 text-base mt-4">
+                {dict.nav.signIn}
+              </Button>
+            )}
+            {user && (
+              <Button onClick={handleLogout} variant="ghost" className="w-full text-primary-foreground/80 justify-start gap-3 px-4 h-12 font-bold mt-4">
+                <LogOut className="h-5 w-5 text-destructive" />
+                {dict.nav.signOut}
+              </Button>
+            )}
           </div>
         </div>
       )}

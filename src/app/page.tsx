@@ -367,34 +367,47 @@ export default function DashboardPage() {
   }, [user, firestore, isUserLoading]);
 
   const playerRef = useMemoFirebase(() => {
-    if (isUserLoading || !user) return null;
+    if (!user) return null;
     return doc(firestore, "players", user.uid);
-  }, [firestore, user, isUserLoading]);
+  }, [firestore, user]);
   const { data: currentPlayer, isLoading: isProfileLoading } = useDoc<Player>(playerRef);
 
   const emailMatchQuery = useMemoFirebase(() => {
-    if (isUserLoading || !user || currentPlayer) return null;
-    // Use normalized email for search
+    if (!user || currentPlayer) return null;
     const normalizedEmail = user.email?.trim().toLowerCase() || "";
     return query(collection(firestore, "players"), where("email", "==", normalizedEmail), limit(1));
-  }, [firestore, user, currentPlayer, isUserLoading]);
+  }, [firestore, user, currentPlayer]);
   const { data: matchedProfiles, isLoading: isMatchedProfilesLoading } = useCollection<Player>(emailMatchQuery);
   const preEnteredProfile = matchedProfiles?.find(p => p.id !== user?.uid);
 
-  // Critical Guard: super admin emails are always authorized to see the dashboard (to seed/claim admin)
   const normalizedUserEmail = user?.email?.trim().toLowerCase() || "";
   const isSuperAdminEmailCheck = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
+  
+  // WAIT FOR LOADING to avoid flashing/kicking valid users
+  const isAuthorizationDetermined = !isUserLoading && !isProfileLoading && !isMatchedProfilesLoading && isFirstRunCheck !== null;
   const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmailCheck);
-  const isCheckingAuth = !!user && !isAuthorized;
+  const isCheckingAuth = !!user && !isAuthorizationDetermined;
+
+  useEffect(() => {
+    if (isAuthorizationDetermined && user && !isAuthorized) {
+      signOut(auth).then(() => {
+        toast({
+          variant: "destructive",
+          title: dict.nav.unauthorizedEmailTitle,
+          description: dict.nav.unauthorizedEmailDesc,
+        });
+      });
+    }
+  }, [isAuthorizationDetermined, user, isAuthorized, auth, toast, dict.nav]);
 
   const teamsQuery = useMemoFirebase(() => {
-    if (!isAuthorized) return null;
+    if (!isAuthorized || isCheckingAuth) return null;
     return collection(firestore, "teams");
-  }, [firestore, isAuthorized]);
+  }, [firestore, isAuthorized, isCheckingAuth]);
   const { data: teams } = useCollection<Team>(teamsQuery);
 
   const gamesQuery = useMemoFirebase(() => {
-    if (!isAuthorized) return null;
+    if (!isAuthorized || isCheckingAuth) return null;
     const now = new Date();
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     
@@ -404,48 +417,22 @@ export default function DashboardPage() {
       orderBy("date", "asc"),
       limit(30)
     );
-  }, [firestore, isAuthorized]);
-
+  }, [firestore, isAuthorized, isCheckingAuth]);
   const { data: upcomingGames, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
   
   const playersQuery = useMemoFirebase(() => {
-    if (!isAuthorized) return null;
+    if (!isAuthorized || isCheckingAuth) return null;
     return collection(firestore, "players");
-  }, [firestore, isAuthorized]);
-  
+  }, [firestore, isAuthorized, isCheckingAuth]);
   const { data: players } = useCollection<Player>(playersQuery);
 
   const handleLogin = async () => {
     if (isLoggingIn) return;
-    setIsLoggingIn(true);
+    setIsLoggingIn(false);
     const provider = new GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     try {
-      const result = await signInWithPopup(auth, provider);
-
-      if (result.user.email) {
-        // Normalize email: trim and lowercase
-        const normalizedEmail = result.user.email.trim().toLowerCase();
-        
-        const playersRef = collection(firestore, "players");
-        const q = query(playersRef, where("email", "==", normalizedEmail));
-        const snapshot = await getDocs(q);
-
-        const allPlayersSnapshot = await getDocs(query(playersRef, limit(1)));
-        const isFirstRun = allPlayersSnapshot.empty;
-        const isUserSuperAdmin = SUPER_ADMIN_EMAILS.includes(normalizedEmail);
-
-        if (snapshot.empty && !isFirstRun && !isUserSuperAdmin) {
-          await signOut(auth);
-          toast({
-            variant: "destructive",
-            title: dict.nav.unauthorizedEmailTitle,
-            description: dict.nav.unauthorizedEmailDesc,
-          });
-          return;
-        }
-      }
-
+      await signInWithPopup(auth, provider);
       router.push('/');
     } catch (error: any) {
       if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
@@ -459,56 +446,35 @@ export default function DashboardPage() {
     }
   };
 
-  useEffect(() => {
-    if (user && !isProfileLoading && !isMatchedProfilesLoading && isFirstRunCheck === false) {
-      const normalizedEmail = user.email?.trim().toLowerCase() || "";
-      const isUserSuperAdmin = SUPER_ADMIN_EMAILS.includes(normalizedEmail);
-      if (!currentPlayer && (!matchedProfiles || matchedProfiles.length === 0) && !isUserSuperAdmin) {
-        signOut(auth);
-      }
-    }
-  }, [user, currentPlayer, matchedProfiles, isFirstRunCheck, isProfileLoading, isMatchedProfilesLoading, auth]);
-
   const handleClaimProfile = () => {
     if (!user || !preEnteredProfile) return;
     setIsLinking(true);
-    
     const newDocRef = doc(firestore, "players", user.uid);
     const oldDocRef = doc(firestore, "players", preEnteredProfile.id);
-    
-    const normalizedEmail = user.email?.trim().toLowerCase() || "";
-
     const claimData = {
       ...preEnteredProfile,
       id: user.uid,
-      email: normalizedEmail,
+      email: user.email?.trim().toLowerCase() || "",
       isLinked: true 
     };
-
-    setDoc(newDocRef, claimData)
-      .then(() => {
-        deleteDoc(oldDocRef).catch(() => {});
-        toast({ title: "Profile Claimed!" });
-      })
-      .finally(() => {
-        setIsLinking(false);
-      });
+    setDoc(newDocRef, claimData).then(() => {
+      deleteDoc(oldDocRef).catch(() => {});
+      toast({ title: "Profile Claimed!" });
+    }).finally(() => {
+      setIsLinking(false);
+    });
   };
 
   const handleClaimAdmin = () => {
     if (!user) return;
     setIsClaimingAdmin(true);
-    
     const adminRef = doc(firestore, "players", user.uid);
-    const normalizedEmail = user.email?.trim().toLowerCase() || "";
-    
     const adminData: Partial<Player> = {
       id: user.uid,
       isAdmin: true,
       isLinked: true,
-      email: normalizedEmail
+      email: user.email?.trim().toLowerCase() || ""
     };
-
     if (!currentPlayer) {
       Object.assign(adminData, {
         name: user.displayName || "Admin User",
@@ -518,67 +484,45 @@ export default function DashboardPage() {
         number: 10
       });
     }
-
-    setDoc(adminRef, adminData, { merge: true })
-      .then(() => {
-        toast({ title: "Admin Rights Granted" });
-      })
-      .finally(() => {
-        setIsClaimingAdmin(false);
-      });
+    setDoc(adminRef, adminData, { merge: true }).then(() => {
+      toast({ title: "Admin Rights Granted" });
+    }).finally(() => {
+      setIsClaimingAdmin(false);
+    });
   };
 
   const handleToggleAdminRole = () => {
     if (!user || !currentPlayer) return;
     const newAdminStatus = !currentPlayer.isAdmin;
-    const pRef = doc(firestore, "players", user.uid);
-    setDoc(pRef, { id: user.uid, isAdmin: newAdminStatus }, { merge: true });
+    setDoc(doc(firestore, "players", user.uid), { id: user.uid, isAdmin: newAdminStatus }, { merge: true });
     toast({ title: newAdminStatus ? "Admin Mode" : "Player Mode" });
   };
 
   const handleSeedData = () => {
     if (!user || !currentPlayer?.isAdmin) return;
     setIsSeeding(true);
-    
     const sampleTeams = [
       { id: "team-a", name: "Team A", nameZh: "隊伍A" },
       { id: "team-b", name: "Team B", nameZh: "隊伍B" },
       { id: "team-camp3", name: "Team Camp 3", nameZh: "訓練營 3" }
     ];
-
-    sampleTeams.forEach(t => {
-      setDoc(doc(firestore, "teams", t.id), t);
-    });
-
+    sampleTeams.forEach(t => setDoc(doc(firestore, "teams", t.id), t));
     const sampleKits = [
       { id: "kit-home-1", name: "Home 1", nameZh: "主場一", color: "Pink / Grey", colorZh: "粉紅 / 灰", imageUrl: "https://picsum.photos/seed/kit1/600/800" },
       { id: "kit-away-1", name: "Away 1", nameZh: "客場一", color: "Black / Black", colorZh: "全黑", imageUrl: "https://picsum.photos/seed/kit2/600/800" },
     ];
-
-    sampleKits.forEach(k => {
-      setDoc(doc(firestore, "kits", k.id), k);
-    });
-
+    sampleKits.forEach(k => setDoc(doc(firestore, "kits", k.id), k));
     const today = new Date().toISOString().split('T')[0];
-    const in3Days = new Date(Date.now() + 86400000 * 3).toISOString().split('T')[0];
-
     const sampleGames = [
       { id: "seed-g1", date: today, startTime: "19:00", endTime: "21:00", location: "Central Sports Complex, Pitch 1", type: "League", team: "team-a", opponent: "Blue Arrows FC", coach: "Sir Alex", fee: "$100\nPayment via Bank Transfer", kitColors: "kit-home-1", alternativeKitColors: "kit-away-1", additionalDetails: "Please arrive 30 mins early for warm up." },
-      { id: "seed-g2", date: in3Days, startTime: "18:30", endTime: "20:00", location: "Community Field A", type: "Training", team: "All", opponent: "N/A", coach: "Pep G", fee: "Free", kitColors: "kit-home-1", alternativeKitColors: "", additionalDetails: "Tactics session." },
     ];
-
-    sampleGames.forEach(g => {
-      setDoc(doc(firestore, "games", g.id), g);
-    });
-
-    const pRef = doc(firestore, "players", user.uid);
-    setDoc(pRef, { 
+    sampleGames.forEach(g => setDoc(doc(firestore, "games", g.id), g));
+    setDoc(doc(firestore, "players", user.uid), { 
       id: user.uid,
       teams: ["team-a", "team-b", "team-camp3"],
       status: "Active",
-      number: (currentPlayer?.number !== undefined && currentPlayer?.number !== null) ? currentPlayer.number : 10
+      number: currentPlayer?.number || 10
     }, { merge: true });
-
     toast({ title: "Seeding Complete" });
     setIsSeeding(false);
   };
@@ -637,7 +581,7 @@ export default function DashboardPage() {
                 </Button>
               </>
             )}
-            {user && (!currentPlayer || !currentPlayer.isAdmin) && (normalizedUserEmail && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail) || isFirstRunCheck === true) && (
+            {user && (!currentPlayer || !currentPlayer.isAdmin) && (isSuperAdminEmailCheck || isFirstRunCheck === true) && (
               <Button variant="outline" size="sm" className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold text-xs" onClick={handleClaimAdmin} disabled={isClaimingAdmin}>
                 {isClaimingAdmin ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="mr-2 h-3.5 w-3.5" />}
                 {dict.dashboard.claimAdmin}
@@ -712,12 +656,6 @@ export default function DashboardPage() {
                                 {dict.common.gameTypes[game.type] || game.type}
                               </Badge>
                               <span className="text-xs md:sm font-bold text-muted-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{game.startTime} - {game.endTime}</span>
-                              {game.coach && (
-                                <span className="text-[10px] md:text-xs font-bold text-muted-foreground flex items-center gap-1.5">
-                                  <UserRound className="h-3.5 w-3.5 text-primary" />
-                                  {game.coach}
-                                </span>
-                              )}
                               <div className="flex flex-wrap gap-3">
                                 <KitBadge kitId={game.kitColors} />
                                 <KitBadge kitId={game.alternativeKitColors} isAlternative />
