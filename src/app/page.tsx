@@ -635,7 +635,13 @@ export default function DashboardPage() {
                       </Badge>
                     )}
                   </h2>
-                  <Link href="/games"><Button variant="ghost" size="sm" className="text-primary gap-1 font-bold p-0 sm:px-3 sm:py-2 hover:bg-transparent sm:hover:bg-muted/50">{dict.dashboard.fullSchedule} <ArrowRight className="h-4 w-4" /></Button></Link>
+                  {currentPlayer?.isAdmin && (
+                    <Link href="/games">
+                      <Button variant="ghost" size="sm" className="text-primary gap-1 font-bold p-0 sm:px-3 sm:py-2 hover:bg-transparent sm:hover:bg-muted/50">
+                        {dict.dashboard.fullSchedule} <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  )}
                 </div>
 
                 <div className="grid gap-6">
