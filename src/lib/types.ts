@@ -58,4 +58,6 @@ export interface Attendance {
   playerId: string;
   status: AttendanceStatus;
   lastUpdated: string;
+  isGuest?: boolean;
+  guestName?: string;
 }

@@ -1,3 +1,4 @@
+
 /**
  * Centralized Dictionaries for UI Strings
  */
@@ -205,11 +206,16 @@ const baseDict = {
     attendingQuestion: "你會出席嗎？",
     confirmationRequired: "請確認出席情況",
     viewFullRoster: "View Full Roster",
+    addGuest: "Add Guest Player",
+    guestName: "Guest Name",
+    guest: "Guest",
     toasts: {
       statusUpdated: "Status Updated",
       statusDesc: (status: string) => `Attendance set to ${status}.`,
       confirmDesc: "You're in!",
-      updateDesc: "Status updated"
+      updateDesc: "Status updated",
+      guestAdded: "Guest Added",
+      guestAddedDesc: "Guest player has been added to the roster."
     }
   }
 };
@@ -417,11 +423,16 @@ const zhDict: typeof baseDict = {
     attendingQuestion: "你會出席嗎？",
     confirmationRequired: "請確認出席情況",
     viewFullRoster: "查看完整隊員名單",
+    addGuest: "新增客籍球員",
+    guestName: "客籍球員姓名",
+    guest: "客籍",
     toasts: {
       statusUpdated: "狀態已更新",
       statusDesc: (status: string) => `出席情況已設置為 ${status}。`,
       confirmDesc: "我們會見到你！",
-      updateDesc: "出席狀態已更新"
+      updateDesc: "出席狀態已更新",
+      guestAdded: "客籍球員已新增",
+      guestAddedDesc: "客籍球員已添加到名單中。"
     }
   }
 };

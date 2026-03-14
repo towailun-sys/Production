@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, Fragment } from "react";
@@ -270,8 +271,13 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
   
   const confirmedPlayers = attendanceDocs
     ?.filter(a => a.status === 'Confirmed')
-    .map(a => allPlayers.find(p => p.id === a.playerId))
-    .filter(Boolean) as Player[] || [];
+    .map(a => {
+      if (a.isGuest) {
+        return { id: a.id, name: a.guestName || "Guest", isGuest: true } as any;
+      }
+      return allPlayers.find(p => p.id === a.playerId);
+    })
+    .filter(Boolean) as any[] || [];
 
   if (confirmedPlayers.length === 0) {
     return <div className="text-[11px] text-muted-foreground italic mt-3">{dict.dashboard.noConfirmations}</div>;
@@ -286,20 +292,24 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
       <div className="flex flex-wrap gap-1.5">
         {confirmedPlayers.map((p) => {
           const hasNumber = p.number !== undefined && p.number !== null;
-          const positions = p.preferredPositions?.map(pos => dict.common.positions[pos.toLowerCase() as keyof typeof dict.common.positions] || pos).join('/') || null;
+          const positions = p.preferredPositions?.map((pos: any) => dict.common.positions[pos.toLowerCase() as keyof typeof dict.common.positions] || pos).join('/') || null;
           
           return (
             <Badge 
               key={p.id} 
               variant="secondary" 
-              className="text-[10px] py-0.5 px-2 h-auto min-h-6 font-bold gap-1 bg-primary/10 text-primary border-primary/20 flex flex-wrap"
+              className={cn(
+                "text-[10px] py-0.5 px-2 h-auto min-h-6 font-bold gap-1 flex flex-wrap",
+                p.isGuest ? "bg-accent/10 text-accent border-accent/20" : "bg-primary/10 text-primary border-primary/20"
+              )}
             >
               <div className="flex items-center gap-1">
                 {p.isCaptain && <Crown className="h-3 w-3 text-accent" />}
                 {hasNumber && <span className="opacity-60">#{p.number}</span>}
                 <span>{p.nickname || p.name}</span>
+                {p.isGuest && <span className="text-[8px] opacity-60 font-normal">({dict.attendance.guest})</span>}
               </div>
-              {positions && (
+              {positions && !p.isGuest && (
                 <span className="text-[8px] opacity-60 font-normal ml-0.5">
                   ({positions})
                 </span>

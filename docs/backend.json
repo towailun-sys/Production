@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "Player": {
@@ -86,6 +87,14 @@
           "type": "string",
           "description": "The date and time when the player's attendance status was last updated.",
           "format": "date-time"
+        },
+        "isGuest": {
+          "type": "boolean",
+          "description": "Flag indicating if this is a guest player not in the main player list."
+        },
+        "guestName": {
+          "type": "string",
+          "description": "The name of the guest player."
         }
       },
       "required": [

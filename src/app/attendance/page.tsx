@@ -28,13 +28,13 @@ import {
   Shirt,
   UserRound,
   Banknote,
-  Image as ImageIcon
+  UserPlus,
 } from "lucide-react";
-import { Game, AttendanceStatus, Player, Attendance, Team, Kit } from "@/lib/types";
+import { Game, AttendanceStatus, Player, Attendance, Team } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
-import { collection, query, orderBy, doc, setDoc, where } from "firebase/firestore";
+import { collection, query, orderBy, doc, setDoc, where, deleteDoc } from "firebase/firestore";
 import Link from "next/link";
 import {
   DropdownMenu,
@@ -44,11 +44,20 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useTranslation } from "@/components/language-provider";
-import Image from "next/image";
 import { KitBadge } from "@/app/page";
+import { useState } from "react";
 
 export default function AttendancePage() {
   const searchParams = useSearchParams();
@@ -83,7 +92,7 @@ export default function AttendancePage() {
 
   const { data: games, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
 
-  const handleStatusChange = (gameId: string, status: AttendanceStatus, targetPlayerId?: string) => {
+  const handleStatusChange = (gameId: string, status: AttendanceStatus, targetPlayerId?: string, isGuest?: boolean) => {
     if (!user) return;
 
     const playerId = targetPlayerId || user.uid;
@@ -335,12 +344,16 @@ function GameRosterList({
 }: { 
   gameId: string;
   teams: Team[];
-  onStatusChange: (gameId: string, status: AttendanceStatus, targetPlayerId?: string) => void;
+  onStatusChange: (gameId: string, status: AttendanceStatus, targetPlayerId?: string, isGuest?: boolean) => void;
 }) {
   const firestore = useFirestore();
   const { user, isUserLoading } = useUser();
   const { dict, language } = useTranslation();
+  const { toast } = useToast();
   
+  const [isGuestDialogOpen, setIsGuestDialogOpen] = useState(false);
+  const [guestName, setGuestName] = useState("");
+
   const playerRef = useMemoFirebase(() => {
     if (isUserLoading || !user) return null;
     return doc(firestore, "players", user.uid);
@@ -372,67 +385,173 @@ function GameRosterList({
   const confirmedCount = attendanceDocs?.filter(a => a.status === 'Confirmed').length || 0;
   const declinedCount = attendanceDocs?.filter(a => a.status === 'Declined').length || 0;
 
+  const handleAddGuest = () => {
+    if (!guestName.trim()) return;
+    
+    const guestId = `guest-${Math.random().toString(36).substring(2, 11)}`;
+    const attendanceRef = doc(firestore, "games", gameId, "attendanceRecords", guestId);
+    
+    const guestData = {
+      id: guestId,
+      playerId: guestId,
+      gameId: gameId,
+      status: 'Confirmed' as AttendanceStatus,
+      isGuest: true,
+      guestName: guestName,
+      lastUpdated: new Date().toISOString()
+    };
+
+    setDoc(attendanceRef, guestData)
+      .catch(async (error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: attendanceRef.path,
+          operation: 'write',
+          requestResourceData: guestData
+        } satisfies SecurityRuleContext));
+      });
+
+    setGuestName("");
+    setIsGuestDialogOpen(false);
+    toast({
+      title: dict.attendance.toasts.guestAdded,
+      description: dict.attendance.toasts.guestAddedDesc,
+    });
+  };
+
+  const handleDeleteGuest = (id: string) => {
+    const ref = doc(firestore, "games", gameId, "attendanceRecords", id);
+    deleteDoc(ref);
+  };
+
+  const guestAttendances = attendanceDocs?.filter(a => a.isGuest) || [];
+
   return (
-    <Card className="border-none shadow-lg rounded-2xl overflow-hidden">
-      <CardHeader className="bg-primary/5 px-5 py-4 flex flex-row items-center justify-between border-b">
-        <CardTitle className="text-lg md:text-xl flex items-center gap-2">
-          <Users className="h-5 w-5 text-primary" />
-          {dict.attendance.rosterTitle}
-        </CardTitle>
-        <div className="flex gap-4 text-sm font-bold">
-          <span className="text-emerald-600 flex items-center gap-1"><Check className="h-4 w-4" /> {confirmedCount}</span>
-          <span className="text-destructive flex items-center gap-1"><X className="h-4 w-4" /> {declinedCount}</span>
-        </div>
-      </CardHeader>
-      <CardContent className="p-0">
-        <div className="divide-y">
-          {players?.map((player) => {
-            const status = getStatus(player.id);
-            const hasNumber = player.number !== undefined && player.number !== null;
-            return (
-              <div key={player.id} className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors">
+    <div className="space-y-4">
+      <Card className="border-none shadow-lg rounded-2xl overflow-hidden">
+        <CardHeader className="bg-primary/5 px-5 py-4 flex flex-row items-center justify-between border-b">
+          <CardTitle className="text-lg md:text-xl flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            {dict.attendance.rosterTitle}
+          </CardTitle>
+          <div className="flex items-center gap-4">
+            <div className="flex gap-3 text-xs md:text-sm font-bold">
+              <span className="text-emerald-600 flex items-center gap-1"><Check className="h-4 w-4" /> {confirmedCount}</span>
+              <span className="text-destructive flex items-center gap-1"><X className="h-4 w-4" /> {declinedCount}</span>
+            </div>
+            {currentPlayer?.isAdmin && (
+              <Button size="sm" onClick={() => setIsGuestDialogOpen(true)} className="bg-accent hover:bg-accent/90 font-bold h-8 text-[10px] uppercase tracking-wider">
+                <UserPlus className="h-3.5 w-3.5 mr-1.5" /> {dict.attendance.addGuest}
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          <div className="divide-y">
+            {players?.map((player) => {
+              const status = getStatus(player.id);
+              const hasNumber = player.number !== undefined && player.number !== null;
+              return (
+                <div key={player.id} className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors">
+                  <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
+                    <div className="shrink-0">
+                      <div className={cn(
+                        "h-10 w-10 md:h-11 md:w-11 rounded-full flex items-center justify-center font-bold bg-primary/10 text-primary border border-primary/5 relative"
+                      )}>
+                        {hasNumber ? player.number : player.name[0]}
+                        {player.isCaptain && (
+                          <div className="absolute -top-1 -right-1 bg-accent text-accent-foreground rounded-full p-0.5 shadow-sm border border-white">
+                            <Crown className="h-3 w-3" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="overflow-hidden">
+                      <div className="font-bold flex items-center gap-2 truncate">
+                        <span className="truncate">{player.name}</span>
+                        {player.nickname && <span className="hidden sm:inline-flex text-muted-foreground text-xs italic font-normal">"{player.nickname}"</span>}
+                        {player.isCaptain && (
+                          <Badge variant="secondary" className="bg-accent/20 text-accent text-[9px] font-bold h-4 px-1 leading-none uppercase tracking-wider hidden sm:flex">
+                            {dict.common.captain}
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="text-[10px] md:text-xs text-muted-foreground truncate">
+                        <span className="font-bold text-primary">
+                          {player.teams?.map(getTeamName).join(', ')}
+                        </span>
+                        {" • "}{player.preferredPositions?.map(pos => dict.common.positions[pos.toLowerCase() as keyof typeof dict.common.positions] || pos).join(', ') || dict.common.any}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 shrink-0">
+                    <Badge 
+                      variant={status === 'Confirmed' ? 'default' : status === 'Declined' ? 'destructive' : 'outline'}
+                      className={cn(
+                        "min-w-[80px] md:min-w-[95px] justify-center font-bold text-[10px] md:text-xs py-1",
+                        status === 'Confirmed' && "bg-emerald-500 hover:bg-emerald-500",
+                        status === 'Pending' && "border-amber-500 text-amber-600"
+                      )}
+                    >
+                      {status === 'Confirmed' ? dict.common.confirm : status === 'Declined' ? dict.common.decline : dict.common.pending}
+                    </Badge>
+
+                    {currentPlayer?.isAdmin && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-primary/5">
+                            <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuLabel className="text-xs uppercase tracking-widest text-muted-foreground">{dict.dashboard.roles}</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Confirmed', player.id)} className="text-emerald-600 font-bold py-2.5">
+                            <Check className="mr-2 h-4 w-4" /> {dict.common.confirm}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Declined', player.id)} className="text-destructive font-bold py-2.5">
+                            <X className="mr-2 h-4 w-4" /> {dict.common.decline}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Pending', player.id)} className="text-amber-600 font-bold py-2.5">
+                            <Clock className="mr-2 h-4 w-4" /> {dict.common.pending}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+
+            {/* Guest Players */}
+            {guestAttendances.map((guest) => (
+              <div key={guest.id} className="p-4 flex items-center justify-between hover:bg-muted/10 transition-colors bg-accent/5">
                 <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
                   <div className="shrink-0">
-                    <div className={cn(
-                      "h-10 w-10 md:h-11 md:w-11 rounded-full flex items-center justify-center font-bold bg-primary/10 text-primary border border-primary/5 relative"
-                    )}>
-                      {hasNumber ? player.number : player.name[0]}
-                      {player.isCaptain && (
-                        <div className="absolute -top-1 -right-1 bg-accent text-accent-foreground rounded-full p-0.5 shadow-sm border border-white">
-                          <Crown className="h-3 w-3" />
-                        </div>
-                      )}
+                    <div className="h-10 w-10 md:h-11 md:w-11 rounded-full flex items-center justify-center font-bold bg-accent/10 text-accent border border-accent/20">
+                      {guest.guestName?.[0] || "?"}
                     </div>
                   </div>
                   <div className="overflow-hidden">
                     <div className="font-bold flex items-center gap-2 truncate">
-                      <span className="truncate">{player.name}</span>
-                      {player.nickname && <span className="hidden sm:inline-flex text-muted-foreground text-xs italic font-normal">"{player.nickname}"</span>}
-                      {player.isCaptain && (
-                        <Badge variant="secondary" className="bg-accent/20 text-accent text-[9px] font-bold h-4 px-1 leading-none uppercase tracking-wider hidden sm:flex">
-                          {dict.common.captain}
-                        </Badge>
-                      )}
+                      <span className="truncate">{guest.guestName}</span>
+                      <Badge variant="outline" className="text-[8px] h-4 px-1.5 uppercase font-bold bg-accent text-accent-foreground border-none">
+                        {dict.attendance.guest}
+                      </Badge>
                     </div>
-                    <div className="text-[10px] md:text-xs text-muted-foreground truncate">
-                      <span className="font-bold text-primary">
-                        {player.teams?.map(getTeamName).join(', ')}
-                      </span>
-                      {" • "}{player.preferredPositions?.map(pos => dict.common.positions[pos.toLowerCase() as keyof typeof dict.common.positions] || pos).join(', ') || dict.common.any}
+                    <div className="text-[10px] md:text-xs text-muted-foreground">
+                      {dict.attendance.guest}
                     </div>
                   </div>
                 </div>
                 
                 <div className="flex items-center gap-2 shrink-0">
                   <Badge 
-                    variant={status === 'Confirmed' ? 'default' : status === 'Declined' ? 'destructive' : 'outline'}
                     className={cn(
-                      "min-w-[80px] md:min-w-[95px] justify-center font-bold text-[10px] md:text-xs py-1",
-                      status === 'Confirmed' && "bg-emerald-500 hover:bg-emerald-500",
-                      status === 'Pending' && "border-amber-500 text-amber-600"
+                      "min-w-[80px] md:min-w-[95px] justify-center font-bold text-[10px] md:text-xs py-1 bg-emerald-500"
                     )}
                   >
-                    {status === 'Confirmed' ? dict.common.confirm : status === 'Declined' ? dict.common.decline : dict.common.pending}
+                    {dict.common.confirm}
                   </Badge>
 
                   {currentPlayer?.isAdmin && (
@@ -443,27 +562,44 @@ function GameRosterList({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
-                        <DropdownMenuLabel className="text-xs uppercase tracking-widest text-muted-foreground">{dict.dashboard.roles}</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Confirmed', player.id)} className="text-emerald-600 font-bold py-2.5">
-                          <Check className="mr-2 h-4 w-4" /> {dict.common.confirm}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Declined', player.id)} className="text-destructive font-bold py-2.5">
-                          <X className="mr-2 h-4 w-4" /> {dict.common.decline}
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onStatusChange(gameId, 'Pending', player.id)} className="text-amber-600 font-bold py-2.5">
-                          <Clock className="mr-2 h-4 w-4" /> {dict.common.pending}
+                        <DropdownMenuItem onClick={() => handleDeleteGuest(guest.id)} className="text-destructive font-bold py-2.5">
+                          <X className="mr-2 h-4 w-4" /> {dict.common.delete}
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
                 </div>
               </div>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Dialog open={isGuestDialogOpen} onOpenChange={setIsGuestDialogOpen}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle className="font-headline">{dict.attendance.addGuest}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="guestName" className="text-xs uppercase tracking-wider">{dict.attendance.guestName}</Label>
+              <Input 
+                id="guestName" 
+                value={guestName} 
+                onChange={(e) => setGuestName(e.target.value)}
+                placeholder="Name"
+                className="h-11"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button onClick={handleAddGuest} className="w-full font-bold h-11 bg-primary">
+              {dict.common.save}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }
 
