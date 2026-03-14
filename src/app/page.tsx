@@ -225,7 +225,6 @@ function GameAttendanceSection({
   const firestore = useFirestore();
   const { dict, language } = useTranslation();
   const { toast } = useToast();
-  const [isExpanded, setIsExpanded] = useState(false);
 
   const attendanceQuery = useMemoFirebase(() => {
     return collection(firestore, "games", game.id, "attendanceRecords");
@@ -280,61 +279,50 @@ function GameAttendanceSection({
             {dict.common.decline}
           </Badge>
         </div>
-        
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-primary font-bold gap-2 hover:bg-primary/5 rounded-full"
-          onClick={() => setIsExpanded(!isExpanded)}
-        >
-          <Users className="h-4 w-4" />
-          {dict.dashboard.confirmedSquad} ({confirmedRecords.length})
-          {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-        </Button>
       </div>
 
-      {isExpanded && (
-        <Card className="border-none bg-primary/5 shadow-inner rounded-2xl overflow-hidden">
-          <CardHeader className="py-4 px-5 border-b border-primary/10">
-            <CardTitle className="text-sm font-bold flex items-center gap-2 text-primary uppercase tracking-widest">
-              <Users className="h-4 w-4" />
-              {dict.dashboard.confirmedSquad} ({confirmedRecords.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {confirmedRecords.length === 0 ? (
-              <div className="p-8 text-center text-muted-foreground text-xs italic">
-                {dict.dashboard.noConfirmations}
-              </div>
-            ) : (
-              <div className="divide-y divide-primary/5 max-h-[300px] overflow-y-auto custom-scrollbar">
-                {confirmedRecords.map((record) => {
-                  const p = allPlayers?.find(player => player.id === record.playerId);
-                  if (!p) return null;
-                  
-                  return (
-                    <div key={record.id} className="flex items-center gap-3 p-4 hover:bg-primary/10 transition-colors">
-                      <div className="h-8 w-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-[11px] border border-primary/10 shrink-0">
-                        {p.number !== undefined && p.number !== null ? p.number : p.name[0]}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-bold truncate text-foreground">{p.nickname || p.name}</div>
-                        <div className="flex gap-1 mt-1">
-                          {p.preferredPositions?.map(pos => (
-                            <Badge key={pos} variant="outline" className="text-[9px] h-4 px-1 py-0 border-primary/20 bg-primary/5 text-primary">
-                              {dict.common.positions[pos.toLowerCase() as keyof typeof dict.common.positions] || pos}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
+      <div className="bg-primary/5 rounded-2xl overflow-hidden">
+        <div className="py-3 px-5 border-b border-primary/10 flex items-center justify-between">
+          <div className="text-xs font-bold flex items-center gap-2 text-primary uppercase tracking-widest">
+            <Users className="h-4 w-4" />
+            {dict.dashboard.confirmedSquad}
+          </div>
+          <Badge variant="secondary" className="bg-primary/20 text-primary font-bold text-[10px]">
+            {confirmedRecords.length}
+          </Badge>
+        </div>
+        
+        {confirmedRecords.length === 0 ? (
+          <div className="p-6 text-center text-muted-foreground text-xs italic">
+            {dict.dashboard.noConfirmations}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-px bg-primary/10">
+            {confirmedRecords.map((record) => {
+              const p = allPlayers?.find(player => player.id === record.playerId);
+              if (!p) return null;
+              
+              return (
+                <div key={record.id} className="flex items-center gap-3 p-3 bg-white hover:bg-primary/5 transition-colors">
+                  <div className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-[11px] border border-primary/5 shrink-0">
+                    {p.number !== undefined && p.number !== null ? p.number : p.name[0]}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-bold truncate text-foreground leading-none">{p.nickname || p.name}</div>
+                    <div className="flex gap-1 mt-1">
+                      {p.preferredPositions?.slice(0, 1).map(pos => (
+                        <span key={pos} className="text-[9px] font-bold text-primary/60 uppercase">
+                          {dict.common.positions[pos.toLowerCase() as keyof typeof dict.common.positions] || pos}
+                        </span>
+                      ))}
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -770,3 +758,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+
