@@ -49,8 +49,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useTranslation } from "@/components/language-provider";
 import Image from "next/image";
-
-const SUPER_ADMIN_EMAILS = ['towailun@gmail.com', 'alan941206@gmail.com'];
+import { SUPER_ADMIN_EMAILS } from "@/lib/constants";
 
 const getColorHex = (name: string) => {
   const n = name.toLowerCase().trim();
@@ -381,8 +380,8 @@ export default function DashboardPage() {
   const preEnteredProfile = matchedProfiles?.find(p => p.id !== user?.uid);
 
   // Critical Guard: super admin emails are always authorized to see the dashboard (to seed/claim admin)
-  const isSuperAdminEmail = !!user?.email && SUPER_ADMIN_EMAILS.includes(user.email);
-  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmail);
+  const isSuperAdminEmailCheck = !!user?.email && SUPER_ADMIN_EMAILS.includes(user.email);
+  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmailCheck);
   const isCheckingAuth = !!user && !isAuthorized;
 
   const teamsQuery = useMemoFirebase(() => {
@@ -740,7 +739,7 @@ export default function DashboardPage() {
                               </h3>
                               <div className="grid gap-2 text-xs md:text-sm text-muted-foreground">
                                 <div className="flex items-center gap-2.5"><Calendar className="h-4 w-4 text-primary shrink-0" />{formatGameDate(game.date)}</div>
-                                <div className="flex items-center gap-2.5"><MapPin className="h-4 w-4 text-primary shrink-0" />{game.location}</div>
+                                <div className="flex items-center gap-2.5"><MapPin className="h-4 w-4 text-primary shrink-0" />{formatGameDate(game.date)}</div>
                               </div>
                             </div>
 

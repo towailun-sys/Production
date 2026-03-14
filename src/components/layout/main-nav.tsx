@@ -33,8 +33,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/components/language-provider";
 import Image from "next/image";
 import { Player } from "@/lib/types";
-
-const SUPER_ADMIN_EMAILS = ['towailun@gmail.com', 'alan941206@gmail.com'];
+import { SUPER_ADMIN_EMAILS } from "@/lib/constants";
 
 export function MainNav() {
   const pathname = usePathname();

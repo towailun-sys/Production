@@ -59,8 +59,7 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useTranslation } from "@/components/language-provider";
 import { KitBadge } from "@/app/page";
-
-const SUPER_ADMIN_EMAILS = ['towailun@gmail.com', 'alan941206@gmail.com'];
+import { SUPER_ADMIN_EMAILS } from "@/lib/constants";
 
 function AttendanceContent() {
   const searchParams = useSearchParams();
@@ -84,10 +83,10 @@ function AttendanceContent() {
         .catch(() => {
           setIsFirstRunCheck(false);
         });
-    } else {
+    } else if (!isUserLoading) {
       setIsFirstRunCheck(false);
     }
-  }, [user, firestore]);
+  }, [user, firestore, isUserLoading]);
 
   const handleLogin = async () => {
     if (isLoggingIn) return;
@@ -691,30 +690,32 @@ function GameRosterList({
         </CardContent>
       </Card>
 
-      <Dialog open={isGuestDialogOpen} onOpenChange={setIsGuestDialogOpen}>
-        <DialogContent className="sm:max-w-[400px]">
-          <DialogHeader>
-            <DialogTitle className="font-headline">{dict.attendance.addGuest}</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="guestName" className="text-xs uppercase tracking-wider">{dict.attendance.guestName}</Label>
-              <Input 
-                id="guestName" 
-                value={guestName} 
-                onChange={(e) => setGuestName(e.target.value)}
-                placeholder="Name"
-                className="h-11"
-              />
+      <Suspense>
+        <Dialog open={isGuestDialogOpen} onOpenChange={setIsGuestDialogOpen}>
+          <DialogContent className="sm:max-w-[400px]">
+            <DialogHeader>
+              <DialogTitle className="font-headline">{dict.attendance.addGuest}</DialogTitle>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="guestName" className="text-xs uppercase tracking-wider">{dict.attendance.guestName}</Label>
+                <Input 
+                  id="guestName" 
+                  value={guestName} 
+                  onChange={(e) => setGuestName(e.target.value)}
+                  placeholder="Name"
+                  className="h-11"
+                />
+              </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={handleAddGuest} className="w-full font-bold h-11 bg-primary">
-              {dict.common.save}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+            <DialogFooter>
+              <Button onClick={handleAddGuest} className="w-full font-bold h-11 bg-primary">
+                {dict.common.save}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </Suspense>
     </div>
   );
 }
