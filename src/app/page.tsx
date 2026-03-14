@@ -39,7 +39,8 @@ import {
   Image as ImageIcon,
   LogIn,
   Fingerprint,
-  Copy
+  Copy,
+  CalendarDays
 } from "lucide-react";
 import Link from "next/link";
 import { Game, Player, Attendance, AttendanceStatus, Team, Kit } from "@/lib/types";
@@ -337,6 +338,62 @@ function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string,
         })}
       </div>
     </div>
+  );
+}
+
+function CommittedGamesSummary({ games, userId, teams }: { games: Game[], userId: string, teams: Team[] }) {
+  const { dict, language } = useTranslation();
+  
+  // We need to fetch attendance for all these games to find the confirmed ones
+  // But useCollection/useDoc within a map is expensive.
+  // Instead, let's just render a helper that checks each game.
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      {games.map(game => (
+        <CommittedGameCard key={game.id} game={game} userId={userId} teams={teams} />
+      ))}
+    </div>
+  );
+}
+
+function CommittedGameCard({ game, userId, teams }: { game: Game, userId: string, teams: Team[] }) {
+  const firestore = useFirestore();
+  const { dict, language } = useTranslation();
+  const attendanceRef = useMemoFirebase(() => doc(firestore, "games", game.id, "attendanceRecords", userId), [firestore, game.id, userId]);
+  const { data: attendance } = useDoc<Attendance>(attendanceRef);
+
+  if (!attendance || attendance.status !== 'Confirmed') return null;
+
+  const getTeamName = (teamId: string) => {
+    if (teamId === 'All') return dict.common.teams.All;
+    const team = teams?.find(t => t.id === teamId);
+    if (!team) return teamId;
+    return language === 'zh' ? team.nameZh : team.name;
+  };
+
+  return (
+    <Card className="bg-emerald-50/50 border-emerald-100 shadow-sm rounded-2xl overflow-hidden group hover:shadow-md transition-all">
+      <CardContent className="p-4 flex gap-4">
+        <div className="bg-emerald-100 rounded-xl h-12 w-12 flex flex-col items-center justify-center shrink-0">
+          <span className="text-[8px] font-bold text-emerald-600 uppercase tracking-widest">{new Date(game.date).toLocaleString('default', { month: 'short' })}</span>
+          <span className="text-lg font-bold font-headline text-emerald-700 leading-none">{new Date(game.date).getDate()}</span>
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <Badge className="bg-emerald-500 text-white font-bold text-[8px] py-0 px-1.5 h-4 border-none">{getTeamName(game.team)}</Badge>
+            <span className="text-[10px] font-bold text-emerald-600 truncate">{game.startTime}</span>
+          </div>
+          <h4 className="text-xs font-bold font-headline truncate">
+             {game.type === 'Training' || game.type === 'Internal' 
+                ? dict.common.gameTypes[game.type] 
+                : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
+          </h4>
+          <Link href={`/attendance?gameId=${game.id}`} className="text-[9px] font-bold text-primary hover:underline flex items-center gap-1 mt-1">
+            <Users className="h-3 w-3" /> {dict.dashboard.viewRoster}
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -649,6 +706,18 @@ export default function DashboardPage() {
             ) : (
               <div className="grid gap-8 lg:grid-cols-4">
                 <div className="lg:col-span-3 space-y-8">
+                  {/* My Committed Games Summary */}
+                  <section>
+                    <div className="flex items-center justify-between mb-4">
+                       <h2 className="text-xl font-headline flex items-center gap-2">
+                          <Check className="h-5 w-5 text-emerald-500" />
+                          {dict.dashboard.confirmedSquad}
+                       </h2>
+                       <Link href="/attendance" className="text-xs font-bold text-primary hover:underline">{dict.dashboard.fullSchedule}</Link>
+                    </div>
+                    <CommittedGamesSummary games={filteredGames} userId={user.uid} teams={teams || []} />
+                  </section>
+
                   <section>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
                       <h2 className="text-xl md:text-2xl font-headline flex items-center gap-2">
