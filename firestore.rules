@@ -12,11 +12,6 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
-    /** 
-     * Robust isAdmin check. 
-     * Checks if the user's UID is in the roles_admin collection 
-     * or if their player profile has isAdmin set to true.
-     */
     function isAdmin() {
       return isSignedIn() && (
         exists(/databases/$(database)/documents/roles_admin/$(request.auth.uid)) ||
@@ -27,60 +22,40 @@ service cloud.firestore {
 
     // --- Collection Rules ---
 
-    // Player profiles: Any signed-in user can read to allow for login validation and roster viewing.
+    // Global Read: Allow all signed-in squad members to read data for transparency.
+    match /{path=**} {
+      allow read: if isSignedIn();
+    }
+
+    // Restricted Writes: Only owners or admins can modify data.
     match /players/{playerId} {
-      allow get, list: if isSignedIn();
       allow create: if isOwner(playerId) || isAdmin();
       allow update: if isOwner(playerId) || isAdmin();
       allow delete: if isAdmin();
     }
 
-    // Teams: Public read for members, managed by admins.
     match /teams/{teamId} {
-      allow get, list: if isSignedIn();
       allow write: if isAdmin();
     }
 
-    // Kits: Public read for members, managed by admins.
     match /kits/{kitId} {
-      allow get, list: if isSignedIn();
       allow write: if isAdmin();
     }
 
-    // Games: Public read for members, managed by admins.
     match /games/{gameId} {
-      allow get, list: if isSignedIn();
       allow write: if isAdmin();
     }
 
-    // Attendance Records: Stored inside games.
     match /games/{gameId}/attendanceRecords/{playerId} {
-      allow get, list: if isSignedIn();
       allow write, delete: if isOwner(playerId) || isAdmin();
     }
 
-    // Support for Collection Group queries on attendanceRecords.
-    // This allows the "My Attendance" view to efficiently find records across all games.
-    match /{path=**}/attendanceRecords/{recordId} {
-      allow list: if isSignedIn() && (
-        isAdmin() || 
-        recordId == request.auth.uid ||
-        (resource != null && resource.data.playerId == request.auth.uid)
-      );
-      allow get: if isSignedIn();
-      allow write, delete: if isOwner(recordId) || isAdmin();
-    }
-
-    // User-centric attendance path (legacy/additional support).
     match /users/{userId}/game_attendances/{attendanceId} {
-      allow get, list: if isOwner(userId) || isAdmin();
       allow write: if (isOwner(userId) && request.resource.data.playerId == userId) || isAdmin();
       allow delete: if isOwner(userId) || isAdmin();
     }
 
-    // System roles.
     match /roles_admin/{userId} {
-      allow get: if isSignedIn();
       allow write: if false; 
     }
   }
