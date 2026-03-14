@@ -8,7 +8,6 @@ import {
   Users, 
   Calendar, 
   LayoutDashboard, 
-  CheckCircle2,
   Menu,
   X,
   LogOut,
@@ -126,7 +125,6 @@ export function MainNav() {
 
   const baseRoutes = [
     { href: "/", label: dict.nav.dashboard, icon: LayoutDashboard, active: pathname === "/" },
-    { href: "/attendance", label: dict.nav.attendance, icon: CheckCircle2, active: pathname === "/attendance" },
     { href: "/players", label: dict.nav.players, icon: Users, active: pathname === "/players" },
     { href: "/games", label: dict.nav.games, icon: Calendar, active: pathname === "/games", adminOnly: true },
   ];

@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, Fragment, useEffect } from "react";
@@ -386,7 +387,7 @@ export default function DashboardPage() {
   const isSuperAdminEmailCheck = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
   
   const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || (matchedProfiles !== null && !isMatchedProfilesLoading)) && isFirstRunCheck !== null;
-  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmailCheck);
+  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRun === true || isSuperAdminEmailCheck);
   const isCheckingAuth = !!user && !isAuthDetermined;
 
   const teamsQuery = useMemoFirebase(() => {
@@ -730,12 +731,6 @@ export default function DashboardPage() {
                                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{dict.attendance.attendingQuestion}</p>
                                   <UserAttendanceToggle gameId={game.id} userId={user.uid} />
                                 </div>
-                                <Link href={`/attendance?gameId=${game.id}`} className="mt-2 sm:mt-0">
-                                  <Button variant="outline" size="sm" className="w-full text-xs font-bold border-primary text-primary hover:bg-primary hover:text-white gap-2 h-10 md:h-9">
-                                    <Users className="h-4 w-4" />
-                                    {dict.dashboard.viewRoster}
-                                  </Button>
-                                </Link>
                               </div>
                             </CardContent>
                           </Card>

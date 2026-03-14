@@ -51,9 +51,9 @@ import {
   Info,
   UserRound,
   Banknote,
-  Calendar as CalendarIcon,
   History,
-  CalendarDays
+  CalendarDays,
+  Calendar as CalendarIcon
 } from "lucide-react";
 import { Game, GameType, Player, Team, Kit } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -425,21 +425,6 @@ export default function GamesPage() {
                 </div>
 
                 <div className="flex flex-row md:flex-col items-center gap-3 justify-between md:justify-center border-t md:border-none pt-4 md:pt-0">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className={cn(
-                      "font-bold gap-1.5 h-10 px-4 flex-1 md:flex-none",
-                      isOutdated ? "text-muted-foreground hover:bg-muted" : "text-primary hover:bg-primary/5"
-                    )} 
-                    asChild
-                  >
-                    <Link href={`/attendance?gameId=${game.id}`}>
-                      {dict.dashboard.viewRoster}
-                      <ChevronRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  
                   {currentPlayer?.isAdmin && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -800,7 +785,7 @@ export default function GamesPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-kitColors" className="text-xs uppercase tracking-wider">{dict.games.dialog.kit}</Label>
+                  <Label htmlFor="edit-kitColors" className="text-xs uppercase tracking-wider">{dict.players.dialog.kit}</Label>
                   <Select 
                     value={formData.kitColors}
                     onValueChange={(val) => setFormData({ ...formData, kitColors: val })}
