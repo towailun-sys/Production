@@ -26,6 +26,7 @@ const baseDict = {
     matchVs: "Match vs",
     status: "Status",
     statusLabel: "Status",
+    player: "Player",
     statusTypes: {
       active: "Active",
       injured: "Injured",
@@ -85,6 +86,7 @@ const baseDict = {
     myGame: "My Game",
     otherTeam: "Other Team",
     fullAccess: "Full Access View",
+    noTeam: "No Team",
     teamView: (team: string) => `${team} View`
   },
   games: {
@@ -208,12 +210,17 @@ const baseDict = {
     locationLabel: "Location",
     feeLabel: "Fee",
     detailsLabel: "Details",
-    attendingQuestion: "你會出席嗎？",
-    confirmationRequired: "請確認出席情況",
+    attendingQuestion: "Will you attend?",
+    confirmationRequired: "Please confirm your attendance",
     viewFullRoster: "View Full Roster",
     addGuest: "Add Guest Player",
     guestName: "Guest Name",
     guest: "Guest",
+    noConfirmedFixtures: "No upcoming confirmed fixtures found in your list.",
+    fixtureNotFound: "Fixture not found",
+    returnToFixtures: "Return to Fixtures",
+    deploymentNoteTitle: "Note for Deployment",
+    deploymentNoteDesc: "If the Google Sign-In window does not appear, please ensure your App Hosting domain is added to the Authorized Domains list in the Firebase Console under Authentication > Settings.",
     toasts: {
       statusUpdated: "Status Updated",
       statusDesc: (status: string) => `Attendance set to ${status}.`,
@@ -248,6 +255,7 @@ const zhDict: typeof baseDict = {
     matchVs: "比賽對手",
     status: "狀態",
     statusLabel: "狀態",
+    player: "球員",
     statusTypes: {
       active: "現役",
       injured: "受傷",
@@ -307,6 +315,7 @@ const zhDict: typeof baseDict = {
     myGame: "我的比賽",
     otherTeam: "其他隊伍",
     fullAccess: "管理員全視角",
+    noTeam: "未分配隊伍",
     teamView: (team: string) => `${team} 視角`
   },
   games: {
@@ -436,6 +445,11 @@ const zhDict: typeof baseDict = {
     addGuest: "新增客籍球員",
     guestName: "客籍球員姓名",
     guest: "客籍",
+    noConfirmedFixtures: "名單中沒有找到即將舉行的確認賽程。",
+    fixtureNotFound: "找不到該場次",
+    returnToFixtures: "返回賽程",
+    deploymentNoteTitle: "部署說明",
+    deploymentNoteDesc: "如果 Google 登入視窗沒有彈出，請確保已在 Firebase 控制台的「驗證 > 設定」下將你的 App Hosting 域名添加到「授權網域」列表中。",
     toasts: {
       statusUpdated: "狀態已更新",
       statusDesc: (status: string) => `出席情況已設置為 ${status}。`,

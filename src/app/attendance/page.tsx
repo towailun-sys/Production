@@ -220,8 +220,8 @@ function AttendanceContent() {
         <div className="min-h-screen bg-background">
           <MainNav />
           <main className="container mx-auto px-4 py-20 text-center">
-            <h1 className="text-xl md:text-2xl font-headline">Fixture not found</h1>
-            <Link href="/games" className="text-primary hover:underline mt-4 inline-block font-bold">Return to Fixtures</Link>
+            <h1 className="text-xl md:text-2xl font-headline">{dict.attendance.fixtureNotFound}</h1>
+            <Link href="/attendance" className="text-primary hover:underline mt-4 inline-block font-bold">{dict.attendance.returnToFixtures}</Link>
           </main>
         </div>
       );
@@ -355,7 +355,7 @@ function ConfirmedAttendanceList({ games, userId, teams }: { games: Game[], user
       {games.length === 0 ? (
         <Card className="p-16 text-center border-dashed border-2 rounded-2xl flex flex-col items-center gap-4">
           <CalendarCheck className="h-12 w-12 text-muted-foreground/30" />
-          <p className="text-muted-foreground font-medium">No upcoming confirmed fixtures found in your list.</p>
+          <p className="text-muted-foreground font-medium">{dict.attendance.noConfirmedFixtures}</p>
         </Card>
       ) : (
         <div className="space-y-6">
@@ -625,10 +625,10 @@ function GameRosterList({
 
       <div className="mt-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
         <p className="text-xs font-bold text-primary mb-2 flex items-center gap-2">
-          <Info className="h-4 w-4" /> Note for Deployment
+          <Info className="h-4 w-4" /> {dict.attendance.deploymentNoteTitle}
         </p>
         <p className="text-[10px] text-muted-foreground leading-relaxed">
-          If the Google Sign-In window does not appear, please ensure your App Hosting domain is added to the <strong>"Authorized Domains"</strong> list in the Firebase Console under <em>Authentication &gt; Settings</em>.
+          {dict.attendance.deploymentNoteDesc}
         </p>
       </div>
 

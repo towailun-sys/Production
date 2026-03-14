@@ -554,7 +554,7 @@ export default function DashboardPage() {
     );
   }
 
-  const welcomeName = currentPlayer?.nickname || currentPlayer?.name || user?.displayName || "Player";
+  const welcomeName = currentPlayer?.nickname || currentPlayer?.name || user?.displayName || dict.common.player;
   const filteredGames = upcomingGames?.filter(game => {
     if (currentPlayer?.isAdmin) return true;
     if (!currentPlayer) return false;
@@ -634,7 +634,7 @@ export default function DashboardPage() {
                     <Calendar className="h-6 w-6 text-primary" />{dict.nav.dashboard}
                     {currentPlayer && (
                       <Badge variant="outline" className="hidden sm:inline-flex ml-2 bg-primary/10 text-primary border-primary/20 font-bold">
-                        {currentPlayer.isAdmin ? dict.dashboard.fullAccess : dict.dashboard.teamView(currentPlayer.teams?.map(getTeamName).join(', ') || "No Team")}
+                        {currentPlayer.isAdmin ? dict.dashboard.fullAccess : dict.dashboard.teamView(currentPlayer.teams?.length ? currentPlayer.teams?.map(getTeamName).join(', ') : dict.dashboard.noTeam)}
                       </Badge>
                     )}
                   </h2>
