@@ -4,7 +4,7 @@
 import { MainNav } from "@/components/layout/main-nav";
 import { useTranslation } from "@/components/language-provider";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, collectionGroup, query, where, orderBy } from "firebase/firestore";
+import { collection, query, where, orderBy } from "firebase/firestore";
 import { Game, Attendance } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -17,12 +17,12 @@ export default function AttendancePage() {
   const firestore = useFirestore();
   const { dict, language } = useTranslation();
 
-  // 1. Get user's confirmed attendance records across all games
+  // 1. Get user's confirmed attendance records from their personal collection
+  // This is a much simpler and more robust query than collectionGroup
   const confirmedAttendanceQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
-      collectionGroup(firestore, "attendanceRecords"),
-      where("playerId", "==", user.uid),
+      collection(firestore, "users", user.uid, "game_attendances"),
       where("status", "==", "Confirmed")
     );
   }, [firestore, user]);

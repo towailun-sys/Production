@@ -231,7 +231,11 @@ function GameAttendanceSection({
   const confirmedRecords = attendanceRecords?.filter(r => r.status === 'Confirmed') || [];
 
   const handleUpdateStatus = (status: 'Confirmed' | 'Declined') => {
+    // 1. Write to game's squad list
     const recordRef = doc(firestore, "games", game.id, "attendanceRecords", user.uid);
+    // 2. Write to user's personal history (for the My Attendance page to avoid collection group query)
+    const userRecordRef = doc(firestore, "users", user.uid, "game_attendances", game.id);
+
     const data = {
       id: user.uid,
       gameId: game.id,
@@ -240,9 +244,18 @@ function GameAttendanceSection({
       lastUpdated: new Date().toISOString()
     };
     
+    // Perform both writes
     setDoc(recordRef, data, { merge: true }).catch(err => {
       errorEmitter.emit('permission-error', new FirestorePermissionError({
         path: recordRef.path,
+        operation: 'write',
+        requestResourceData: data
+      } satisfies SecurityRuleContext));
+    });
+
+    setDoc(userRecordRef, data, { merge: true }).catch(err => {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({
+        path: userRecordRef.path,
         operation: 'write',
         requestResourceData: data
       } satisfies SecurityRuleContext));
@@ -617,7 +630,7 @@ export default function DashboardPage() {
                     </p>
                     <div className="flex flex-col items-center gap-2 max-w-xs mx-auto p-4 bg-white rounded-2xl border shadow-sm">
                       <div className="text-[10px] uppercase font-bold text-muted-foreground flex items-center gap-1.5">
-                        <Fingerprint className="h-3 w-3" /> User ID
+                        <Fingerprint className="h-3.5 w-3.5" /> User ID
                       </div>
                       <code className="text-xs font-mono font-bold bg-muted px-3 py-1 rounded-lg select-all w-full truncate">{user.uid}</code>
                       <Button variant="ghost" size="sm" onClick={handleCopyId} className="w-full text-primary hover:bg-primary/5 font-bold text-xs gap-2">
