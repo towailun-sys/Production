@@ -133,7 +133,7 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
             </div>
           </Badge>
         </PopoverTrigger>
-        <PopoverContent className="w-64 p-3 shadow-xl rounded-xl">
+        <PopoverContent className="w-64 p-3 shadow-xl rounded-xl" align="center" side="bottom" sideOffset={8}>
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -152,6 +152,7 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
                   fill 
                   className="object-cover"
                   sizes="256px"
+                  unoptimized={kit.imageUrl.startsWith('data:')}
                 />
               ) : (
                 <div className="flex flex-col items-center justify-center h-full text-muted-foreground gap-2">
