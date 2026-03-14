@@ -134,12 +134,14 @@ export default function AttendancePage() {
               </div>
             )}
 
-            <GameAttendanceSection 
-              game={game} 
-              user={user} 
-              allPlayers={players || []} 
-              readOnly={true}
-            />
+            {user && (
+              <GameAttendanceSection 
+                game={game} 
+                user={user} 
+                allPlayers={players || []} 
+                readOnly={true}
+              />
+            )}
           </div>
         </div>
       </CardContent>
@@ -153,6 +155,19 @@ export default function AttendancePage() {
         <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
           <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
           <p className="text-muted-foreground font-medium">{dict.common.loading}</p>
+        </main>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background pb-12">
+        <MainNav />
+        <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center text-center">
+          <Lock className="h-10 w-10 text-primary mb-4" />
+          <h2 className="text-xl md:text-2xl font-headline mb-2">{dict.attendance.signinRequired}</h2>
+          <p className="text-muted-foreground">{dict.attendance.signinDesc}</p>
         </main>
       </div>
     );

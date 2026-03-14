@@ -229,10 +229,18 @@ export function GameAttendanceSection({
   }, [firestore, game.id]);
   const { data: attendanceRecords, isLoading } = useCollection<Attendance>(attendanceQuery);
 
-  const myRecord = attendanceRecords?.find(r => r.id === user.uid);
+  const myRecord = user ? (attendanceRecords?.find(r => r.id === user.uid) || null) : null;
   const confirmedRecords = attendanceRecords?.filter(r => r.status === 'Confirmed') || [];
 
   const handleUpdateStatus = (status: 'Confirmed' | 'Declined') => {
+    if (!user) {
+      toast({
+        variant: "destructive",
+        title: dict.attendance.signinRequired,
+      });
+      return;
+    }
+
     const recordRef = doc(firestore, "games", game.id, "attendanceRecords", user.uid);
     const userRecordRef = doc(firestore, "users", user.uid, "game_attendances", game.id);
 
