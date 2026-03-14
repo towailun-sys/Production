@@ -23,7 +23,6 @@ import {
   Calendar, 
   MapPin, 
   Clock,
-  Trophy,
   Lock,
   Loader2,
   ShieldCheck,
@@ -40,15 +39,12 @@ import {
   Copy,
   Users,
   CheckCircle2,
-  XCircle,
-  ChevronDown,
-  ChevronUp
+  XCircle
 } from "lucide-react";
-import Link from "next/link";
 import { Game, Player, Team, Kit, Attendance } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, useAuth } from "@/firebase";
-import { collection, query, orderBy, limit, where, doc, setDoc, deleteDoc, getDocs, serverTimestamp } from "firebase/firestore";
+import { collection, query, orderBy, limit, where, doc, setDoc, deleteDoc, getDocs } from "firebase/firestore";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/components/language-provider";
@@ -223,7 +219,7 @@ function GameAttendanceSection({
   allPlayers: Player[] | null 
 }) {
   const firestore = useFirestore();
-  const { dict, language } = useTranslation();
+  const { dict } = useTranslation();
   const { toast } = useToast();
 
   const attendanceQuery = useMemoFirebase(() => {
@@ -632,122 +628,93 @@ export default function DashboardPage() {
                 )}
               </div>
             ) : (
-              <div className="grid gap-8 lg:grid-cols-4">
-                <div className="lg:col-span-3 space-y-8">
-                  <section>
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
-                      <h2 className="text-xl md:text-2xl font-headline flex items-center gap-2">
-                        <Calendar className="h-6 w-6 text-primary" />{dict.nav.dashboard}
-                        <Badge variant="outline" className="hidden sm:inline-flex ml-2 bg-primary/10 text-primary border-primary/20 font-bold">
-                          {currentPlayer.isAdmin ? dict.dashboard.fullAccess : dict.dashboard.teamView(currentPlayer.teams?.length ? currentPlayer.teams?.map(getTeamName).join(', ') : dict.dashboard.noTeam)}
-                        </Badge>
-                      </h2>
-                    </div>
+              <div className="max-w-4xl mx-auto space-y-8">
+                <section>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-2">
+                    <h2 className="text-xl md:text-2xl font-headline flex items-center gap-2">
+                      <Calendar className="h-6 w-6 text-primary" />{dict.nav.dashboard}
+                      <Badge variant="outline" className="hidden sm:inline-flex ml-2 bg-primary/10 text-primary border-primary/20 font-bold">
+                        {currentPlayer.isAdmin ? dict.dashboard.fullAccess : dict.dashboard.teamView(currentPlayer.teams?.length ? currentPlayer.teams?.map(getTeamName).join(', ') : dict.dashboard.noTeam)}
+                      </Badge>
+                    </h2>
+                  </div>
 
-                    <div className="grid gap-6">
-                      {isGamesLoading ? (
-                        <div className="p-12 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>
-                      ) : filteredGames.length === 0 ? (
-                        <Card className="p-12 text-center border-dashed border-2 text-muted-foreground">{dict.dashboard.noGames}</Card>
-                      ) : (
-                        filteredGames.map((game) => (
-                          <Card key={game.id} className="border-none shadow-md overflow-hidden border-l-4 border-primary transition-all">
-                            <CardContent className="p-0 flex flex-col">
-                              <div className="p-5 md:p-6 flex-1 space-y-4">
-                                <div className="flex flex-wrap items-center gap-3">
-                                  <Badge className="text-[10px] md:text-xs font-bold bg-primary text-white px-3 py-0.5 border-none">{getTeamName(game.team)}</Badge>
-                                  <Badge variant="outline" className={cn(
-                                    "font-bold px-2 py-0.5 border-none text-[10px] uppercase tracking-wider",
-                                    game.type === 'League' ? "bg-primary text-white" : 
-                                    game.type === 'Training' ? "bg-accent text-white" :
-                                    game.type === 'Internal' ? "bg-indigo-600 text-white" :
-                                    "bg-muted text-foreground"
-                                  )}>
-                                    {dict.common.gameTypes[game.type] || game.type}
-                                  </Badge>
-                                  <span className="text-xs md:sm font-bold text-muted-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{game.startTime} - {game.endTime}</span>
-                                  <div className="flex flex-wrap gap-3">
-                                    <KitBadge kitId={game.kitColors} />
-                                    <KitBadge kitId={game.alternativeKitColors} isAlternative />
-                                  </div>
-                                  {game.additionalDetails && (
-                                    <Popover>
-                                      <PopoverTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 shrink-0">
-                                          <Info className="h-4 w-4" />
-                                        </Button>
-                                      </PopoverTrigger>
-                                      <PopoverContent className="w-80 p-4 shadow-xl">
-                                        <div className="space-y-2">
-                                          <div className="flex items-center gap-2 text-[10px] font-bold text-destructive uppercase tracking-widest">
-                                            <Info className="h-3 w-3" /> {dict.attendance.detailsLabel}
-                                          </div>
-                                          <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
-                                            {game.additionalDetails}
-                                          </p>
+                  <div className="grid gap-6">
+                    {isGamesLoading ? (
+                      <div className="p-12 text-center"><Loader2 className="animate-spin mx-auto text-primary" /></div>
+                    ) : filteredGames.length === 0 ? (
+                      <Card className="p-12 text-center border-dashed border-2 text-muted-foreground">{dict.dashboard.noGames}</Card>
+                    ) : (
+                      filteredGames.map((game) => (
+                        <Card key={game.id} className="border-none shadow-md overflow-hidden border-l-4 border-primary transition-all">
+                          <CardContent className="p-0 flex flex-col">
+                            <div className="p-5 md:p-6 flex-1 space-y-4">
+                              <div className="flex flex-wrap items-center gap-3">
+                                <Badge className="text-[10px] md:text-xs font-bold bg-primary text-white px-3 py-0.5 border-none">{getTeamName(game.team)}</Badge>
+                                <Badge variant="outline" className={cn(
+                                  "font-bold px-2 py-0.5 border-none text-[10px] uppercase tracking-wider",
+                                  game.type === 'League' ? "bg-primary text-white" : 
+                                  game.type === 'Training' ? "bg-accent text-white" :
+                                  game.type === 'Internal' ? "bg-indigo-600 text-white" :
+                                  "bg-muted text-foreground"
+                                )}>
+                                  {dict.common.gameTypes[game.type] || game.type}
+                                </Badge>
+                                <span className="text-xs md:sm font-bold text-muted-foreground flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{game.startTime} - {game.endTime}</span>
+                                <div className="flex flex-wrap gap-3">
+                                  <KitBadge kitId={game.kitColors} />
+                                  <KitBadge kitId={game.alternativeKitColors} isAlternative />
+                                </div>
+                                {game.additionalDetails && (
+                                  <Popover>
+                                    <PopoverTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 shrink-0">
+                                        <Info className="h-4 w-4" />
+                                      </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-80 p-4 shadow-xl">
+                                      <div className="space-y-2">
+                                        <div className="flex items-center gap-2 text-[10px] font-bold text-destructive uppercase tracking-widest">
+                                          <Info className="h-3 w-3" /> {dict.attendance.detailsLabel}
                                         </div>
-                                      </PopoverContent>
-                                    </Popover>
-                                  )}
-                                </div>
-                                
-                                <div className="space-y-1">
-                                  <h3 className="text-lg md:text-xl font-headline leading-tight">
-                                    {game.type === 'Training' || game.type === 'Internal' ? dict.common.gameTypes[game.type] : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
-                                  </h3>
-                                  <div className="grid gap-2 text-xs md:text-sm text-muted-foreground">
-                                    <div className="flex items-center gap-2.5"><Calendar className="h-4 w-4 text-primary shrink-0" />{formatGameDate(game.date)}</div>
-                                    <div className="flex items-center gap-2.5"><MapPin className="h-4 w-4 text-primary shrink-0" />{game.location}</div>
-                                  </div>
-                                </div>
-
-                                {game.fee && (
-                                  <div className="flex items-start gap-2 text-primary font-bold text-[11px] md:text-xs pt-1">
-                                    <Banknote className="h-3.5 w-3.5 shrink-0 mt-0.5" />
-                                    <span className="whitespace-pre-wrap leading-normal">{game.fee}</span>
-                                  </div>
+                                        <p className="text-xs text-foreground leading-relaxed whitespace-pre-wrap">
+                                          {game.additionalDetails}
+                                        </p>
+                                      </div>
+                                    </PopoverContent>
+                                  </Popover>
                                 )}
+                              </div>
+                              
+                              <div className="space-y-1">
+                                <h3 className="text-lg md:text-xl font-headline leading-tight">
+                                  {game.type === 'Training' || game.type === 'Internal' ? dict.common.gameTypes[game.type] : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
+                                </h3>
+                                <div className="grid gap-2 text-xs md:text-sm text-muted-foreground">
+                                  <div className="flex items-center gap-2.5"><Calendar className="h-4 w-4 text-primary shrink-0" />{formatGameDate(game.date)}</div>
+                                  <div className="flex items-center gap-2.5"><MapPin className="h-4 w-4 text-primary shrink-0" />{game.location}</div>
+                                </div>
+                              </div>
 
-                                <GameAttendanceSection 
-                                  game={game} 
-                                  user={user} 
-                                  allPlayers={players} 
-                                />
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))
-                      )}
-                    </div>
-                  </section>
-                </div>
+                              {game.fee && (
+                                <div className="flex items-start gap-2 text-primary font-bold text-[11px] md:text-xs pt-1">
+                                  <Banknote className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                                  <span className="whitespace-pre-wrap leading-normal">{game.fee}</span>
+                                </div>
+                              )}
 
-                <div className="space-y-8 lg:sticky lg:top-24 h-fit">
-                  <Card className="border-primary/10 shadow-lg bg-primary/5">
-                    <CardHeader className="pb-3"><CardTitle className="text-lg flex items-center gap-2"><Trophy className="h-5 w-5 text-primary" />{dict.dashboard.teammates}</CardTitle></CardHeader>
-                    <CardContent className="space-y-5">
-                      <div className="divide-y max-h-[300px] lg:max-h-[400px] overflow-y-auto pr-1 custom-scrollbar">
-                        {players?.map((p) => {
-                          const hasNumber = p.number !== undefined && p.number !== null;
-                          return (
-                            <div key={p.id} className="py-2.5 flex items-center gap-3">
-                              <div className="h-8 w-8 shrink-0 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-[11px] border border-primary/10">
-                                {hasNumber ? p.number : p.name[0]}
-                              </div>
-                              <div className="flex-1 text-xs font-bold truncate text-foreground/90">{p.nickname || p.name}</div>
-                              <div className="flex flex-wrap gap-1 justify-end max-w-[40%]">
-                                {p.teams?.map(tId => (
-                                  <Badge key={tId} variant="outline" className="text-[8px] h-4 px-1 bg-primary text-white border-none whitespace-nowrap">{getTeamName(tId)}</Badge>
-                                ))}
-                              </div>
+                              <GameAttendanceSection 
+                                game={game} 
+                                user={user} 
+                                allPlayers={players} 
+                              />
                             </div>
-                          );
-                        })}
-                      </div>
-                      <Link href="/players"><Button className="w-full bg-primary font-bold h-10">{dict.dashboard.viewPlayers}</Button></Link>
-                    </CardContent>
-                  </Card>
-                </div>
+                          </CardContent>
+                        </Card>
+                      ))
+                    )}
+                  </div>
+                </section>
               </div>
             )}
           </div>
