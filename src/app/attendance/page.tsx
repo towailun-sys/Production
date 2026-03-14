@@ -20,9 +20,10 @@ import {
   Crown,
   UserPlus,
   LogIn,
-  CalendarDays
+  CalendarDays,
+  Shirt
 } from "lucide-react";
-import { Game, AttendanceStatus, Player, Attendance, Team } from "@/lib/types";
+import { Game, AttendanceStatus, Player, Attendance, Team, Kit } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, useAuth } from "@/firebase";
@@ -52,7 +53,6 @@ import { SUPER_ADMIN_EMAILS } from "@/lib/constants";
 
 function AttendanceContent() {
   const searchParams = useSearchParams();
-  const router = useRouter();
   const gameId = searchParams.get("gameId");
   const { toast } = useToast();
   const auth = useAuth();
@@ -143,14 +143,14 @@ function AttendanceContent() {
     }
   };
 
-  const handleStatusChange = (gameId: string, status: AttendanceStatus, targetPlayerId?: string) => {
+  const handleStatusChange = (targetGameId: string, status: AttendanceStatus, targetPlayerId?: string) => {
     if (!user) return;
     const playerId = targetPlayerId || user.uid;
-    const attendanceRef = doc(firestore, "games", gameId, "attendanceRecords", playerId);
+    const attendanceRef = doc(firestore, "games", targetGameId, "attendanceRecords", playerId);
     const attendanceData = {
       id: playerId,
       playerId: playerId,
-      gameId: gameId,
+      gameId: targetGameId,
       status: status,
       lastUpdated: new Date().toISOString()
     };
@@ -325,20 +325,21 @@ function AttendanceContent() {
                        <span className="text-[10px] font-bold text-muted-foreground uppercase">{new Date(game.date).toLocaleString('default', { month: 'short' })}</span>
                        <span className="text-2xl font-bold font-headline leading-none">{new Date(game.date).getDate()}</span>
                     </div>
-                    <div className="flex-1 space-y-2">
+                    <div className="flex-1 space-y-3">
                       <div className="flex flex-wrap items-center gap-2">
                         <Badge className="bg-primary text-white font-bold text-[10px]">{getTeamName(game.team)}</Badge>
                         <Badge variant="outline" className="font-bold text-[10px]">{dict.common.gameTypes[game.type] || game.type}</Badge>
+                        <KitBadge kitId={game.kitColors} />
                       </div>
                       <h3 className="font-headline font-bold text-lg leading-tight">
                         {game.type === 'Training' || game.type === 'Internal' ? dict.common.gameTypes[game.type] : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {game.startTime} - {game.endTime}</span>
-                        <span className="flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {game.location}</span>
+                      <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs md:text-sm text-muted-foreground">
+                        <span className="flex items-center gap-1.5 font-medium"><Clock className="h-4 w-4 text-primary" /> {game.startTime} - {game.endTime}</span>
+                        <span className="flex items-center gap-1.5 font-medium"><MapPin className="h-4 w-4 text-primary" /> {game.location}</span>
                       </div>
                     </div>
-                    <div className="shrink-0 w-full md:w-auto">
+                    <div className="shrink-0 w-full md:w-auto flex flex-col gap-2">
                       <Button variant="outline" size="sm" className="w-full md:w-auto font-bold border-primary text-primary hover:bg-primary/5 gap-2 h-10 px-6 rounded-xl" asChild>
                          <Link href={`/attendance?gameId=${game.id}`}>
                             <Users className="h-4 w-4" />
@@ -371,7 +372,7 @@ function GameRosterList({
 }: { 
   gameId: string;
   teams: Team[];
-  onStatusChange: (gameId: string, status: AttendanceStatus, targetPlayerId?: string) => void;
+  onStatusChange: (targetGameId: string, status: AttendanceStatus, targetPlayerId?: string) => void;
   isAuthorized: boolean;
 }) {
   const firestore = useFirestore();
