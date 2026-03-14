@@ -17,6 +17,8 @@ const baseDict = {
     linked: "Linked",
     team: "Team",
     outdated: "Outdated",
+    showAll: "Show All",
+    collapse: "Collapse",
     teams: {
       All: "For all Team"
     },
@@ -257,6 +259,8 @@ const zhDict: typeof baseDict = {
     linked: "已連結",
     team: "隊伍",
     outdated: "已過期",
+    showAll: "顯示全部",
+    collapse: "收起",
     teams: {
       All: "全部隊伍"
     },
@@ -331,7 +335,7 @@ const zhDict: typeof baseDict = {
     noGames: "你的隊伍目前沒有預定的比賽。",
     myGame: "我的比賽",
     otherTeam: "其他隊伍",
-    fullAccess: "管理員全視角",
+    fullAccess: "管理員全視視角",
     noTeam: "未分配隊伍",
     teamView: (team: string) => `${team} 視角`
   },

@@ -40,6 +40,8 @@ import {
   Plus, 
   MoreVertical,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Pencil,
   Trash2,
   Shirt,
@@ -72,6 +74,7 @@ export default function GamesPage() {
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isOutdatedExpanded, setIsOutdatedExpanded] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
 
   const playerRef = useMemoFirebase(() => {
@@ -122,7 +125,6 @@ export default function GamesPage() {
 
   const gamesQuery = useMemoFirebase(() => {
     if (isUserLoading || !user) return null;
-    // Base fetch, separation happens in component logic
     return collection(firestore, "games");
   }, [firestore, user, isUserLoading]);
 
@@ -676,16 +678,32 @@ export default function GamesPage() {
 
               {/* Outdated Fixtures */}
               <section className="space-y-6">
-                <div className="flex items-center gap-3 border-b pb-4 opacity-70">
-                  <History className="h-6 w-6 text-muted-foreground" />
-                  <h2 className="text-xl md:text-2xl font-headline font-bold text-muted-foreground">
-                    {dict.games.outdated}
-                  </h2>
-                  <Badge variant="outline" className="ml-2 font-bold text-muted-foreground border-muted-foreground">
-                    {outdatedGames.length}
-                  </Badge>
+                <div className="flex items-center justify-between border-b pb-4 opacity-70">
+                  <div className="flex items-center gap-3">
+                    <History className="h-6 w-6 text-muted-foreground" />
+                    <h2 className="text-xl md:text-2xl font-headline font-bold text-muted-foreground">
+                      {dict.games.outdated}
+                    </h2>
+                    <Badge variant="outline" className="ml-2 font-bold text-muted-foreground border-muted-foreground">
+                      {outdatedGames.length}
+                    </Badge>
+                  </div>
+                  {outdatedGames.length > 0 && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setIsOutdatedExpanded(!isOutdatedExpanded)}
+                      className="text-muted-foreground font-bold hover:bg-muted"
+                    >
+                      {isOutdatedExpanded ? (
+                        <><ChevronUp className="h-4 w-4 mr-2" /> {dict.common.collapse}</>
+                      ) : (
+                        <><ChevronDown className="h-4 w-4 mr-2" /> {dict.common.showAll}</>
+                      )}
+                    </Button>
+                  )}
                 </div>
-                {renderGameList(outdatedGames, true)}
+                {isOutdatedExpanded && renderGameList(outdatedGames, true)}
               </section>
             </>
           )}
