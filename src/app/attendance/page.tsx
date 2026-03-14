@@ -8,7 +8,7 @@ import { collection, collectionGroup, query, where, orderBy } from "firebase/fir
 import { Game, Attendance } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MapPin, CalendarDays, Banknote, UserRound, History, Info, Loader2 } from "lucide-react";
+import { Clock, MapPin, CalendarDays, Banknote, UserRound, History, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { KitBadge } from "@/app/page";
 
@@ -45,15 +45,6 @@ export default function AttendancePage() {
   
   const upcomingConfirmed = confirmedGames.filter(g => g.date >= todayStr);
   const pastConfirmed = confirmedGames.filter(g => g.date < todayStr);
-
-  const formatGameDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    if (language === 'zh') {
-      const weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
-      return `${date.getMonth() + 1}月${date.getDate()}日 ${weekdays[date.getDay()]}`;
-    }
-    return date.toLocaleDateString('default', { weekday: 'long', month: 'long', day: 'numeric' });
-  };
 
   const renderGameCard = (game: Game, isOutdated: boolean) => (
     <Card 
