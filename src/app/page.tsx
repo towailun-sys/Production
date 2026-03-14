@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, Fragment, useEffect } from "react";
@@ -354,7 +353,8 @@ export default function DashboardPage() {
   useEffect(() => {
     if (user) {
       const playersRef = collection(firestore, "players");
-      getDocs(query(playersRef, where("id", "!=", ""))).then(snapshot => {
+      // Use limit(1) to check for existence efficiently
+      getDocs(query(playersRef, limit(1))).then(snapshot => {
         setIsFirstRunCheck(snapshot.empty);
       });
     } else if (!isUserLoading) {
@@ -415,7 +415,7 @@ export default function DashboardPage() {
         const q = query(playersRef, where("email", "==", result.user.email));
         const snapshot = await getDocs(q);
 
-        const allPlayersSnapshot = await getDocs(query(playersRef, where("id", "!=", "")));
+        const allPlayersSnapshot = await getDocs(query(playersRef, limit(1)));
         const isFirstRun = allPlayersSnapshot.empty;
 
         if (snapshot.empty && !isFirstRun) {

@@ -29,12 +29,11 @@ service cloud.firestore {
 
     // Player profiles: Everyone can read.
     // Owners and admins can write.
-    // Also allow a user to delete a profile if the email matches their authenticated email (for claiming/linking).
     match /players/{playerId} {
       allow get, list: if isSignedIn();
       allow create: if isSignedIn() && (request.auth.uid == playerId || isAdmin());
       allow update: if isOwner(playerId) || isAdmin();
-      allow delete: if isAdmin() || (isSignedIn() && (resource.data.email == request.auth.token.email || resource.data.id == request.auth.uid));
+      allow delete: if isAdmin();
     }
 
     // Teams: Public read for signed-in members, managed by admins.
@@ -58,13 +57,15 @@ service cloud.firestore {
     // Attendance Records: Stored inside games for easy roster viewing.
     match /games/{gameId}/attendanceRecords/{playerId} {
       allow get, list: if isSignedIn();
-      allow write: if isOwner(playerId) || isAdmin();
+      allow write, delete: if isOwner(playerId) || isAdmin();
     }
 
     // User-centric attendance path for "My Attendance" view.
     match /users/{userId}/game_attendances/{attendanceId} {
       allow get, list: if isOwner(userId) || isAdmin();
       allow write: if (isOwner(userId) && request.resource.data.playerId == userId) || isAdmin();
+      // Allow delete if owner or admin
+      allow delete: if isOwner(userId) || isAdmin();
     }
 
     // Support for Collection Group queries on attendance for admin dashboards.
