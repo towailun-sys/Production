@@ -98,14 +98,13 @@ function AttendanceContent() {
 
   const userConfirmedAttendanceQuery = useMemoFirebase(() => {
     if (!user || !isAuthorized || isAuthChecking) return null;
-    // Collection Group Query requires explicit rule in firestore.rules
     return query(
       collectionGroup(firestore, "attendanceRecords"),
       where("playerId", "==", user.uid),
       where("status", "==", "Confirmed")
     );
   }, [firestore, user, isAuthorized, isAuthChecking]);
-  const { data: userAttendances } = useCollection<Attendance>(userConfirmedAttendanceQuery);
+  const { data: userAttendances, isLoading: isAttendancesLoading } = useCollection<Attendance>(userConfirmedAttendanceQuery);
 
   const teamsQuery = useMemoFirebase(() => {
     if (!isAuthorized || isAuthChecking) return null;
@@ -129,7 +128,7 @@ function AttendanceContent() {
       orderBy("date", "asc")
     );
   }, [firestore, isAuthorized, isAuthChecking, gameId]);
-  const { data: games, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
+  const { data: allGames, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
 
   const handleLogin = async () => {
     if (isLoggingIn) return;
@@ -305,9 +304,10 @@ function AttendanceContent() {
     );
   }
 
-  // List View: Only show confirmed games for the user
+  // Filtering Logic: Only show games where the user has confirmed their attendance.
+  // We use the results from the userConfirmedAttendanceQuery (collectionGroup) to filter the allGames list.
   const joinedGameIds = new Set(userAttendances?.map(a => a.gameId) || []);
-  const joinedGames = (games || []).filter(g => joinedGameIds.has(g.id));
+  const joinedGames = (allGames || []).filter(g => joinedGameIds.has(g.id));
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -318,7 +318,7 @@ function AttendanceContent() {
           <p className="text-sm md:text-base text-muted-foreground">{dict.attendance.subtitle}</p>
         </header>
         <div className="space-y-6 max-w-4xl">
-          {isGamesLoading ? (
+          {isGamesLoading || isAttendancesLoading ? (
             Array.from({ length: 3 }).map((_, i) => (
               <Card key={i} className="h-48 animate-pulse bg-muted/50 rounded-2xl" />
             ))

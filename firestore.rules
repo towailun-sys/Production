@@ -23,13 +23,15 @@ service cloud.firestore {
     // --- Collection Rules ---
 
     // Global Read: Allow all signed-in squad members to read data for transparency.
+    // This is the fallback for standard collections like /games, /teams, /kits.
     match /{path=**} {
       allow read: if isSignedIn();
     }
 
-    // Collection Group Rule: Required for queries across all 'attendanceRecords' subcollections.
+    // Collection Group Rule: Explicitly required for queries across all 'attendanceRecords' subcollections.
+    // This resolves the "Missing or insufficient permissions" error for collectionGroup queries.
     match /{path=**}/attendanceRecords/{recordId} {
-      allow read: if isSignedIn();
+      allow read, list: if isSignedIn();
     }
 
     // Restricted Writes: Only owners or admins can modify data.
