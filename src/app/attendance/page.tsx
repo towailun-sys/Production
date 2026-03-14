@@ -98,6 +98,7 @@ function AttendanceContent() {
 
   const userConfirmedAttendanceQuery = useMemoFirebase(() => {
     if (!user || !isAuthorized || isAuthChecking) return null;
+    // Collection Group Query requires explicit rule in firestore.rules
     return query(
       collectionGroup(firestore, "attendanceRecords"),
       where("playerId", "==", user.uid),
@@ -107,19 +108,19 @@ function AttendanceContent() {
   const { data: userAttendances } = useCollection<Attendance>(userConfirmedAttendanceQuery);
 
   const teamsQuery = useMemoFirebase(() => {
-    if (!currentPlayer || !isAuthorized || isAuthChecking) return null;
+    if (!isAuthorized || isAuthChecking) return null;
     return collection(firestore, "teams");
-  }, [firestore, isAuthorized, isAuthChecking, currentPlayer]);
+  }, [firestore, isAuthorized, isAuthChecking]);
   const { data: teams } = useCollection<Team>(teamsQuery);
 
   const gameRef = useMemoFirebase(() => {
-    if (!currentPlayer || !isAuthorized || isAuthChecking || !gameId) return null;
+    if (!isAuthorized || isAuthChecking || !gameId) return null;
     return doc(firestore, "games", gameId);
-  }, [firestore, isAuthorized, isAuthChecking, gameId, currentPlayer]);
+  }, [firestore, isAuthorized, isAuthChecking, gameId]);
   const { data: specificGame, isLoading: isGameLoading } = useDoc<Game>(gameRef);
 
   const gamesQuery = useMemoFirebase(() => {
-    if (!currentPlayer || !isAuthorized || isAuthChecking || gameId) return null;
+    if (!isAuthorized || isAuthChecking || gameId) return null;
     const now = new Date();
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     return query(
@@ -127,7 +128,7 @@ function AttendanceContent() {
       where("date", ">=", todayStr),
       orderBy("date", "asc")
     );
-  }, [firestore, isAuthorized, isAuthChecking, gameId, currentPlayer]);
+  }, [firestore, isAuthorized, isAuthChecking, gameId]);
   const { data: games, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
 
   const handleLogin = async () => {
@@ -203,7 +204,7 @@ function AttendanceContent() {
     );
   }
 
-  if (!user || !currentPlayer) {
+  if (!user || !isAuthorized) {
     return (
       <div className="min-h-screen bg-background">
         <MainNav />
@@ -304,7 +305,7 @@ function AttendanceContent() {
     );
   }
 
-  // List View: Only show confirmed games
+  // List View: Only show confirmed games for the user
   const joinedGameIds = new Set(userAttendances?.map(a => a.gameId) || []);
   const joinedGames = (games || []).filter(g => joinedGameIds.has(g.id));
 

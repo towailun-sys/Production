@@ -27,6 +27,11 @@ service cloud.firestore {
       allow read: if isSignedIn();
     }
 
+    // Collection Group Rule: Required for queries across all 'attendanceRecords' subcollections.
+    match /{path=**}/attendanceRecords/{recordId} {
+      allow read: if isSignedIn();
+    }
+
     // Restricted Writes: Only owners or admins can modify data.
     match /players/{playerId} {
       allow create: if isOwner(playerId) || isAdmin();
