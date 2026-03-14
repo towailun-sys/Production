@@ -121,7 +121,7 @@
           "schema": {
             "$ref": "#/backend/entities/Player"
           },
-          "description": "Collection storing individual player profiles. Managed by team administrators, viewable by all authenticated players. Authorization is based on global admin roles for writes and authentication for reads.",
+          "description": "Collection storing individual player profiles.",
           "params": [
             {
               "name": "playerId",
@@ -137,11 +137,11 @@
           "schema": {
             "$ref": "#/backend/entities/Game"
           },
-          "description": "Collection storing scheduled game and training session details. Managed by team administrators, viewable by all authenticated players. Authorization is based on global admin roles for writes and authentication for reads.",
+          "description": "Collection storing scheduled game details.",
           "params": [
             {
               "name": "gameId",
-              "description": "The unique identifier of the game or session."
+              "description": "The unique identifier of the game."
             }
           ]
         }
@@ -153,20 +153,19 @@
           "schema": {
             "$ref": "#/backend/entities/PlayerGameAttendance"
           },
-          "description": "Subcollection storing a specific player's attendance records for various games. Each document includes denormalized 'playerId' and 'gameId' fields to ensure Authorization Independence. Players can manage their own records (create, update), while team administrators can view all records via collection group queries or manage any record. The 'userId' in the path must match 'request.auth.uid' for player access.",
+          "description": "Subcollection storing a specific player's attendance records.",
           "params": [
             {
               "name": "userId",
-              "description": "The unique identifier of the user (player) who owns this attendance record, matching 'request.auth.uid'."
+              "description": "The UID of the user."
             },
             {
               "name": "attendanceId",
-              "description": "The unique identifier for this specific player's attendance record for a game."
+              "description": "The unique identifier for the attendance record."
             }
           ]
         }
       }
-    ],
-    "reasoning": "The Firestore structure for SquadFlow is designed prioritizing Authorization Independence, Structural Segregation, and robust Access Modeling to ensure security, scalability, and debuggability. \n\n**Authorization Independence via Denormalization:**\n-   For the `/players` and `/games` collections, documents are top-level. Authorization is handled by checking global administrator roles (`isAdmin()`) for write operations and authenticated status for read operations. No `get()` calls are required within these rules, ensuring atomic operations and simplicity.\n-   For `/users/{userId}/game_attendances/{attendanceId}`, Authorization Independence is achieved by explicitly denormalizing critical authorization context within each `PlayerGameAttendance` document. Each attendance record includes `playerId` and `gameId`. The path structure itself (`/users/{userId}/...`) binds the document to the owner. During `create` and `update` operations, rules will verify that `request.auth.uid` matches `userId` in the path AND that `request.resource.data.playerId` matches `userId`. This makes ownership explicit and prevents `get()` calls to verify who a player is, simplifying rules and enabling atomic writes (e.g., a player confirming attendance doesn't need to read their own player profile first).\n\n**Support for QAPs (Query as Authorization Predicates):**\n-   **Structural Segregation:** Each collection holds documents with a homogeneous security posture.\n    -   `/players` contains all player profiles, accessible by authenticated users and manageable by administrators.\n    -   `/games` contains all game schedules, accessible by authenticated users and manageable by administrators.\n    -   `/users/{userId}/game_attendances` contains attendance records specifically for the user identified by `userId` in the path.\n-   **Player Attendance Confirmation (User-specific QAPs):** Players can view and manage their own attendance records. The path `/users/{request.auth.uid}/game_attendances` directly enforces that a player can only query and modify their own data. This means `list` operations for players are inherently filtered by their UID, making security rules straightforward: `allow list: if request.auth.uid == userId;`.\n-   **Team Attendance Dashboard (Admin QAPs):** For the team management dashboard, administrators will perform a **Collection Group Query** over all `game_attendances` subcollections. This query will be filtered by `gameId` to retrieve all attendance records for a specific game. The corresponding security rule would grant `list` access if the user is an administrator (`isAdmin()`). This approach is efficient and robust, allowing administrators to easily visualize attendance across all players for any given game without violating security principles or performance. Global administrator roles are managed in a dedicated, server-side-managed collection (e.g., `/roles_admin/{uid}`) where the existence of a document with the user's UID signifies admin status, enabling simple `exists()` checks in rules."
+    ]
   }
 }

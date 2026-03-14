@@ -286,7 +286,7 @@ const zhDict: typeof baseDict = {
     pendingProfileDesc: "你的帳號尚未分配到任何球隊。請將你的用戶 ID 提供給球隊管理員，以便他們連結你的帳號。",
     copyId: "複製 ID",
     upcomingFixtures: "最近賽程",
-    fullSchedule: "全部場次",
+    fullSchedule: "全體場次",
     confirmedSquad: "已確認出席的陣容",
     noConfirmations: "尚未確認",
     availability: "出席情況",
