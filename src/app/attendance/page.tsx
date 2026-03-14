@@ -1,6 +1,7 @@
 
 "use client";
 
+import { Suspense, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { MainNav } from "@/components/layout/main-nav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,9 +60,8 @@ import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useTranslation } from "@/components/language-provider";
 import { KitBadge } from "@/app/page";
-import { useState } from "react";
 
-export default function AttendancePage() {
+function AttendanceContent() {
   const searchParams = useSearchParams();
   const gameId = searchParams.get("gameId");
   const { toast } = useToast();
@@ -320,6 +320,21 @@ export default function AttendancePage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function AttendancePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-background">
+        <MainNav />
+        <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
+        </main>
+      </div>
+    }>
+      <AttendanceContent />
+    </Suspense>
   );
 }
 
