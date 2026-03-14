@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { 
   Card, 
   CardContent, 
-  CardHeader 
+  CardHeader,
+  CardTitle
 } from "@/components/ui/card";
 import { 
   Table, 
@@ -63,7 +64,8 @@ import {
   UserSearch,
   Shirt,
   Image as ImageIcon,
-  X
+  X,
+  PieChart
 } from "lucide-react";
 import { Player, PlayerPosition, PlayerStatus, Team, Kit } from "@/lib/types";
 import { Badge } from "@/components/ui/badge";
@@ -611,6 +613,10 @@ export default function PlayersPage() {
           )}
         </div>
 
+        <div className="mb-8">
+          <SquadStats players={players || []} teams={teams || []} statusOptions={STATUS_OPTIONS} />
+        </div>
+
         <Dialog open={isEditOpen} onOpenChange={(open) => { if(!open) { setIsEditOpen(false); resetForm(); setEditingPlayer(null); } }}>
           <DialogContent className="sm:max-w-[425px] sm:max-w-[95vw] max-h-[90vh] overflow-y-auto rounded-2xl">
             <DialogHeader>
@@ -1020,6 +1026,112 @@ export default function PlayersPage() {
         </Card>
       </main>
     </div>
+  );
+}
+
+function SquadStats({ 
+  players, 
+  teams, 
+  statusOptions 
+}: { 
+  players: Player[], 
+  teams: Team[], 
+  statusOptions: any[] 
+}) {
+  const { dict, language } = useTranslation();
+
+  const getTeamName = (teamId: string) => {
+    const team = teams.find(t => t.id === teamId);
+    if (!team) return teamId;
+    return language === 'zh' ? team.nameZh : team.name;
+  };
+
+  const teamCounts = teams.map(t => ({
+    name: language === 'zh' ? t.nameZh : t.name,
+    count: players.filter(p => p.teams.includes(t.id)).length
+  }));
+
+  const roleCounts = {
+    admin: players.filter(p => p.isAdmin).length,
+    captain: players.filter(p => p.isCaptain).length,
+    regular: players.filter(p => !p.isAdmin && !p.isCaptain).length
+  };
+
+  const statusCounts = statusOptions.map(opt => ({
+    label: opt.label,
+    value: opt.value,
+    count: players.filter(p => p.status === opt.value).length,
+    color: opt.color
+  }));
+
+  return (
+    <Card className="border-none shadow-md bg-muted/20 overflow-hidden rounded-2xl">
+      <CardHeader className="pb-3 border-b bg-white/50">
+        <CardTitle className="text-lg flex items-center gap-2">
+          <PieChart className="h-5 w-5 text-primary" />
+          {dict.players.summaryTitle}
+          <Badge variant="secondary" className="ml-auto bg-primary/10 text-primary font-bold">
+            {dict.players.totalPlayers}: {players.length}
+          </Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* By Team */}
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground border-b pb-1">
+              {dict.players.byTeam}
+            </h4>
+            <div className="space-y-2">
+              {teamCounts.map(tc => (
+                <div key={tc.name} className="flex items-center justify-between text-sm">
+                  <span className="font-medium">{tc.name}</span>
+                  <Badge variant="outline" className="font-bold border-primary/20 text-primary">
+                    {tc.count}
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* By Role */}
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground border-b pb-1">
+              {dict.players.byRole}
+            </h4>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-primary" /> {dict.players.dialog.admin}
+                </span>
+                <span className="font-bold">{roleCounts.admin}</span>
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2">
+                  <Crown className="h-4 w-4 text-accent" /> {dict.players.dialog.captain}
+                </span>
+                <span className="font-bold">{roleCounts.captain}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* By Status */}
+          <div className="space-y-4">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground border-b pb-1">
+              {dict.players.byStatus}
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+              {statusCounts.map(sc => (
+                <div key={sc.value} className={cn("p-2 rounded-lg border text-[10px] flex flex-col items-center justify-center gap-1 bg-white", sc.color)}>
+                  <span className="font-bold leading-none">{sc.count}</span>
+                  <span className="opacity-80 truncate w-full text-center">{sc.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

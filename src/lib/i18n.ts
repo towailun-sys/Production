@@ -98,6 +98,11 @@ const baseDict = {
     revokeAdmin: "Revoke Admin Role",
     searchPlaceholder: "Search players...",
     noPlayersFound: "No players found matching your search.",
+    summaryTitle: "Squad Summary",
+    byTeam: "By Team",
+    byRole: "By Player Role",
+    byStatus: "By Status",
+    totalPlayers: "Total Players",
     tableHeader: {
       number: "#",
       info: "Player Info",
@@ -153,40 +158,6 @@ const baseDict = {
       update: "Update Kit",
       noKits: "No kits defined yet.",
       viewImage: "View Reference Image"
-    }
-  },
-  games: {
-    title: "Fixtures",
-    subtitle: "Plan and manage upcoming fixtures.",
-    scheduleGame: "Schedule Upcoming Fixture",
-    manageEvent: "Manage Event",
-    dialog: {
-      addTitle: "Schedule New Upcoming Fixture",
-      editTitle: "Edit Upcoming Fixture",
-      type: "Event Type",
-      team: "Assigned Team",
-      date: "Date",
-      start: "Start Time",
-      end: "End Time",
-      location: "Location",
-      opponent: "Opponent",
-      coach: "Coach",
-      fee: "Fee",
-      kit: "Primary Kit",
-      alternativeKit: "Alternative Kit",
-      details: "Extra Details",
-      create: "Create Upcoming Fixture",
-      update: "Save Changes"
-    },
-    toasts: {
-      missingInfo: "Missing Information",
-      missingInfoDesc: "Please fill in all required fields.",
-      saving: "Upcoming Fixture Scheduled",
-      savingDesc: "The event has been added to the calendar.",
-      updating: "Upcoming Fixture Updated",
-      updatingDesc: "Fixture details have been saved.",
-      removing: "Upcoming Fixture Deleted",
-      removingDesc: "The event has been removed from the list."
     }
   },
   attendance: {
@@ -315,6 +286,11 @@ const zhDict: typeof baseDict = {
     revokeAdmin: "撤銷管理員權限",
     searchPlaceholder: "搜尋球員...",
     noPlayersFound: "找不到符合搜尋條件的球員。",
+    summaryTitle: "球員統計",
+    byTeam: "按隊伍",
+    byRole: "按球員類型",
+    byStatus: "按狀態",
+    totalPlayers: "球員總數",
     tableHeader: {
       number: "#",
       info: "球員資料",
@@ -370,40 +346,6 @@ const zhDict: typeof baseDict = {
       update: "更新球衣",
       noKits: "尚未定義任何球衣。",
       viewImage: "查看參考圖片"
-    }
-  },
-  games: {
-    title: "賽程表",
-    subtitle: "規劃並管理即將舉行的賽事。",
-    scheduleGame: "安排最近賽程",
-    manageEvent: "管理活動",
-    dialog: {
-      addTitle: "安排新最近賽程",
-      editTitle: "編輯最近賽程",
-      type: "活動類型",
-      team: "分配隊伍",
-      date: "日期",
-      start: "開始時間",
-      end: "結束時間",
-      location: "地點",
-      opponent: "對手",
-      coach: "教練",
-      fee: "費用",
-      kit: "首選球衣",
-      alternativeKit: "後備球衣",
-      details: "額外詳情",
-      create: "創建最近賽程",
-      update: "儲存更改"
-    },
-    toasts: {
-      missingInfo: "資料缺失",
-      missingInfoDesc: "請填寫所有必填欄位。",
-      saving: "最近賽程已安排",
-      savingDesc: "活動已添加到賽程表中。",
-      updating: "最近賽程已更新",
-      updatingDesc: "賽事詳情已儲存。",
-      removing: "最近賽程已刪除",
-      removingDesc: "活動已從名單中移除。"
     }
   },
   attendance: {
