@@ -373,7 +373,7 @@ export default function DashboardPage() {
     if (isUserLoading || !user || currentPlayer) return null;
     return query(collection(firestore, "players"), where("email", "==", user.email), limit(1));
   }, [firestore, user, currentPlayer, isUserLoading]);
-  const { data: matchedProfiles } = useCollection<Player>(emailMatchQuery);
+  const { data: matchedProfiles, isLoading: isMatchedProfilesLoading } = useCollection<Player>(emailMatchQuery);
   const preEnteredProfile = matchedProfiles?.find(p => p.id !== user?.uid);
 
   const teamsQuery = useMemoFirebase(() => {
@@ -577,7 +577,7 @@ export default function DashboardPage() {
   };
 
   // Block rendering until authorization status is confirmed
-  const isAuthChecking = user && (isProfileLoading || isFirstRunCheck === null);
+  const isAuthChecking = user && (isProfileLoading || isMatchedProfilesLoading || isFirstRunCheck === null);
   const isUnauthorizedFlashCheck = user && !currentPlayer && !preEnteredProfile && isFirstRunCheck === false;
 
   if (isUserLoading || isAuthChecking || isUnauthorizedFlashCheck) {
