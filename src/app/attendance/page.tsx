@@ -18,7 +18,7 @@ export default function AttendancePage() {
   const { dict, language } = useTranslation();
 
   // 1. Get user's confirmed attendance records from their personal collection
-  // This is a much simpler and more robust query than collectionGroup
+  // This is much simpler and more robust query than collectionGroup
   const confirmedAttendanceQuery = useMemoFirebase(() => {
     if (!user) return null;
     return query(
