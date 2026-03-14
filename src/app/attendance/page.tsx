@@ -626,7 +626,7 @@ function GameRosterList({
           <Info className="h-4 w-4" /> Note for Deployment
         </p>
         <p className="text-[10px] text-muted-foreground leading-relaxed">
-          If the Google Sign-In window does not appear, please ensure your App Hosting domain is added to the <strong>"Authorized Domains"</strong> list in the Firebase Console under <em>Authentication > Settings</em>.
+          If the Google Sign-In window does not appear, please ensure your App Hosting domain is added to the <strong>"Authorized Domains"</strong> list in the Firebase Console under <em>Authentication &gt; Settings</em>.
         </p>
       </div>
 
