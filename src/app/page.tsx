@@ -172,7 +172,6 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
           <div className="mt-6">
             <Button className="w-full font-bold h-12" variant="outline" onClick={(e) => {
               const closeBtn = (e.currentTarget.closest('[role="dialog"]') as HTMLElement)?.querySelector('[data-radix-collection-item]') as HTMLElement;
-              // Simple way to trigger close is via programmatic UI interaction or just reliance on standard close
             }}>
               Close
             </Button>
@@ -435,7 +434,6 @@ export default function DashboardPage() {
         toast({ title: "Profile Claimed!" });
       })
       .catch(async () => {
-        // Handle error silently
       })
       .finally(() => {
         setIsLinking(false);

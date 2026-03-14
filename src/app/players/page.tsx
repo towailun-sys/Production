@@ -781,7 +781,6 @@ export default function PlayersPage() {
               </div>
             ) : (
               <>
-                {/* Desktop View: Table */}
                 <div className="hidden lg:block">
                   <Table>
                     <TableHeader className="bg-muted/30">
@@ -909,7 +908,6 @@ export default function PlayersPage() {
                   </Table>
                 </div>
 
-                {/* Mobile/Tablet View: Cards */}
                 <div className="lg:hidden">
                   {filteredPlayers.length === 0 ? (
                     <div className="p-12 text-center text-muted-foreground italic text-sm">
@@ -1058,8 +1056,7 @@ function TeamManagementUI() {
     setEditingTeam(team);
     setName(team.name);
     setNameZh(team.nameZh || "");
-    // Scroll to the top of the dialog content for mobile users
-    containerRef.current?.closest('[role="dialog"]')?.scrollTo({ top: 0, behavior: 'smooth' });
+    containerRef.current?.parentElement?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const resetForm = () => {
@@ -1105,18 +1102,15 @@ function TeamManagementUI() {
               <span className="text-xs text-muted-foreground">{team.nameZh}</span>
             </div>
             <div className="flex gap-2">
-              <Button variant="ghost" size="icon" onClick={() => handleEditClick(team)} className="h-10 w-10 text-primary hover:bg-primary/10">
+              <Button variant="ghost" size="icon" onClick={() => handleEditClick(team)} className="h-11 w-11 text-primary hover:bg-primary/10">
                 <Pencil className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={() => handleDeleteTeam(team.id)} className="text-destructive h-10 w-10 hover:bg-destructive/10">
+              <Button variant="ghost" size="icon" onClick={() => handleDeleteTeam(team.id)} className="text-destructive h-11 w-11 hover:bg-destructive/10">
                 <Trash2 className="h-5 w-5" />
               </Button>
             </div>
           </div>
         ))}
-        {(!teams || teams.length === 0) && (
-          <p className="text-center text-xs text-muted-foreground py-4">{dict.players.teams.noTeams}</p>
-        )}
       </div>
     </div>
   );
@@ -1143,7 +1137,7 @@ function KitManagementUI() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 800000) { // Limit to ~800KB for Base64 storage
+      if (file.size > 800000) { 
         toast({
           variant: "destructive",
           title: "File too large",
@@ -1184,8 +1178,7 @@ function KitManagementUI() {
       colorZh: kit.colorZh || "",
       imageUrl: kit.imageUrl || ""
     });
-    // Scroll to the top of the dialog content for mobile users
-    containerRef.current?.closest('[role="dialog"]')?.scrollTo({ top: 0, behavior: 'smooth' });
+    containerRef.current?.parentElement?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const resetForm = () => {
@@ -1235,22 +1228,22 @@ function KitManagementUI() {
         </div>
         
         {formData.imageUrl && (
-          <div className="relative aspect-[3/4] w-24 mx-auto rounded-lg overflow-hidden border bg-muted shadow-sm mt-1">
+          <div className="relative aspect-[3/4] w-32 mx-auto rounded-lg overflow-hidden border bg-muted shadow-sm mt-1">
             <Image 
               src={formData.imageUrl} 
               alt="Preview" 
               fill 
               className="object-cover" 
-              sizes="100px"
+              sizes="150px"
               unoptimized={formData.imageUrl.startsWith('data:')}
             />
             <Button 
               variant="destructive" 
               size="icon" 
-              className="absolute top-1 right-1 h-6 w-6 rounded-full opacity-80"
+              className="absolute top-1 right-1 h-7 w-7 rounded-full opacity-90 shadow-md"
               onClick={() => setFormData({ ...formData, imageUrl: "" })}
             >
-              <X className="h-3 w-3" />
+              <X className="h-4 w-4" />
             </Button>
           </div>
         )}
@@ -1285,18 +1278,15 @@ function KitManagementUI() {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button variant="ghost" size="icon" onClick={() => handleEditClick(kit)} className="h-10 w-10 text-primary hover:bg-primary/10">
+              <Button variant="ghost" size="icon" onClick={() => handleEditClick(kit)} className="h-11 w-11 text-primary hover:bg-primary/10">
                 <Pencil className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={() => handleDeleteKit(kit.id)} className="text-destructive h-10 w-10 hover:bg-destructive/10">
+              <Button variant="ghost" size="icon" onClick={() => handleDeleteKit(kit.id)} className="text-destructive h-11 w-11 hover:bg-destructive/10">
                 <Trash2 className="h-5 w-5" />
               </Button>
             </div>
           </div>
         ))}
-        {(!kits || kits.length === 0) && (
-          <p className="text-center text-xs text-muted-foreground py-4">{dict.players.kits.noKits}</p>
-        )}
       </div>
     </div>
   );
