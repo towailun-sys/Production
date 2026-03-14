@@ -58,21 +58,24 @@ service cloud.firestore {
       allow write, delete: if isOwner(playerId) || isAdmin();
     }
 
-    // Support for Collection Group queries on attendance.
-    match /{path=**}/attendanceRecords/{playerId} {
-      allow list: if isSignedIn() && (request.auth.uid == playerId || isAdmin());
+    // Support for Collection Group queries on attendanceRecords.
+    // This is critical for the "My Attendance" view to filter by playerId across all games.
+    match /{path=**}/attendanceRecords/{recordId} {
+      // Allow list operations if the user is filtering by their own ID or is an admin.
+      allow list: if isSignedIn() && (
+        resource.data.playerId == request.auth.uid || 
+        recordId == request.auth.uid || 
+        isAdmin()
+      );
+      allow get: if isSignedIn();
+      allow write, delete: if isOwner(recordId) || isAdmin();
     }
 
-    // User-centric attendance path for "My Attendance" view.
+    // User-centric attendance path for "My Attendance" view (legacy/additional support).
     match /users/{userId}/game_attendances/{attendanceId} {
       allow get, list: if isOwner(userId) || isAdmin();
       allow write: if (isOwner(userId) && request.resource.data.playerId == userId) || isAdmin();
       allow delete: if isOwner(userId) || isAdmin();
-    }
-
-    // Support for Collection Group queries on attendance for admin dashboards.
-    match /{path=**}/game_attendances/{attendanceId} {
-      allow list: if isAdmin();
     }
 
     // System roles (Read-only for signed-in, managed by service accounts/external).
