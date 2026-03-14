@@ -4,7 +4,7 @@
 import { MainNav } from "@/components/layout/main-nav";
 import { useTranslation } from "@/components/language-provider";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, query, where, orderBy } from "firebase/firestore";
+import { collection, query, orderBy } from "firebase/firestore";
 import { Game, Attendance, Player } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,10 +20,7 @@ export default function AttendancePage() {
   // 1. Get user's confirmed attendance records from their personal collection
   const confirmedAttendanceQuery = useMemoFirebase(() => {
     if (!user) return null;
-    return query(
-      collection(firestore, "users", user.uid, "game_attendances"),
-      where("status", "==", "Confirmed")
-    );
+    return collection(firestore, "users", user.uid, "game_attendances");
   }, [firestore, user]);
 
   const { data: attendanceRecords, isLoading: isAttendanceLoading } = useCollection<Attendance>(confirmedAttendanceQuery);
@@ -42,7 +39,7 @@ export default function AttendancePage() {
   const { data: players } = useCollection<Player>(playersQuery);
 
   const confirmedGames = (games || []).filter(game => 
-    attendanceRecords?.some(record => record.gameId === game.id)
+    attendanceRecords?.some(record => record.gameId === game.id && record.status === 'Confirmed')
   );
 
   const now = new Date();
@@ -137,14 +134,12 @@ export default function AttendancePage() {
               </div>
             )}
 
-            {/* Confirmed Squad List - Same as Dashboard */}
-            {!isOutdated && (
-              <GameAttendanceSection 
-                game={game} 
-                user={user} 
-                allPlayers={players || []} 
-              />
-            )}
+            <GameAttendanceSection 
+              game={game} 
+              user={user} 
+              allPlayers={players || []} 
+              readOnly={true}
+            />
           </div>
         </div>
       </CardContent>

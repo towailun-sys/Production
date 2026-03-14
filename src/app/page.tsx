@@ -212,11 +212,13 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
 export function GameAttendanceSection({ 
   game, 
   user, 
-  allPlayers 
+  allPlayers,
+  readOnly = false
 }: { 
   game: Game; 
   user: any; 
-  allPlayers: Player[] | null 
+  allPlayers: Player[] | null;
+  readOnly?: boolean;
 }) {
   const firestore = useFirestore();
   const { dict } = useTranslation();
@@ -268,24 +270,26 @@ export function GameAttendanceSection({
 
   return (
     <div className="mt-6 space-y-4 pt-6 border-t border-dashed">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Badge variant={myRecord?.status === 'Confirmed' ? 'default' : 'outline'} className={cn(
-            "h-10 px-4 font-bold rounded-xl flex items-center gap-2 cursor-pointer transition-all hover:scale-105 active:scale-95",
-            myRecord?.status === 'Confirmed' ? "bg-primary text-white shadow-md" : "border-primary/20 text-muted-foreground"
-          )} onClick={() => handleUpdateStatus('Confirmed')}>
-            <CheckCircle2 className="h-4 w-4" />
-            {dict.common.join}
-          </Badge>
-          <Badge variant={myRecord?.status === 'Declined' ? 'destructive' : 'outline'} className={cn(
-            "h-10 px-4 font-bold rounded-xl flex items-center gap-2 cursor-pointer transition-all hover:scale-105 active:scale-95",
-            myRecord?.status === 'Declined' ? "bg-destructive text-white shadow-md" : "border-destructive/20 text-muted-foreground"
-          )} onClick={() => handleUpdateStatus('Declined')}>
-            <XCircle className="h-4 w-4" />
-            {dict.common.decline}
-          </Badge>
+      {!readOnly && (
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Badge variant={myRecord?.status === 'Confirmed' ? 'default' : 'outline'} className={cn(
+              "h-10 px-4 font-bold rounded-xl flex items-center gap-2 cursor-pointer transition-all hover:scale-105 active:scale-95",
+              myRecord?.status === 'Confirmed' ? "bg-primary text-white shadow-md" : "border-primary/20 text-muted-foreground"
+            )} onClick={() => handleUpdateStatus('Confirmed')}>
+              <CheckCircle2 className="h-4 w-4" />
+              {dict.common.join}
+            </Badge>
+            <Badge variant={myRecord?.status === 'Declined' ? 'destructive' : 'outline'} className={cn(
+              "h-10 px-4 font-bold rounded-xl flex items-center gap-2 cursor-pointer transition-all hover:scale-105 active:scale-95",
+              myRecord?.status === 'Declined' ? "bg-destructive text-white shadow-md" : "border-destructive/20 text-muted-foreground"
+            )} onClick={() => handleUpdateStatus('Declined')}>
+              <XCircle className="h-4 w-4" />
+              {dict.common.decline}
+            </Badge>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="bg-primary/5 rounded-2xl overflow-hidden">
         <div className="py-3 px-5 border-b border-primary/10 flex items-center justify-between">
