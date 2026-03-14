@@ -18,8 +18,9 @@ import {
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { useUser, useAuth } from "@/firebase";
+import { useUser, useAuth, useFirestore, useMemoFirebase, useDoc } from "@/firebase";
 import { GoogleAuthProvider, signInWithPopup, signOut } from "firebase/auth";
+import { doc } from "firebase/firestore";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -32,6 +33,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "@/components/language-provider";
 import Image from "next/image";
+import { Player } from "@/lib/types";
 
 export function MainNav() {
   const pathname = usePathname();
@@ -40,6 +42,7 @@ export function MainNav() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
   const { toast } = useToast();
   const { language, setLanguage, dict } = useTranslation();
 
@@ -51,6 +54,13 @@ export function MainNav() {
     setIsOpen(false);
   }, [pathname]);
 
+  const playerRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(firestore, "players", user.uid);
+  }, [firestore, user]);
+  
+  const { data: currentPlayer } = useDoc<Player>(playerRef);
+
   const handleLogin = async () => {
     if (isLoggingIn) return;
     
@@ -61,7 +71,6 @@ export function MainNav() {
     });
     
     try {
-      // For production mobile stability, ensure we catch any closure immediately
       await signInWithPopup(auth, provider);
       setIsOpen(false);
       toast({
@@ -94,7 +103,7 @@ export function MainNav() {
     }
   };
 
-  const routes = [
+  const baseRoutes = [
     {
       href: "/",
       label: dict.nav.dashboard,
@@ -118,8 +127,16 @@ export function MainNav() {
       label: dict.nav.games,
       icon: Calendar,
       active: pathname === "/games",
+      adminOnly: true,
     },
   ];
+
+  const routes = baseRoutes.filter(route => {
+    if (route.adminOnly) {
+      return currentPlayer?.isAdmin;
+    }
+    return true;
+  });
 
   if (!mounted) return (
     <nav className="sticky top-0 z-50 w-full border-b bg-primary h-16 shadow-lg" />
