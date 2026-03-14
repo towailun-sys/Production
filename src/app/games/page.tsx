@@ -50,7 +50,8 @@ import {
   UserRound,
   Banknote,
   Calendar as CalendarIcon,
-  History
+  History,
+  CalendarDays
 } from "lucide-react";
 import { Game, GameType, Player, Team, Kit } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -121,7 +122,8 @@ export default function GamesPage() {
 
   const gamesQuery = useMemoFirebase(() => {
     if (isUserLoading || !user) return null;
-    return query(collection(firestore, "games"), orderBy("date", "desc")); // Changed to desc to see latest first
+    // Base fetch, separation happens in component logic
+    return collection(firestore, "games");
   }, [firestore, user, isUserLoading]);
 
   const { data: games, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
@@ -301,9 +303,171 @@ export default function GamesPage() {
     );
   }
 
-  // Get today's date string for comparison
   const now = new Date();
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+  const sortedGames = (games || []).sort((a, b) => a.date.localeCompare(b.date));
+  const upcomingGames = sortedGames.filter(g => g.date >= todayStr);
+  const outdatedGames = sortedGames.filter(g => g.date < todayStr);
+
+  const renderGameList = (gameList: Game[], isOutdated: boolean) => (
+    <div className="grid gap-6">
+      {gameList.length === 0 ? (
+        <Card className="p-12 text-center border-dashed border-2 rounded-2xl flex flex-col items-center gap-4">
+          <CalendarIcon className="h-10 w-10 text-muted-foreground/30" />
+          <p className="text-muted-foreground font-medium text-sm">No fixtures in this category.</p>
+        </Card>
+      ) : (
+        gameList.map((game) => (
+          <Card 
+            key={game.id} 
+            className={cn(
+              "border-none shadow-md hover:shadow-lg transition-all border-l-4 rounded-2xl overflow-hidden",
+              isOutdated ? "border-muted-foreground opacity-75 grayscale bg-muted/30" : "border-primary"
+            )}
+          >
+            <CardContent className="p-5 md:p-6">
+              <div className="flex flex-col md:flex-row md:items-start gap-6">
+                <div className={cn(
+                  "flex flex-row md:flex-col items-center justify-center p-4 md:p-5 rounded-2xl min-w-[100px] border gap-3 md:gap-1",
+                  isOutdated ? "bg-muted text-muted-foreground" : "bg-muted/30"
+                )}>
+                  <span className="text-[10px] md:text-sm font-bold uppercase tracking-widest opacity-60">
+                    {new Date(game.date).toLocaleString('default', { month: 'short' })}
+                  </span>
+                  <span className={cn(
+                    "text-3xl md:text-4xl font-bold font-headline leading-none",
+                    isOutdated ? "text-muted-foreground" : "text-primary"
+                  )}>
+                    {new Date(game.date).getDate()}
+                  </span>
+                  <span className="text-[10px] font-bold md:hidden opacity-60">
+                    {new Date(game.date).toLocaleString('default', { weekday: 'short' })}
+                  </span>
+                </div>
+
+                <div className="flex-1 space-y-4">
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      {isOutdated && (
+                        <Badge variant="outline" className="bg-muted text-muted-foreground border-none font-bold px-2 py-0.5 text-[10px] uppercase tracking-wider flex items-center gap-1.5">
+                          <History className="h-3 w-3" />
+                          {dict.common.outdated}
+                        </Badge>
+                      )}
+                      <Badge variant="outline" className={cn(
+                        "font-bold px-2 py-0.5 border-none text-[10px] uppercase tracking-wider",
+                        isOutdated ? "bg-muted-foreground/20 text-muted-foreground" : (
+                          game.type === 'League' ? "bg-primary text-white" : 
+                          game.type === 'Training' ? "bg-accent text-white" :
+                          game.type === 'Internal' ? "bg-indigo-600 text-white" :
+                          "bg-muted text-foreground"
+                        )
+                      )}>
+                        {dict.common.gameTypes[game.type] || game.type}
+                      </Badge>
+                      <Badge variant="secondary" className={cn(
+                        "border-none flex gap-1.5 items-center font-bold px-2.5 py-0.5 text-[10px]",
+                        isOutdated ? "bg-muted-foreground/20 text-muted-foreground" : "bg-primary text-white"
+                      )}>
+                        <Users className="h-3 w-3" />
+                        {getTeamLabel(game.team)}
+                      </Badge>
+                    </div>
+                    <h3 className={cn(
+                      "text-lg md:text-xl font-headline font-bold leading-tight",
+                      isOutdated && "text-muted-foreground"
+                    )}>
+                      {game.type === 'Training' || game.type === 'Internal' 
+                        ? dict.common.gameTypes[game.type] 
+                        : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
+                    </h3>
+                    <div className="flex flex-wrap gap-x-6 gap-y-3 text-xs md:text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <Clock className={cn("h-4 w-4 shrink-0", !isOutdated && "text-primary")} />
+                        {game.startTime} - {game.endTime}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className={cn("h-4 w-4 shrink-0", !isOutdated && "text-primary")} />
+                        {game.location}
+                      </div>
+                      {game.coach && (
+                        <div className="flex items-center gap-2">
+                          <UserRound className={cn("h-4 w-4 shrink-0", !isOutdated && "text-primary")} />
+                          {game.coach}
+                        </div>
+                      )}
+                      <div className="flex flex-wrap gap-3">
+                        <KitBadge kitId={game.kitColors} />
+                        <KitBadge kitId={game.alternativeKitColors} isAlternative />
+                      </div>
+                    </div>
+                  </div>
+
+                  {game.fee && (
+                    <div className={cn(
+                      "flex items-start gap-2 text-[12px] font-bold p-3 rounded-xl border",
+                      isOutdated ? "bg-muted/20 border-muted text-muted-foreground" : "bg-primary/5 border-primary/10 text-primary"
+                    )}>
+                      <Banknote className="h-4 w-4 shrink-0 mt-0.5" />
+                      <span className="whitespace-pre-wrap">{game.fee}</span>
+                    </div>
+                  )}
+
+                  {game.additionalDetails && (
+                    <div className="flex items-start gap-2 text-[11px] text-muted-foreground mt-3 bg-muted/20 p-3 rounded-xl border border-dashed">
+                      <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-destructive" />
+                      <p className="leading-relaxed whitespace-pre-wrap">{game.additionalDetails}</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-row md:flex-col items-center gap-3 justify-between md:justify-center border-t md:border-none pt-4 md:pt-0">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={cn(
+                      "font-bold gap-1.5 h-10 px-4 flex-1 md:flex-none",
+                      isOutdated ? "text-muted-foreground hover:bg-muted" : "text-primary hover:bg-primary/5"
+                    )} 
+                    asChild
+                  >
+                    <Link href={`/attendance?gameId=${game.id}`}>
+                      {dict.dashboard.viewRoster}
+                      <ChevronRight className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  
+                  {currentPlayer?.isAdmin && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:bg-primary/5 rounded-full shrink-0">
+                          <MoreVertical className="h-5 w-5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground px-3">
+                          {dict.games.manageEvent}
+                        </DropdownMenuLabel>
+                        <DropdownMenuItem onSelect={() => handleEditClick(game)} className="gap-3 py-3">
+                          <Pencil className="h-4 w-4" />
+                          {dict.common.edit}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeleteGame(game.id)} className="gap-3 py-3 text-destructive focus:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                          {dict.common.delete}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))
+      )}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-background pb-12">
@@ -487,167 +651,43 @@ export default function GamesPage() {
           )}
         </div>
 
-        <div className="grid gap-6">
+        <div className="space-y-12">
           {isGamesLoading ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <Card key={i} className="h-32 animate-pulse bg-muted/50 rounded-2xl" />
-            ))
-          ) : !games || games.length === 0 ? (
-            <Card className="p-16 text-center border-dashed border-2 rounded-2xl flex flex-col items-center gap-4">
-              <CalendarIcon className="h-12 w-12 text-muted-foreground/30" />
-              <p className="text-muted-foreground font-medium">No events scheduled yet.</p>
-            </Card>
+            <div className="space-y-6">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Card key={i} className="h-32 animate-pulse bg-muted/50 rounded-2xl" />
+              ))}
+            </div>
           ) : (
-            games.map((game) => {
-              const isOutdated = game.date < todayStr;
-              return (
-                <Card 
-                  key={game.id} 
-                  className={cn(
-                    "border-none shadow-md hover:shadow-lg transition-all border-l-4 rounded-2xl overflow-hidden",
-                    isOutdated ? "border-muted-foreground opacity-75 grayscale bg-muted/30" : "border-primary"
-                  )}
-                >
-                  <CardContent className="p-5 md:p-6">
-                    <div className="flex flex-col md:flex-row md:items-start gap-6">
-                      <div className={cn(
-                        "flex flex-row md:flex-col items-center justify-center p-4 md:p-5 rounded-2xl min-w-[100px] border gap-3 md:gap-1",
-                        isOutdated ? "bg-muted text-muted-foreground" : "bg-muted/30"
-                      )}>
-                        <span className="text-[10px] md:text-sm font-bold uppercase tracking-widest opacity-60">
-                          {new Date(game.date).toLocaleString('default', { month: 'short' })}
-                        </span>
-                        <span className={cn(
-                          "text-3xl md:text-4xl font-bold font-headline leading-none",
-                          isOutdated ? "text-muted-foreground" : "text-primary"
-                        )}>
-                          {new Date(game.date).getDate()}
-                        </span>
-                        <span className="text-[10px] font-bold md:hidden opacity-60">
-                          {new Date(game.date).toLocaleString('default', { weekday: 'short' })}
-                        </span>
-                      </div>
+            <>
+              {/* Upcoming Fixtures */}
+              <section className="space-y-6">
+                <div className="flex items-center gap-3 border-b pb-4">
+                  <CalendarDays className="h-6 w-6 text-primary" />
+                  <h2 className="text-xl md:text-2xl font-headline font-bold">
+                    {dict.games.upcoming}
+                  </h2>
+                  <Badge className="ml-2 font-bold bg-primary text-white">
+                    {upcomingGames.length}
+                  </Badge>
+                </div>
+                {renderGameList(upcomingGames, false)}
+              </section>
 
-                      <div className="flex-1 space-y-4">
-                        <div className="space-y-3">
-                          <div className="flex flex-wrap items-center gap-2">
-                            {isOutdated && (
-                              <Badge variant="outline" className="bg-muted text-muted-foreground border-none font-bold px-2 py-0.5 text-[10px] uppercase tracking-wider flex items-center gap-1.5">
-                                <History className="h-3 w-3" />
-                                {dict.common.outdated}
-                              </Badge>
-                            )}
-                            <Badge variant="outline" className={cn(
-                              "font-bold px-2 py-0.5 border-none text-[10px] uppercase tracking-wider",
-                              isOutdated ? "bg-muted-foreground/20 text-muted-foreground" : (
-                                game.type === 'League' ? "bg-primary text-white" : 
-                                game.type === 'Training' ? "bg-accent text-white" :
-                                game.type === 'Internal' ? "bg-indigo-600 text-white" :
-                                "bg-muted text-foreground"
-                              )
-                            )}>
-                              {dict.common.gameTypes[game.type] || game.type}
-                            </Badge>
-                            <Badge variant="secondary" className={cn(
-                              "border-none flex gap-1.5 items-center font-bold px-2.5 py-0.5 text-[10px]",
-                              isOutdated ? "bg-muted-foreground/20 text-muted-foreground" : "bg-primary text-white"
-                            )}>
-                              <Users className="h-3 w-3" />
-                              {getTeamLabel(game.team)}
-                            </Badge>
-                          </div>
-                          <h3 className={cn(
-                            "text-lg md:text-xl font-headline font-bold leading-tight",
-                            isOutdated && "text-muted-foreground"
-                          )}>
-                            {game.type === 'Training' || game.type === 'Internal' 
-                              ? dict.common.gameTypes[game.type] 
-                              : `${dict.common.matchVs} ${game.opponent || dict.common.tbd}`}
-                          </h3>
-                          <div className="flex flex-wrap gap-x-6 gap-y-3 text-xs md:text-sm text-muted-foreground">
-                            <div className="flex items-center gap-2">
-                              <Clock className={cn("h-4 w-4 shrink-0", !isOutdated && "text-primary")} />
-                              {game.startTime} - {game.endTime}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <MapPin className={cn("h-4 w-4 shrink-0", !isOutdated && "text-primary")} />
-                              {game.location}
-                            </div>
-                            {game.coach && (
-                              <div className="flex items-center gap-2">
-                                <UserRound className={cn("h-4 w-4 shrink-0", !isOutdated && "text-primary")} />
-                                {game.coach}
-                              </div>
-                            )}
-                            <div className="flex flex-wrap gap-3">
-                              <KitBadge kitId={game.kitColors} />
-                              <KitBadge kitId={game.alternativeKitColors} isAlternative />
-                            </div>
-                          </div>
-                        </div>
-
-                        {game.fee && (
-                          <div className={cn(
-                            "flex items-start gap-2 text-[12px] font-bold p-3 rounded-xl border",
-                            isOutdated ? "bg-muted/20 border-muted text-muted-foreground" : "bg-primary/5 border-primary/10 text-primary"
-                          )}>
-                            <Banknote className="h-4 w-4 shrink-0 mt-0.5" />
-                            <span className="whitespace-pre-wrap">{game.fee}</span>
-                          </div>
-                        )}
-
-                        {game.additionalDetails && (
-                          <div className="flex items-start gap-2 text-[11px] text-muted-foreground mt-3 bg-muted/20 p-3 rounded-xl border border-dashed">
-                            <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-destructive" />
-                            <p className="leading-relaxed whitespace-pre-wrap">{game.additionalDetails}</p>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex flex-row md:flex-col items-center gap-3 justify-between md:justify-center border-t md:border-none pt-4 md:pt-0">
-                        <Button 
-                          variant="ghost" 
-                          size="sm" 
-                          className={cn(
-                            "font-bold gap-1.5 h-10 px-4 flex-1 md:flex-none",
-                            isOutdated ? "text-muted-foreground hover:bg-muted" : "text-primary hover:bg-primary/5"
-                          )} 
-                          asChild
-                        >
-                          <Link href={`/attendance?gameId=${game.id}`}>
-                            {dict.dashboard.viewRoster}
-                            <ChevronRight className="h-4 w-4" />
-                          </Link>
-                        </Button>
-                        
-                        {currentPlayer?.isAdmin && (
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-10 w-10 text-muted-foreground hover:bg-primary/5 rounded-full shrink-0">
-                                <MoreVertical className="h-5 w-5" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-48">
-                              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground px-3">
-                                {dict.games.manageEvent}
-                              </DropdownMenuLabel>
-                              <DropdownMenuItem onSelect={() => handleEditClick(game)} className="gap-3 py-3">
-                                <Pencil className="h-4 w-4" />
-                                {dict.common.edit}
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleDeleteGame(game.id)} className="gap-3 py-3 text-destructive focus:text-destructive">
-                                <Trash2 className="h-4 w-4" />
-                                {dict.common.delete}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              );
-            })
+              {/* Outdated Fixtures */}
+              <section className="space-y-6">
+                <div className="flex items-center gap-3 border-b pb-4 opacity-70">
+                  <History className="h-6 w-6 text-muted-foreground" />
+                  <h2 className="text-xl md:text-2xl font-headline font-bold text-muted-foreground">
+                    {dict.games.outdated}
+                  </h2>
+                  <Badge variant="outline" className="ml-2 font-bold text-muted-foreground border-muted-foreground">
+                    {outdatedGames.length}
+                  </Badge>
+                </div>
+                {renderGameList(outdatedGames, true)}
+              </section>
+            </>
           )}
         </div>
 

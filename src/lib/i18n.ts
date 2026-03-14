@@ -98,6 +98,8 @@ const baseDict = {
   games: {
     title: "Fixtures",
     subtitle: "View and manage upcoming matches and training sessions.",
+    upcoming: "Upcoming Fixtures",
+    outdated: "Outdated Fixtures",
     scheduleGame: "Schedule Game",
     manageEvent: "Manage Event",
     toasts: {
@@ -336,6 +338,8 @@ const zhDict: typeof baseDict = {
   games: {
     title: "賽程",
     subtitle: "查看並管理即將舉行的比賽及訓練。",
+    upcoming: "最近賽程",
+    outdated: "已過期",
     scheduleGame: "安排賽程",
     manageEvent: "管理活動",
     toasts: {
