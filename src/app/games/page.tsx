@@ -293,8 +293,8 @@ export default function GamesPage() {
         <MainNav />
         <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center text-center px-6">
           <Lock className="h-12 w-12 text-muted-foreground mb-4" />
-          <h1 className="text-xl md:text-2xl font-headline mb-2">Access Restricted</h1>
-          <p className="text-muted-foreground text-sm">Sign in to manage the game schedule.</p>
+          <h1 className="text-xl md:text-2xl font-headline mb-2">{dict.attendance.restrictedTitle}</h1>
+          <p className="text-muted-foreground text-sm">{dict.attendance.restrictedDescGames}</p>
         </main>
       </div>
     );

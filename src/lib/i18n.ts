@@ -55,7 +55,12 @@ const baseDict = {
     games: "Fixtures",
     signIn: "Sign In",
     signOut: "Log Out",
-    language: "Language"
+    language: "Language",
+    signInSuccess: "Signed in successfully",
+    signInWelcome: (club: string) => `Welcome back to ${club}.`,
+    signInError: "Sign in failed",
+    signOutSuccess: "Signed out",
+    signOutMessage: "You have been logged out safely."
   },
   dashboard: {
     welcome: "Welcome back",
@@ -205,6 +210,9 @@ const baseDict = {
     currently: "Currently",
     signinRequired: "Sign In Required",
     signinDesc: "Please sign in with your Google account to manage your availability for team events.",
+    restrictedTitle: "Access Restricted",
+    restrictedDescGames: "Sign in to manage the game schedule.",
+    restrictedDescPlayers: "Sign in to manage the squad list.",
     dateLabel: "Date",
     timeLabel: "Time",
     locationLabel: "Location",
@@ -220,7 +228,7 @@ const baseDict = {
     fixtureNotFound: "Fixture not found",
     returnToFixtures: "Return to Fixtures",
     deploymentNoteTitle: "Note for Deployment",
-    deploymentNoteDesc: "If the Google Sign-In window does not appear, please ensure your App Hosting domain is added to the Authorized Domains list in the Firebase Console under Authentication > Settings.",
+    deploymentNoteDesc: "If the Google Sign-In window does not appear, please ensure your App Hosting domain is added to the \"Authorized Domains\" list in the Firebase Console under Authentication > Settings.",
     toasts: {
       statusUpdated: "Status Updated",
       statusDesc: (status: string) => `Attendance set to ${status}.`,
@@ -284,7 +292,12 @@ const zhDict: typeof baseDict = {
     games: "場次",
     signIn: "登入",
     signOut: "登出",
-    language: "語言"
+    language: "語言",
+    signInSuccess: "登入成功",
+    signInWelcome: (club: string) => `歡迎回到 ${club}。`,
+    signInError: "登入失敗",
+    signOutSuccess: "已登出",
+    signOutMessage: "你已安全登出。"
   },
   dashboard: {
     welcome: "歡迎",
@@ -434,6 +447,9 @@ const zhDict: typeof baseDict = {
     currently: "目前",
     signinRequired: "請先登入",
     signinDesc: "請使用你的 Google 帳號登入，以管理你出席球隊活動的情況。",
+    restrictedTitle: "存取受限",
+    restrictedDescGames: "請先登入以管理賽程。",
+    restrictedDescPlayers: "請先登入以管理球員名單。",
     dateLabel: "日期",
     timeLabel: "時間",
     locationLabel: "地點",
@@ -449,7 +465,7 @@ const zhDict: typeof baseDict = {
     fixtureNotFound: "找不到該場次",
     returnToFixtures: "返回賽程",
     deploymentNoteTitle: "部署說明",
-    deploymentNoteDesc: "如果 Google 登入視窗沒有彈出，請確保已在 Firebase 控制台的「驗證 > 設定」下將你的 App Hosting 域名添加到「授權網域」列表中。",
+    deploymentNoteDesc: "如果 Google 登入視窗沒有彈出，請確保已在 Firebase 控制台的「驗證 > 設定」下將你的 App Hosting 域名添加到 \"授權網域\" 列表中。",
     toasts: {
       statusUpdated: "狀態已更新",
       statusDesc: (status: string) => `出席情況已設置為 ${status}。`,

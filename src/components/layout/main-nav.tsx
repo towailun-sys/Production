@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from "next/link";
@@ -75,14 +76,14 @@ export function MainNav() {
       setIsOpen(false);
       router.push('/'); // Force landing page after login
       toast({
-        title: language === 'zh' ? "登入成功" : "Signed in successfully",
-        description: language === 'zh' ? `歡迎回到 ${dict.nav.title}。` : `Welcome back to ${dict.nav.title}.`,
+        title: dict.nav.signInSuccess,
+        description: dict.nav.signInWelcome(dict.nav.title),
       });
     } catch (error: any) {
       if (error.code !== 'auth/popup-closed-by-user' && error.code !== 'auth/cancelled-popup-request') {
         toast({
           variant: "destructive",
-          title: language === 'zh' ? "登入失敗" : "Sign in failed",
+          title: dict.nav.signInError,
           description: error.message || "Could not complete Google authentication. Please check if the domain is authorized in Firebase.",
         });
       }
@@ -96,8 +97,8 @@ export function MainNav() {
     try {
       await signOut(auth);
       toast({
-        title: language === 'zh' ? "已登出" : "Signed out",
-        description: language === 'zh' ? "你已安全登出。" : "You have been logged out safely.",
+        title: dict.nav.signOutSuccess,
+        description: dict.nav.signOutMessage,
       });
     } catch (error) {
       console.error("Logout failed:", error);

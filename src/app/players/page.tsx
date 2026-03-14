@@ -407,10 +407,10 @@ export default function PlayersPage() {
     return (
       <div className="min-h-screen bg-background">
         <MainNav />
-        <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center text-center">
+        <main className="container mx-auto px-4 py-20 flex flex-col items-center justify-center text-center px-6">
           <Lock className="h-10 w-10 text-muted-foreground mb-4" />
-          <h1 className="text-xl md:text-2xl font-headline mb-2">Access Restricted</h1>
-          <div className="text-muted-foreground text-sm">Sign in to manage the squad list.</div>
+          <h1 className="text-xl md:text-2xl font-headline mb-2">{dict.attendance.restrictedTitle}</h1>
+          <div className="text-muted-foreground text-sm">{dict.attendance.restrictedDescPlayers}</div>
         </main>
       </div>
     );
