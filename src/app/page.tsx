@@ -309,8 +309,9 @@ function GameAttendanceSection({
                 <Badge 
                   key={record.id} 
                   variant="outline" 
-                  className="h-8 px-3 font-bold bg-white text-foreground border-primary/20 shadow-sm hover:bg-primary/5 transition-colors rounded-lg flex items-center gap-1"
+                  className="h-8 px-3 font-bold bg-white text-foreground border-primary/20 shadow-sm hover:bg-primary/5 transition-colors rounded-lg flex items-center gap-1.5"
                 >
+                  {p.isCaptain && <Crown className="h-3 w-3 text-accent shrink-0" />}
                   {numberStr && <span className="text-primary font-bold">{numberStr}</span>}
                   <span className="truncate max-w-[120px]">{p.nickname || p.name}</span>
                   {posStr && <span className="text-[10px] text-muted-foreground font-medium">({posStr})</span>}
