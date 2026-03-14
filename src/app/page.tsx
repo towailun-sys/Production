@@ -30,8 +30,6 @@ import {
   Database,
   UserRound,
   Sparkles,
-  Check,
-  X,
   Crown,
   Shirt,
   Banknote,
@@ -43,14 +41,12 @@ import {
   Users
 } from "lucide-react";
 import Link from "next/link";
-import { Game, Player, Attendance, AttendanceStatus, Team, Kit } from "@/lib/types";
+import { Game, Player, Team, Kit } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc, useAuth } from "@/firebase";
 import { collection, query, orderBy, limit, where, doc, setDoc, deleteDoc, getDocs } from "firebase/firestore";
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { useToast } from "@/hooks/use-toast";
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useTranslation } from "@/components/language-provider";
 import Image from "next/image";
 import { SUPER_ADMIN_EMAILS } from "@/lib/constants";
@@ -211,136 +207,6 @@ export function KitBadge({ kitId, isAlternative = false }: { kitId: string | nul
   return null;
 }
 
-function UserAttendanceToggle({ gameId, userId }: { gameId: string, userId: string }) {
-  const firestore = useFirestore();
-  const { toast } = useToast();
-  const { dict } = useTranslation();
-  
-  const attendanceRef = useMemoFirebase(() => 
-    doc(firestore, "games", gameId, "attendanceRecords", userId), 
-    [firestore, gameId, userId]
-  );
-  const { data: attendance } = useDoc<Attendance>(attendanceRef);
-  
-  const currentStatus = attendance?.status || 'Pending';
-
-  const updateStatus = (status: AttendanceStatus) => {
-    const attendanceData = {
-      id: userId,
-      playerId: userId,
-      gameId: gameId,
-      status: status,
-      lastUpdated: new Date().toISOString()
-    };
-
-    setDoc(attendanceRef, attendanceData, { merge: true })
-      .catch(async (error) => {
-        errorEmitter.emit('permission-error', new FirestorePermissionError({
-          path: attendanceRef.path,
-          operation: 'write',
-          requestResourceData: attendanceData
-        } satisfies SecurityRuleContext));
-      });
-
-    toast({
-      title: status === 'Confirmed' ? dict.attendance.toasts.confirmDesc : dict.attendance.toasts.updateDesc,
-    });
-  };
-
-  return (
-    <div className="flex gap-2 w-full mt-4">
-      <Button 
-        size="sm" 
-        variant={currentStatus === 'Confirmed' ? "default" : "outline"}
-        className={cn(
-          "flex-1 h-10 text-xs font-bold transition-all", 
-          currentStatus === 'Confirmed' ? "bg-primary hover:bg-primary/90 border-primary text-white" : "hover:border-primary hover:text-primary"
-        )}
-        onClick={() => updateStatus('Confirmed')}
-      >
-        <Check className="h-4 w-4 mr-1.5" /> {dict.common.join}
-      </Button>
-      <Button 
-        size="sm" 
-        variant={currentStatus === 'Declined' ? "default" : "outline"}
-        className={cn(
-          "flex-1 h-10 text-xs font-bold transition-all",
-          currentStatus === 'Declined' ? "bg-destructive hover:bg-destructive/90 border-destructive text-white" : "hover:border-destructive hover:text-destructive"
-        )}
-        onClick={() => updateStatus('Declined')}
-      >
-        <X className="h-4 w-4 mr-1.5" /> {dict.common.decline}
-      </Button>
-    </div>
-  );
-}
-
-function GameAttendancePreview({ gameId, allPlayers, userId }: { gameId: string, allPlayers: Player[], userId: string | undefined }) {
-  const firestore = useFirestore();
-  const { dict } = useTranslation();
-  
-  const attendanceQuery = useMemoFirebase(() => {
-    if (!userId) return null;
-    return collection(firestore, "games", gameId, "attendanceRecords");
-  }, [firestore, gameId, userId]);
-  
-  const { data: attendanceDocs, isLoading } = useCollection<Attendance>(attendanceQuery);
-
-  if (isLoading) return <div className="h-4 w-24 animate-pulse bg-muted rounded mt-2" />;
-  
-  const confirmedPlayers = attendanceDocs
-    ?.filter(a => a.status === 'Confirmed')
-    .map(a => {
-      if (a.isGuest) {
-        return { id: a.id, name: a.guestName || "Guest", isGuest: true } as any;
-      }
-      return allPlayers.find(p => p.id === a.playerId);
-    })
-    .filter(Boolean) as any[] || [];
-
-  if (confirmedPlayers.length === 0) {
-    return <div className="text-[11px] text-muted-foreground italic mt-3">{dict.dashboard.noConfirmations}</div>;
-  }
-
-  return (
-    <div className="mt-4 pt-3 border-t border-dashed">
-      <div className="flex items-center gap-1.5 mb-2">
-        <Check className="h-3 w-3 text-primary" />
-        <span className="text-[10px] font-bold text-primary uppercase tracking-wider">{dict.dashboard.confirmedSquad} ({confirmedPlayers.length})</span>
-      </div>
-      <div className="flex flex-wrap gap-1.5">
-        {confirmedPlayers.map((p) => {
-          const hasNumber = p.number !== undefined && p.number !== null;
-          const positions = p.preferredPositions?.map((pos: any) => dict.common.positions[pos.toLowerCase() as keyof typeof dict.common.positions] || pos).join('/') || null;
-          
-          return (
-            <Badge 
-              key={p.id} 
-              variant="secondary" 
-              className={cn(
-                "text-[10px] py-0.5 px-2 h-auto min-h-6 font-bold gap-1 flex flex-wrap",
-                p.isGuest ? "bg-accent/10 text-accent border-accent/20" : "bg-primary/10 text-primary border-primary/20"
-              )}
-            >
-              <div className="flex items-center gap-1">
-                {p.isCaptain && <Crown className="h-3 w-3 text-accent" />}
-                {hasNumber && <span className="opacity-60">#{p.number}</span>}
-                <span>{p.nickname || p.name}</span>
-                {p.isGuest && <span className="text-[8px] opacity-60 font-normal">({dict.attendance.guest})</span>}
-              </div>
-              {positions && !p.isGuest && (
-                <span className="text-[8px] opacity-60 font-normal ml-0.5">
-                  ({positions})
-                </span>
-              )}
-            </Badge>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
 export default function DashboardPage() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
@@ -387,7 +253,7 @@ export default function DashboardPage() {
   const isSuperAdminEmailCheck = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
   
   const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || (matchedProfiles !== null && !isMatchedProfilesLoading)) && isFirstRunCheck !== null;
-  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRun === true || isSuperAdminEmailCheck);
+  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isSuperAdminEmailCheck);
   const isCheckingAuth = !!user && !isAuthDetermined;
 
   const teamsQuery = useMemoFirebase(() => {
@@ -723,14 +589,6 @@ export default function DashboardPage() {
                                     <span className="whitespace-pre-wrap leading-normal">{game.fee}</span>
                                   </div>
                                 )}
-                                
-                                <GameAttendancePreview gameId={game.id} allPlayers={players || []} userId={user?.uid} />
-                              </div>
-                              <div className="bg-muted/30 p-5 md:p-6 md:w-80 border-t md:border-t-0 md:border-l flex flex-col justify-between gap-4">
-                                <div className="space-y-1">
-                                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{dict.attendance.attendingQuestion}</p>
-                                  <UserAttendanceToggle gameId={game.id} userId={user.uid} />
-                                </div>
                               </div>
                             </CardContent>
                           </Card>
