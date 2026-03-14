@@ -98,6 +98,7 @@ function AttendanceContent() {
 
   const userConfirmedAttendanceQuery = useMemoFirebase(() => {
     if (!user || !isAuthorized || isAuthChecking) return null;
+    // Collection Group query to find all attendance records for this player across all games
     return query(
       collectionGroup(firestore, "attendanceRecords"),
       where("playerId", "==", user.uid),
@@ -119,7 +120,7 @@ function AttendanceContent() {
   const { data: specificGame, isLoading: isGameLoading } = useDoc<Game>(gameRef);
 
   const gamesQuery = useMemoFirebase(() => {
-    if (!isAuthorized || isAuthChecking || gameId) return null;
+    if (!isAuthorized || isAuthChecking) return null;
     const now = new Date();
     const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     return query(
@@ -127,7 +128,7 @@ function AttendanceContent() {
       where("date", ">=", todayStr),
       orderBy("date", "asc")
     );
-  }, [firestore, isAuthorized, isAuthChecking, gameId]);
+  }, [firestore, isAuthorized, isAuthChecking]);
   const { data: allGames, isLoading: isGamesLoading } = useCollection<Game>(gamesQuery);
 
   const handleLogin = async () => {
@@ -183,7 +184,9 @@ function AttendanceContent() {
   };
 
   const formatGameDate = (dateStr: string) => {
+    if (!dateStr) return "";
     const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return dateStr;
     if (language === 'zh') {
       const weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
       return `${date.getMonth() + 1}月${date.getDate()}日 ${weekdays[date.getDay()]}`;
@@ -304,8 +307,7 @@ function AttendanceContent() {
     );
   }
 
-  // Filtering Logic: Only show games where the user has confirmed their attendance.
-  // We use the results from the userConfirmedAttendanceQuery (collectionGroup) to filter the allGames list.
+  // Logic: Only show games where the current user has confirmed their attendance.
   const joinedGameIds = new Set(userAttendances?.map(a => a.gameId) || []);
   const joinedGames = (allGames || []).filter(g => joinedGameIds.has(g.id));
 
