@@ -211,7 +211,7 @@ const baseDict = {
   attendance: {
     title: "My Attendance",
     subtitle: "Confirm your availability for upcoming games and training sessions.",
-    rosterTitle: "球員名單",
+    rosterTitle: "Squad Roster",
     backToFixtures: "Back to Fixtures",
     myStatus: "My Status",
     currently: "Currently",
