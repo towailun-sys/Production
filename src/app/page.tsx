@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useState, Fragment, useEffect } from "react";
@@ -587,23 +586,8 @@ export default function DashboardPage() {
                 <div className="text-muted-foreground font-medium text-sm md:text-base">{dict.dashboard.subtitle}</div>
               )}
             </div>
+            {/* Admin actions hidden temporarily */}
             <div className="flex flex-wrap gap-2">
-              {currentPlayer?.isAdmin && (
-                <>
-                  <Button variant="outline" size="sm" className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold text-xs" onClick={handleSeedData}>
-                    <Database className="mr-2 h-3.5 w-3.5" /> {dict.dashboard.seedData}
-                  </Button>
-                  <Button variant="outline" size="sm" className="border-dashed border-destructive text-destructive hover:bg-destructive/5 font-bold text-xs" onClick={handleToggleAdminRole}>
-                    <UserRound className="mr-2 h-3.5 w-3.5" /> {dict.dashboard.testAsPlayer}
-                  </Button>
-                </>
-              )}
-              {(!currentPlayer || !currentPlayer.isAdmin) && (isSuperAdminEmailCheck || isFirstRunCheck === true) && (
-                <Button variant="outline" size="sm" className="border-dashed border-primary text-primary hover:bg-primary/5 font-bold text-xs" onClick={handleClaimAdmin} disabled={isClaimingAdmin}>
-                  {isClaimingAdmin ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="mr-2 h-3.5 w-3.5" />}
-                  {dict.dashboard.claimAdmin}
-                </Button>
-              )}
             </div>
           </header>
         )}
