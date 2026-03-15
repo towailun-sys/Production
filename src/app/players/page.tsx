@@ -588,26 +588,6 @@ export default function PlayersPage() {
                       </div>
                       <div className="grid gap-2">
                         <Label htmlFor="status" className="text-xs uppercase tracking-wider">{dict.common.statusLabel}</Label>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 border rounded-xl bg-muted/20">
-                          {teams?.map((team) => (
-                            <div key={team.id} className="flex items-center space-x-3">
-                              <Checkbox 
-                                id={`team-${team.id}`} 
-                                checked={formData.teams.includes(team.id)}
-                                onCheckedChange={() => handleTeamToggle(team.id)}
-                              />
-                              <label
-                                htmlFor={`team-${team.id}`}
-                                className="text-xs font-bold leading-none cursor-pointer"
-                              >
-                                {language === 'zh' ? team.nameZh : team.name}
-                              </label>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="status" className="text-xs uppercase tracking-wider">{dict.common.statusLabel}</Label>
                         <Select 
                           value={formData.status} 
                           onValueChange={(val: PlayerStatus) => setFormData({ ...formData, status: val })}
@@ -987,8 +967,16 @@ export default function PlayersPage() {
                                     {player.name}
                                     {player.isAdmin && <ShieldCheck className="h-3.5 w-3.5 text-primary" />}
                                   </div>
-                                  <div className="text-[10px] text-primary font-bold uppercase tracking-wider mt-0.5">
-                                    {player.nickname ? `"${player.nickname}"` : getTeamName(player.teams[0] || "")}
+                                  <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                                    <div className="text-[10px] text-primary font-bold uppercase tracking-wider">
+                                      {player.nickname ? `"${player.nickname}"` : getTeamName(player.teams[0] || "")}
+                                    </div>
+                                    {player.isLinked && (
+                                      <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-1.5 py-0 rounded-full text-[8px] font-bold border border-emerald-100">
+                                        <LinkIcon className="h-2.5 w-2.5" />
+                                        {dict.common.linked}
+                                      </div>
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -1259,7 +1247,7 @@ function TeamManagementUI() {
               <Button variant="ghost" size="icon" onClick={() => handleEditClick(team)} className="h-11 w-11 text-primary hover:bg-primary/10 transition-colors">
                 <Pencil className="h-5 w-5" />
               </Button>
-              <Button variant="ghost" size="icon" onClick={() => handleDeleteTeam(team.id)} className="text-destructive h-11 w-11 hover:bg-destructive/10 transition-colors">
+              <Button variant="ghost" size="icon" onClick={() => handleDeleteTeam(id)} className="text-destructive h-11 w-11 hover:bg-destructive/10 transition-colors">
                 <Trash2 className="h-5 w-5" />
               </Button>
             </div>

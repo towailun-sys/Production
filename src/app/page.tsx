@@ -457,18 +457,33 @@ export default function DashboardPage() {
 
   const handleClaimProfile = () => {
     if (!user || !preEnteredProfile) return;
+    
     const newDocRef = doc(firestore, "players", user.uid);
     const oldDocRef = doc(firestore, "players", preEnteredProfile.id);
+    
     const claimData = {
       ...preEnteredProfile,
       id: user.uid,
       email: user.email?.trim().toLowerCase() || "",
       isLinked: true 
     };
-    setDoc(newDocRef, claimData).then(() => {
-      deleteDoc(oldDocRef).catch(() => {});
-      toast({ title: "Profile Claimed!" });
-    });
+    
+    // 1. Create the new linked profile
+    setDoc(newDocRef, claimData)
+      .then(() => {
+        // 2. Attempt to delete the old unlinked profile record
+        deleteDoc(oldDocRef).catch((e) => {
+          console.warn("Could not delete old profile record. It may need manual cleanup by an admin.", e);
+        });
+        toast({ title: "Profile Claimed!" });
+      })
+      .catch((error) => {
+        errorEmitter.emit('permission-error', new FirestorePermissionError({
+          path: newDocRef.path,
+          operation: 'create',
+          requestResourceData: claimData
+        } satisfies SecurityRuleContext));
+      });
   };
 
   const formatGameDate = (dateStr: string) => {

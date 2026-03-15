@@ -25,7 +25,9 @@ service cloud.firestore {
 
     match /players/{playerId} {
       allow read, list: if isSignedIn();
-      allow write: if isOwner(playerId) || isAdmin();
+      allow create, update: if isOwner(playerId) || isAdmin();
+      // Allow deletion if admin, or if the user owns the record, or if the email matches (for claiming)
+      allow delete: if isAdmin() || isOwner(playerId) || (isSignedIn() && resource.data.email.lower() == request.auth.token.email.lower());
     }
 
     match /games/{gameId} {
