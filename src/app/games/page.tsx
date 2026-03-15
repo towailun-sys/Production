@@ -58,9 +58,12 @@ import {
   UserPlus,
   Crown,
   Search,
-  RotateCcw
+  RotateCcw,
+  LayoutList,
+  Copy,
+  ClipboardCheck
 } from "lucide-react";
-import { Game, GameType, Player, Team, Kit, Attendance } from "@/lib/types";
+import { Game, GameType, Player, Team, Kit, Attendance, PlayerPosition } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
@@ -79,9 +82,11 @@ export default function GamesPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isRosterOpen, setIsRosterOpen] = useState(false);
+  const [isSummaryOpen, setIsSummaryOpen] = useState(false);
   const [isOutdatedExpanded, setIsOutdatedExpanded] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
   const [rosterGame, setRosterGame] = useState<Game | null>(null);
+  const [summaryGame, setSummaryGame] = useState<Game | null>(null);
 
   const playerRef = useMemoFirebase(() => {
     if (isUserLoading || !user) return null;
@@ -234,6 +239,11 @@ export default function GamesPage() {
   const handleViewRoster = (game: Game) => {
     setRosterGame(game);
     setIsRosterOpen(true);
+  };
+
+  const handleViewSummary = (game: Game) => {
+    setSummaryGame(game);
+    setIsSummaryOpen(true);
   };
 
   const handleUpdateGame = () => {
@@ -442,6 +452,15 @@ export default function GamesPage() {
                     >
                       <Users className="h-3.5 w-3.5" />
                       {dict.attendance.rosterTitle}
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleViewSummary(game)}
+                      className="gap-2 font-bold text-xs bg-accent/5 border-accent/20 text-accent hover:bg-accent/10"
+                    >
+                      <LayoutList className="h-3.5 w-3.5" />
+                      {dict.attendance.summary.title}
                     </Button>
                   </div>
                 </div>
@@ -886,8 +905,206 @@ export default function GamesPage() {
             onOpenChange={setIsRosterOpen} 
           />
         )}
+
+        {summaryGame && (
+          <GameSummaryDialog 
+            game={summaryGame} 
+            players={allPlayers || []} 
+            isOpen={isSummaryOpen} 
+            onOpenChange={setIsSummaryOpen} 
+          />
+        )}
       </main>
     </div>
+  );
+}
+
+function GameSummaryDialog({ 
+  game, 
+  players, 
+  isOpen, 
+  onOpenChange 
+}: { 
+  game: Game; 
+  players: Player[]; 
+  isOpen: boolean; 
+  onOpenChange: (open: boolean) => void;
+}) {
+  const firestore = useFirestore();
+  const { dict, language } = useTranslation();
+  const { toast } = useToast();
+
+  const attendanceQuery = useMemoFirebase(() => {
+    return collection(firestore, "games", game.id, "attendanceRecords");
+  }, [firestore, game.id]);
+  const { data: attendanceRecords, isLoading } = useCollection<Attendance>(attendanceQuery);
+
+  const confirmedRecords = (attendanceRecords || []).filter(r => r.status === 'Confirmed');
+  
+  const categorizedPlayers = {
+    GK: [] as Player[],
+    DF: [] as Player[],
+    MF: [] as Player[],
+    FW: [] as Player[],
+  };
+
+  const guests: Attendance[] = [];
+
+  confirmedRecords.forEach(record => {
+    if (record.isGuest) {
+      guests.push(record);
+    } else {
+      const player = players.find(p => p.id === record.playerId);
+      if (player) {
+        // Assign to first preferred position for categorization
+        const primaryPos = player.preferredPositions[0] || 'MF';
+        categorizedPlayers[primaryPos as keyof typeof categorizedPlayers]?.push(player);
+      }
+    }
+  });
+
+  const handleCopyWhatsApp = () => {
+    const date = new Date(game.date);
+    const dateStr = language === 'zh' 
+      ? `${date.getMonth() + 1}月${date.getDate()}日`
+      : date.toLocaleDateString('default', { month: 'short', day: 'numeric' });
+
+    const title = `⚽ *HHFC Attendance Summary* ⚽\n` +
+                 `📅 ${dateStr} (${game.startTime})\n` +
+                 `📍 ${game.location}\n` +
+                 `🏆 ${game.opponent !== 'N/A' ? 'Match vs ' + game.opponent : dict.common.gameTypes[game.type]}\n\n` +
+                 `✅ *Confirmed (${confirmedRecords.length}):*\n`;
+
+    let squadList = "";
+    const positions: PlayerPosition[] = ['GK', 'DF', 'MF', 'FW'];
+    
+    positions.forEach(pos => {
+      const list = categorizedPlayers[pos];
+      if (list.length > 0) {
+        squadList += `*${pos}:* ${list.map(p => `${p.number ? '#' + p.number + ' ' : ''}${p.nickname || p.name}`).join(', ')}\n`;
+      }
+    });
+
+    if (guests.length > 0) {
+      squadList += `*Guests:* ${guests.map(g => g.guestName).join(', ')}\n`;
+    }
+
+    const text = title + squadList;
+    navigator.clipboard.writeText(text);
+    toast({ 
+      title: dict.attendance.summary.copied,
+      description: "Ready to paste in WhatsApp!",
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[500px] flex items-center justify-center py-20">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[500px] max-h-[85vh] flex flex-col p-0 overflow-hidden rounded-3xl">
+        <DialogHeader className="p-6 bg-accent/5 border-b">
+          <DialogTitle className="font-headline flex items-center gap-3 text-accent-foreground">
+            <LayoutList className="h-5 w-5" />
+            {dict.attendance.summary.title}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div className="flex items-center justify-between p-4 bg-primary/5 rounded-2xl border border-primary/10">
+            <div className="space-y-1">
+              <div className="text-[10px] uppercase font-bold text-primary/60 tracking-widest">{dict.common.status}</div>
+              <div className="text-xl font-headline font-bold text-primary">{confirmedRecords.length} {dict.common.confirm}</div>
+            </div>
+            <div className="flex gap-1.5">
+              {['GK', 'DF', 'MF', 'FW'].map(pos => (
+                <div key={pos} className="flex flex-col items-center min-w-[35px]">
+                  <span className="text-[10px] font-bold text-muted-foreground">{pos}</span>
+                  <span className="font-bold">{categorizedPlayers[pos as keyof typeof categorizedPlayers].length}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {confirmedRecords.length === 0 ? (
+            <div className="py-10 text-center text-muted-foreground italic">
+              {dict.attendance.summary.noConfirmed}
+            </div>
+          ) : (
+            <div className="space-y-6">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground border-b pb-1">
+                {dict.attendance.summary.stats}
+              </h4>
+              
+              <div className="space-y-4">
+                {(['GK', 'DF', 'MF', 'FW'] as PlayerPosition[]).map(pos => {
+                  const list = categorizedPlayers[pos];
+                  if (list.length === 0) return null;
+                  return (
+                    <div key={pos} className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={cn(
+                          "font-bold text-[10px] px-1.5 py-0 h-5",
+                          pos === 'GK' && "border-yellow-500 text-yellow-600 bg-yellow-50",
+                          pos === 'DF' && "border-blue-500 text-blue-600 bg-blue-50",
+                          pos === 'MF' && "border-green-500 text-green-600 bg-green-50",
+                          pos === 'FW' && "border-red-500 text-red-600 bg-red-50",
+                        )}>
+                          {dict.common.positions[pos.toLowerCase() as keyof typeof dict.common.positions] || pos}
+                        </Badge>
+                        <span className="text-[10px] font-bold text-muted-foreground">{list.length} {dict.common.player}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {list.map(p => (
+                          <div key={p.id} className="flex items-center gap-1.5 bg-muted/40 px-3 py-1.5 rounded-lg text-xs font-medium">
+                            {p.isCaptain && <Crown className="h-3 w-3 text-accent" />}
+                            {p.number !== undefined && <span className="text-primary font-bold">#{p.number}</span>}
+                            <span>{p.nickname || p.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+
+                {guests.length > 0 && (
+                  <div className="space-y-2 pt-2">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="font-bold text-[10px] border-primary/30 text-primary bg-primary/5 px-1.5 py-0 h-5 uppercase">
+                        {dict.attendance.summary.guestList}
+                      </Badge>
+                      <span className="text-[10px] font-bold text-muted-foreground">{guests.length} {dict.common.player}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {guests.map(g => (
+                        <div key={g.id} className="flex items-center gap-1.5 bg-primary/5 border border-dashed border-primary/20 px-3 py-1.5 rounded-lg text-xs font-bold text-primary">
+                          <UserPlus className="h-3 w-3" />
+                          <span>{g.guestName}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+        
+        <DialogFooter className="p-6 border-t bg-muted/20">
+          <Button onClick={handleCopyWhatsApp} className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white font-bold h-12 shadow-md gap-3 rounded-xl">
+            <Copy className="h-5 w-5" />
+            {dict.attendance.summary.copyBtn}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 

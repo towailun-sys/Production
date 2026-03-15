@@ -212,6 +212,7 @@ const baseDict = {
     title: "My Attendance",
     subtitle: "Your personal football calendar. Track all the games you have committed to attend, check who else is in the confirmed squad, and review match-day details for your upcoming appearances.",
     rosterTitle: "Squad Roster",
+    summaryTitle: "Attendance Summary",
     backToFixtures: "Back to Fixtures",
     myStatus: "My Status",
     currently: "Currently",
@@ -236,6 +237,14 @@ const baseDict = {
     returnToFixtures: "Return to Fixtures",
     deploymentNoteTitle: "Note for Deployment",
     deploymentNoteDesc: "If the Google Sign-In window does not appear, please ensure your App Hosting domain is added to the \"Authorized Domains\" list in the Firebase Console under Authentication > Settings.",
+    summary: {
+      title: "Attendance Summary",
+      stats: "Squad Breakdown",
+      copyBtn: "Copy for WhatsApp",
+      copied: "Copied to clipboard",
+      guestList: "Guests",
+      noConfirmed: "No players have confirmed yet."
+    },
     toasts: {
       statusUpdated: "Status Updated",
       statusDesc: (status: string) => `Attendance set to ${status === 'Declined' ? 'Declined' : status}.`,
@@ -456,6 +465,7 @@ const zhDict: typeof baseDict = {
     title: "我出席的",
     subtitle: "你的個人足球日曆。追蹤所有你已確認參加的場次，查看已確認出席的隊友名單，並複習即將參加場次的詳細資料。",
     rosterTitle: "球員名單",
+    summaryTitle: "出席摘要",
     backToFixtures: "返回最近賽程",
     myStatus: "我的狀態",
     currently: "目前",
@@ -480,6 +490,14 @@ const zhDict: typeof baseDict = {
     returnToFixtures: "返回賽程",
     deploymentNoteTitle: "部署說明",
     deploymentNoteDesc: "如果 Google 登入視窗沒有彈出，請確保已在 Firebase 控制台的「驗證 > 設定」下將你的 App Hosting 域名添加到 \"授權網域\" 列表中。",
+    summary: {
+      title: "出席摘要",
+      stats: "陣容分析",
+      copyBtn: "複製到 WhatsApp",
+      copied: "已複製到剪貼簿",
+      guestList: "客籍球員",
+      noConfirmed: "尚未有球員確認出席。"
+    },
     toasts: {
       statusUpdated: "狀態已更新",
       statusDesc: (status: string) => `出席情況已設置為 ${status === 'Declined' ? '不能出席' : status}。`,
