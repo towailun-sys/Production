@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, Fragment, useEffect } from "react";
@@ -230,7 +231,12 @@ export function GameAttendanceSection({
   const { data: attendanceRecords, isLoading } = useCollection<Attendance>(attendanceQuery);
 
   const myRecord = (user && attendanceRecords) ? (attendanceRecords.find(r => r.id === user.uid) || null) : null;
-  const confirmedRecords = attendanceRecords?.filter(r => r.status === 'Confirmed') || [];
+  
+  // Filter records to only those that will actually be rendered (have a profile or are guests)
+  const visibleConfirmedRecords = (attendanceRecords?.filter(r => r.status === 'Confirmed') || []).filter(record => {
+    if (record.isGuest) return true;
+    return allPlayers?.some(p => p.id === record.playerId);
+  });
 
   const handleUpdateStatus = (status: 'Confirmed' | 'Declined') => {
     if (!user) {
@@ -306,17 +312,17 @@ export function GameAttendanceSection({
             {dict.dashboard.confirmedSquad}
           </div>
           <Badge variant="secondary" className="bg-primary/20 text-primary font-bold text-[10px]">
-            {confirmedRecords.length}
+            {visibleConfirmedRecords.length}
           </Badge>
         </div>
         
-        {confirmedRecords.length === 0 ? (
+        {visibleConfirmedRecords.length === 0 ? (
           <div className="p-6 text-center text-muted-foreground text-xs italic">
             {dict.dashboard.noConfirmations}
           </div>
         ) : (
           <div className="p-4 flex flex-wrap gap-2">
-            {confirmedRecords.map((record) => {
+            {visibleConfirmedRecords.map((record) => {
               if (record.isGuest) {
                 return (
                   <Badge 
@@ -365,9 +371,6 @@ export default function DashboardPage() {
   const { toast } = useToast();
   const { language, dict } = useTranslation();
   
-  const [isSeeding, setIsSeeding] = useState(false);
-  const [isClaimingAdmin, setIsClaimingAdmin] = useState(false);
-  const [isLinking, setIsLinking] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isFirstRunCheck, setIsFirstRunCheck] = useState<boolean | null>(null);
 
@@ -454,7 +457,6 @@ export default function DashboardPage() {
 
   const handleClaimProfile = () => {
     if (!user || !preEnteredProfile) return;
-    setIsLinking(true);
     const newDocRef = doc(firestore, "players", user.uid);
     const oldDocRef = doc(firestore, "players", preEnteredProfile.id);
     const claimData = {
@@ -466,71 +468,7 @@ export default function DashboardPage() {
     setDoc(newDocRef, claimData).then(() => {
       deleteDoc(oldDocRef).catch(() => {});
       toast({ title: "Profile Claimed!" });
-    }).finally(() => {
-      setIsLinking(false);
     });
-  };
-
-  const handleClaimAdmin = () => {
-    if (!user) return;
-    setIsClaimingAdmin(true);
-    const adminRef = doc(firestore, "players", user.uid);
-    const adminData: Partial<Player> = {
-      id: user.uid,
-      isAdmin: true,
-      isLinked: true,
-      email: user.email?.trim().toLowerCase() || ""
-    };
-    if (!currentPlayer) {
-      Object.assign(adminData, {
-        name: user.displayName || "Admin User",
-        status: "Active",
-        teams: [],
-        preferredPositions: ["MF", "FW"],
-        number: 10
-      });
-    }
-    setDoc(adminRef, adminData, { merge: true }).then(() => {
-      toast({ title: "Admin Rights Granted" });
-    }).finally(() => {
-      setIsClaimingAdmin(false);
-    });
-  };
-
-  const handleToggleAdminRole = () => {
-    if (!user || !currentPlayer) return;
-    const newAdminStatus = !currentPlayer.isAdmin;
-    setDoc(doc(firestore, "players", user.uid), { id: user.uid, isAdmin: newAdminStatus }, { merge: true });
-    toast({ title: newAdminStatus ? "Admin Mode" : "Player Mode" });
-  };
-
-  const handleSeedData = () => {
-    if (!user || !currentPlayer?.isAdmin) return;
-    setIsSeeding(true);
-    const sampleTeams = [
-      { id: "team-a", name: "Team A", nameZh: "隊伍A" },
-      { id: "team-b", name: "Team B", nameZh: "隊伍B" },
-      { id: "team-camp3", name: "Team Camp 3", nameZh: "訓練營 3" }
-    ];
-    sampleTeams.forEach(t => setDoc(doc(firestore, "teams", t.id), t));
-    const sampleKits = [
-      { id: "kit-home-1", name: "Home 1", nameZh: "主場一", color: "Pink / Grey", colorZh: "粉紅 / 灰", imageUrl: "https://picsum.photos/seed/kit1/600/800" },
-      { id: "kit-away-1", name: "Away 1", nameZh: "客場一", color: "Black / Black", colorZh: "全黑", imageUrl: "https://picsum.photos/seed/kit2/600/800" },
-    ];
-    sampleKits.forEach(k => setDoc(doc(firestore, "kits", k.id), k));
-    const today = new Date().toISOString().split('T')[0];
-    const sampleGames = [
-      { id: "seed-g1", date: today, startTime: "19:00", endTime: "21:00", location: "Central Sports Complex, Pitch 1", type: "League", team: "team-a", opponent: "Blue Arrows FC", coach: "Sir Alex", fee: "$100\nPayment via Bank Transfer", kitColors: "kit-home-1", alternativeKitColors: "kit-away-1", additionalDetails: "Please arrive 30 mins early for warm up." },
-    ];
-    sampleGames.forEach(g => setDoc(doc(firestore, "games", g.id), g));
-    setDoc(doc(firestore, "players", user.uid), { 
-      id: user.uid,
-      teams: ["team-a", "team-b", "team-camp3"],
-      status: "Active",
-      number: currentPlayer?.number || 10
-    }, { merge: true });
-    toast({ title: "Seeding Complete" });
-    setIsSeeding(false);
   };
 
   const formatGameDate = (dateStr: string) => {
@@ -620,8 +558,7 @@ export default function DashboardPage() {
                             ))}
                           </div>
                         </div>
-                        <Button onClick={handleClaimProfile} disabled={isLinking} className="bg-primary hover:bg-primary/90 gap-2 font-bold w-full sm:w-auto">
-                          {isLinking ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                        <Button onClick={handleClaimProfile} className="bg-primary hover:bg-primary/90 gap-2 font-bold w-full sm:w-auto">
                           {dict.dashboard.claimProfileBtn}
                         </Button>
                       </div>
