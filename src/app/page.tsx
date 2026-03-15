@@ -39,7 +39,8 @@ import {
   Copy,
   Users,
   CheckCircle2,
-  XCircle
+  XCircle,
+  UserPlus
 } from "lucide-react";
 import { Game, Player, Team, Kit, Attendance } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -229,7 +230,7 @@ export function GameAttendanceSection({
   }, [firestore, game.id]);
   const { data: attendanceRecords, isLoading } = useCollection<Attendance>(attendanceQuery);
 
-  const myRecord = user ? (attendanceRecords?.find(r => r.id === user.uid) || null) : null;
+  const myRecord = (user && attendanceRecords) ? (attendanceRecords.find(r => r.id === user.uid) || null) : null;
   const confirmedRecords = attendanceRecords?.filter(r => r.status === 'Confirmed') || [];
 
   const handleUpdateStatus = (status: 'Confirmed' | 'Declined') => {
@@ -270,7 +271,7 @@ export function GameAttendanceSection({
 
     toast({
       title: status === 'Confirmed' ? dict.attendance.toasts.statusUpdated : dict.attendance.toasts.updateDesc,
-      description: status === 'Confirmed' ? dict.attendance.toasts.confirmDesc : dict.attendance.toasts.statusDesc(status),
+      description: status === 'Confirmed' ? dict.attendance.toasts.confirmDesc : dict.attendance.toasts.statusDesc(status === 'Declined' ? 'Declined' : status),
     });
   };
 
@@ -566,11 +567,16 @@ export default function DashboardPage() {
   }
 
   const welcomeName = currentPlayer?.nickname || currentPlayer?.name || user?.displayName || dict.common.player;
-  const filteredGames = upcomingGames?.filter(game => {
+  
+  // Implementation of team-based filtering:
+  // Admins see all. Players only see 'All' team games + games for their teams.
+  const filteredGames = (upcomingGames || []).filter(game => {
     if (currentPlayer?.isAdmin) return true;
     if (!currentPlayer) return false;
+    
+    // Check if the game is for 'All' teams or if the player is in the game's specific team
     return game.team === 'All' || currentPlayer.teams?.includes(game.team);
-  }) || [];
+  });
 
   return (
     <div className="min-h-screen bg-background pb-12">
