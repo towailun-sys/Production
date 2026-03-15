@@ -568,14 +568,13 @@ export default function DashboardPage() {
 
   const welcomeName = currentPlayer?.nickname || currentPlayer?.name || user?.displayName || dict.common.player;
   
-  // Implementation of team-based filtering:
-  // Admins see all. Players only see 'All' team games + games for their teams.
+  // FILTERING LOGIC:
+  // Shows games the signed-in player can join (matches their teams or 'All').
+  // This applies to everyone, including Admins on the dashboard.
   const filteredGames = (upcomingGames || []).filter(game => {
-    if (currentPlayer?.isAdmin) return true;
     if (!currentPlayer) return false;
-    
-    // Check if the game is for 'All' teams or if the player is in the game's specific team
-    return game.team === 'All' || currentPlayer.teams?.includes(game.team);
+    // Show games for 'All' teams or games matching the user's specific teams
+    return game.team === 'All' || (currentPlayer.teams && currentPlayer.teams.includes(game.team));
   });
 
   return (
