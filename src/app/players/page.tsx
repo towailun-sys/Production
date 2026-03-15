@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useRef } from "react";
@@ -567,6 +568,26 @@ export default function PlayersPage() {
                     <div className="grid gap-4">
                       <div className="grid gap-2">
                         <Label className="text-xs uppercase tracking-wider">{dict.common.team}</Label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 border rounded-xl bg-muted/20">
+                          {teams?.map((team) => (
+                            <div key={team.id} className="flex items-center space-x-3">
+                              <Checkbox 
+                                id={`team-${team.id}`} 
+                                checked={formData.teams.includes(team.id)}
+                                onCheckedChange={() => handleTeamToggle(team.id)}
+                              />
+                              <label
+                                htmlFor={`team-${team.id}`}
+                                className="text-xs font-bold leading-none cursor-pointer"
+                              >
+                                {language === 'zh' ? team.nameZh : team.name}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="status" className="text-xs uppercase tracking-wider">{dict.common.statusLabel}</Label>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 border rounded-xl bg-muted/20">
                           {teams?.map((team) => (
                             <div key={team.id} className="flex items-center space-x-3">

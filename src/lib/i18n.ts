@@ -69,7 +69,7 @@ const baseDict = {
   },
   dashboard: {
     welcome: "Welcome back",
-    subtitle: "Your personalized squad overview and upcoming fixtures.",
+    subtitle: "Stay updated with matches and training sessions specifically for your assigned teams. View essential details like kick-off times, pitch locations, kit requirements, and match fees, then confirm your availability with a single tap.",
     seedData: "Seed Data",
     testAsPlayer: "Test as Player",
     claimAdmin: "Claim Admin Rights",
@@ -137,7 +137,7 @@ const baseDict = {
   },
   players: {
     title: "Squad Management",
-    subtitle: "Manage your squad and link Google accounts.",
+    subtitle: "The heart of the club. Browse the full squad directory to see teammate profiles, squad numbers, positions, and current status.",
     addPlayer: "Add Player",
     manageTeams: "Manage Teams",
     manageKits: "Manage Kits",
@@ -210,7 +210,7 @@ const baseDict = {
   },
   attendance: {
     title: "My Attendance",
-    subtitle: "Confirm your availability for upcoming games and training sessions.",
+    subtitle: "Your personal football calendar. Track all the games you have committed to attend, check who else is in the confirmed squad, and review match-day details for your upcoming appearances.",
     rosterTitle: "Squad Roster",
     backToFixtures: "Back to Fixtures",
     myStatus: "My Status",
@@ -313,7 +313,7 @@ const zhDict: typeof baseDict = {
   },
   dashboard: {
     welcome: "歡迎",
-    subtitle: "最近可供出席的場次",
+    subtitle: "隨時掌握你所屬分隊的比賽與訓練安排。查看開賽時間、球場地點、球衣要求及比賽費用等重要資訊，並可一鍵確認你的出席情況。",
     seedData: "植入測試數據",
     testAsPlayer: "以球員身份測試",
     claimAdmin: "索取管理員權限",
@@ -381,7 +381,7 @@ const zhDict: typeof baseDict = {
   },
   players: {
     title: "球員管理",
-    subtitle: "管理球員名單並連結 Google 帳號。",
+    subtitle: "球會的核心成員名單。瀏覽全體球員資料、球衣號碼、位置及狀態。",
     addPlayer: "新增球員",
     manageTeams: "管理隊伍",
     manageKits: "管理球衣",
@@ -454,7 +454,7 @@ const zhDict: typeof baseDict = {
   },
   attendance: {
     title: "我出席的",
-    subtitle: "確認你出席即將舉行的比賽和訓練。",
+    subtitle: "你的個人足球日曆。追蹤所有你已確認參加的場次，查看已確認出席的隊友名單，並複習即將參加場次的詳細資料。",
     rosterTitle: "球員名單",
     backToFixtures: "返回最近賽程",
     myStatus: "我的狀態",

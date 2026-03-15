@@ -4,11 +4,11 @@
 import { MainNav } from "@/components/layout/main-nav";
 import { useTranslation } from "@/components/language-provider";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
-import { collection, query, orderBy } from "firebase/firestore";
+import { collection, query, orderBy, doc } from "firebase/firestore";
 import { Game, Attendance, Player } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MapPin, CalendarDays, Banknote, UserRound, History, Loader2, Info, Calendar } from "lucide-react";
+import { Clock, MapPin, CalendarDays, Banknote, UserRound, History, Loader2, Info, Calendar, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { KitBadge, GameAttendanceSection } from "@/app/page";
 
