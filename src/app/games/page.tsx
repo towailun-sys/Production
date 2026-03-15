@@ -14,7 +14,8 @@ import {
   DialogHeader, 
   DialogTitle, 
   DialogTrigger,
-  DialogFooter
+  DialogFooter,
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -517,46 +518,42 @@ export default function GamesPage() {
               <DialogContent className="sm:max-w-[450px] max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="font-headline text-xl">{dict.games.dialog.addTitle}</DialogTitle>
+                  <DialogDescription className="sr-only">Form to add a new game fixture</DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-5 py-4 px-1">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="type" className="text-xs uppercase tracking-wider">{dict.games.dialog.type}</Label>
-                      <Select 
+                      <select 
+                        id="type"
+                        className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         value={formData.type}
-                        onValueChange={(val: GameType) => {
+                        onChange={(e) => {
+                          const val = e.target.value as GameType;
                           setFormData({ ...formData, type: val, opponent: isOpponentNotRequired(val) ? "" : formData.opponent });
                         }}
                       >
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Training">{dict.common.gameTypes.Training}</SelectItem>
-                          <SelectItem value="League">{dict.common.gameTypes.League}</SelectItem>
-                          <SelectItem value="Friendly">{dict.common.gameTypes.Friendly}</SelectItem>
-                          <SelectItem value="Internal">{dict.common.gameTypes.Internal}</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        <option value="Training">{dict.common.gameTypes.Training}</option>
+                        <option value="League">{dict.common.gameTypes.League}</option>
+                        <option value="Friendly">{dict.common.gameTypes.Friendly}</option>
+                        <option value="Internal">{dict.common.gameTypes.Internal}</option>
+                      </select>
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="team" className="text-xs uppercase tracking-wider">{dict.games.dialog.team}</Label>
-                      <Select 
+                      <select 
+                        id="team"
+                        className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         value={formData.team}
-                        onValueChange={(val) => setFormData({ ...formData, team: val })}
+                        onChange={(e) => setFormData({ ...formData, team: e.target.value })}
                       >
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Select team" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="All">{dict.common.teams.All}</SelectItem>
-                          {teams?.map(t => (
-                            <SelectItem key={t.id} value={t.id}>
-                              {language === 'zh' ? t.nameZh : t.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        <option value="All">{dict.common.teams.All}</option>
+                        {teams?.map(t => (
+                          <option key={t.id} value={t.id}>
+                            {language === 'zh' ? t.nameZh : t.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                   <div className="grid gap-2">
@@ -607,57 +604,35 @@ export default function GamesPage() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid gap-2">
                       <Label htmlFor="kitColors" className="text-xs uppercase tracking-wider">{dict.games.dialog.kit}</Label>
-                      <Select 
+                      <select 
+                        id="kitColors"
+                        className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         value={formData.kitColors}
-                        onValueChange={(val) => setFormData({ ...formData, kitColors: val })}
+                        onChange={(e) => setFormData({ ...formData, kitColors: e.target.value })}
                       >
-                        <SelectTrigger id="kitColors" className="h-11">
-                          <SelectValue placeholder="Select kit" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">{dict.common.tbd}</SelectItem>
-                          {kits?.map((k) => (
-                            <SelectItem key={k.id} value={k.id}>
-                              <div className="flex items-center gap-2">
-                                <Shirt className="h-4 w-4" />
-                                <div className="flex flex-col">
-                                  <span className="text-sm font-bold">{language === 'zh' ? k.nameZh || k.name : k.name}</span>
-                                  {k.color && (
-                                    <KitColorText colorText={language === 'zh' ? k.colorZh || k.color : k.color} className="text-[10px] font-bold" />
-                                  )}
-                                </div>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        <option value="none">{dict.common.tbd}</option>
+                        {kits?.map((k) => (
+                          <option key={k.id} value={k.id}>
+                            {language === 'zh' ? k.nameZh || k.name : k.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                     <div className="grid gap-2">
                       <Label htmlFor="alternativeKitColors" className="text-xs uppercase tracking-wider">{dict.games.dialog.alternativeKit}</Label>
-                      <Select 
+                      <select 
+                        id="alternativeKitColors"
+                        className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                         value={formData.alternativeKitColors}
-                        onValueChange={(val) => setFormData({ ...formData, alternativeKitColors: val })}
+                        onChange={(e) => setFormData({ ...formData, alternativeKitColors: e.target.value })}
                       >
-                        <SelectTrigger id="alternativeKitColors" className="h-11">
-                          <SelectValue placeholder="Select alt kit" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="none">{dict.common.tbd}</SelectItem>
-                          {kits?.map((k) => (
-                            <SelectItem key={k.id} value={k.id}>
-                              <div className="flex items-center gap-2">
-                                <Shirt className="h-4 w-4" />
-                                <div className="flex flex-col">
-                                  <span className="text-sm font-bold">{language === 'zh' ? k.nameZh || k.name : k.name}</span>
-                                  {k.color && (
-                                    <KitColorText colorText={language === 'zh' ? k.colorZh || k.color : k.color} className="text-[10px] font-bold" />
-                                  )}
-                                </div>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        <option value="none">{dict.common.tbd}</option>
+                        {kits?.map((k) => (
+                          <option key={k.id} value={k.id}>
+                            {language === 'zh' ? k.nameZh || k.name : k.name}
+                          </option>
+                        ))}
+                      </select>
                     </div>
                   </div>
                   <div className="grid gap-2">
@@ -739,44 +714,42 @@ export default function GamesPage() {
           <DialogContent className="sm:max-w-[450px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="font-headline text-xl">{dict.games.dialog.editTitle}</DialogTitle>
+              <DialogDescription className="sr-only">Form to edit an existing game fixture</DialogDescription>
             </DialogHeader>
             <div className="grid gap-5 py-4 px-1">
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="edit-type" className="text-xs uppercase tracking-wider">{dict.games.dialog.type}</Label>
-                  <Select 
+                  <select 
+                    id="edit-type"
+                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     value={formData.type}
-                    onValueChange={(val: GameType) => setFormData({ ...formData, type: val, opponent: isOpponentNotRequired(val) ? "" : formData.opponent })}
+                    onChange={(e) => {
+                      const val = e.target.value as GameType;
+                      setFormData({ ...formData, type: val, opponent: isOpponentNotRequired(val) ? "" : formData.opponent });
+                    }}
                   >
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder="Select type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Training">{dict.common.gameTypes.Training}</SelectItem>
-                      <SelectItem value="League">{dict.common.gameTypes.League}</SelectItem>
-                      <SelectItem value="Friendly">{dict.common.gameTypes.Friendly}</SelectItem>
-                      <SelectItem value="Internal">{dict.common.gameTypes.Internal}</SelectItem>
-                    </SelectContent>
-                  </Select>
+                    <option value="Training">{dict.common.gameTypes.Training}</option>
+                    <option value="League">{dict.common.gameTypes.League}</option>
+                    <option value="Friendly">{dict.common.gameTypes.Friendly}</option>
+                    <option value="Internal">{dict.common.gameTypes.Internal}</option>
+                  </select>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-team" className="text-xs uppercase tracking-wider">{dict.games.dialog.team}</Label>
-                  <Select 
+                  <select 
+                    id="edit-team"
+                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     value={formData.team}
-                    onValueChange={(val) => setFormData({ ...formData, team: val })}
+                    onChange={(e) => setFormData({ ...formData, team: e.target.value })}
                   >
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder="Select team" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="All">{dict.common.teams.All}</SelectItem>
-                      {teams?.map(t => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {language === 'zh' ? t.nameZh : t.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <option value="All">{dict.common.teams.All}</option>
+                    {teams?.map(t => (
+                      <option key={t.id} value={t.id}>
+                        {language === 'zh' ? t.nameZh : t.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="grid gap-2">
@@ -827,57 +800,35 @@ export default function GamesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="edit-kitColors" className="text-xs uppercase tracking-wider">{dict.players.dialog.kit}</Label>
-                  <Select 
+                  <select 
+                    id="edit-kitColors"
+                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     value={formData.kitColors}
-                    onValueChange={(val) => setFormData({ ...formData, kitColors: val })}
+                    onChange={(e) => setFormData({ ...formData, kitColors: e.target.value })}
                   >
-                    <SelectTrigger id="edit-kitColors" className="h-11">
-                      <SelectValue placeholder="Select kit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">{dict.common.tbd}</SelectItem>
-                      {kits?.map((k) => (
-                        <SelectItem key={k.id} value={k.id}>
-                          <div className="flex items-center gap-2">
-                            <Shirt className="h-4 w-4" />
-                            <div className="flex flex-col">
-                              <span className="text-sm font-bold">{language === 'zh' ? k.nameZh || k.name : k.name}</span>
-                              {k.color && (
-                                <KitColorText colorText={language === 'zh' ? k.colorZh || k.color : k.color} className="text-[10px] font-bold" />
-                              )}
-                            </div>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <option value="none">{dict.common.tbd}</option>
+                    {kits?.map((k) => (
+                      <option key={k.id} value={k.id}>
+                        {language === 'zh' ? k.nameZh || k.name : k.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="edit-alternativeKitColors" className="text-xs uppercase tracking-wider">{dict.games.dialog.alternativeKit}</Label>
-                  <Select 
+                  <select 
+                    id="edit-alternativeKitColors"
+                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                     value={formData.alternativeKitColors}
-                    onValueChange={(val) => setFormData({ ...formData, alternativeKitColors: val })}
+                    onChange={(e) => setFormData({ ...formData, alternativeKitColors: e.target.value })}
                   >
-                    <SelectTrigger id="edit-alternativeKitColors" className="h-11">
-                      <SelectValue placeholder="Select alt kit" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="none">{dict.common.tbd}</SelectItem>
-                      {kits?.map((k) => (
-                        <SelectItem key={k.id} value={k.id}>
-                          <div className="flex items-center gap-2">
-                            <Shirt className="h-4 w-4" />
-                            <div className="flex flex-col">
-                              <span className="text-sm font-bold">{language === 'zh' ? k.nameZh || k.name : k.name}</span>
-                              {k.color && (
-                                <KitColorText colorText={language === 'zh' ? k.colorZh || k.color : k.color} className="text-[10px] font-bold" />
-                              )}
-                            </div>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                    <option value="none">{dict.common.tbd}</option>
+                    {kits?.map((k) => (
+                      <option key={k.id} value={k.id}>
+                        {language === 'zh' ? k.nameZh || k.name : k.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div className="grid gap-2">
@@ -1000,7 +951,11 @@ function GameSummaryDialog({
   if (isLoading) {
     return (
       <Dialog open={isOpen} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[500px] flex items-center justify-center py-20">
+        <DialogContent className="sm:max-w-[500px] flex flex-col items-center justify-center py-20">
+          <DialogHeader>
+            <DialogTitle className="sr-only">Loading Summary</DialogTitle>
+            <DialogDescription className="sr-only">Please wait while the attendance summary is loading.</DialogDescription>
+          </DialogHeader>
           <Loader2 className="h-10 w-10 animate-spin text-primary" />
         </DialogContent>
       </Dialog>
@@ -1015,6 +970,7 @@ function GameSummaryDialog({
             <LayoutList className="h-5 w-5" />
             {dict.attendance.summary.title}
           </DialogTitle>
+          <DialogDescription className="sr-only">Detailed breakdown of confirmed players by position.</DialogDescription>
         </DialogHeader>
 
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -1198,6 +1154,7 @@ function GameRosterDialog({
             <Users className="h-5 w-5 text-primary" />
             {dict.attendance.rosterTitle}
           </DialogTitle>
+          <DialogDescription className="sr-only">Management panel for the game roster and guest players.</DialogDescription>
         </DialogHeader>
         
         <div className="flex-1 overflow-y-auto p-6 space-y-8">
