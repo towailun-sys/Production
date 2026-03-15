@@ -5,10 +5,10 @@ import { MainNav } from "@/components/layout/main-nav";
 import { useTranslation } from "@/components/language-provider";
 import { useCollection, useFirestore, useMemoFirebase, useUser } from "@/firebase";
 import { collection, query, orderBy, doc } from "firebase/firestore";
-import { Game, Attendance, Player } from "@/lib/types";
+import { Game, Attendance, Player, Team } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Clock, MapPin, CalendarDays, Banknote, UserRound, History, Loader2, Info, Calendar, Lock } from "lucide-react";
+import { Clock, MapPin, CalendarDays, Banknote, UserRound, History, Loader2, Info, Calendar, Lock, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { KitBadge, GameAttendanceSection } from "@/app/page";
 
@@ -37,6 +37,19 @@ export default function AttendancePage() {
     return collection(firestore, "players");
   }, [firestore]);
   const { data: players } = useCollection<Player>(playersQuery);
+
+  // 4. Get teams to resolve team names
+  const teamsQuery = useMemoFirebase(() => {
+    return collection(firestore, "teams");
+  }, [firestore]);
+  const { data: teams } = useCollection<Team>(teamsQuery);
+
+  const getTeamName = (teamId: string) => {
+    if (teamId === 'All') return dict.common.teams.All;
+    const team = teams?.find(t => t.id === teamId);
+    if (!team) return teamId;
+    return language === 'zh' ? team.nameZh : team.name;
+  };
 
   const confirmedGames = (games || []).filter(game => 
     attendanceRecords?.some(record => record.gameId === game.id && record.status === 'Confirmed')
@@ -78,6 +91,13 @@ export default function AttendancePage() {
                   "bg-muted text-foreground"
                 )}>
                   {dict.common.gameTypes[game.type] || game.type}
+                </Badge>
+                <Badge variant="secondary" className={cn(
+                  "border-none flex gap-1.5 items-center font-bold px-2.5 py-0.5 text-[10px] uppercase tracking-wider",
+                  isOutdated ? "bg-muted-foreground/20 text-muted-foreground" : "bg-primary/10 text-primary"
+                )}>
+                  <Users className="h-3 w-3" />
+                  {getTeamName(game.team)}
                 </Badge>
                 {isOutdated && (
                   <Badge variant="outline" className="bg-muted text-muted-foreground border-none font-bold px-2 py-0.5 text-[10px] uppercase tracking-wider flex items-center gap-1.5">
