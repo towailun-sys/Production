@@ -137,7 +137,7 @@ const baseDict = {
   },
   players: {
     title: "Squad Management",
-    subtitle: "The heart of the club. Browse the full squad directory to see teammate profiles, squad numbers, positions, and current status.",
+    subtitle: "The heart of the club. Browse the full squad directory to see teammate profiles, squad numbers, positions, and current status. ",
     addPlayer: "Add Player",
     manageTeams: "Manage Teams",
     manageKits: "Manage Kits",
