@@ -43,7 +43,7 @@ export function MainNav() {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [isFirstRun, setIsFirstRun] = useState<boolean | null>(null);
+  const [isFirstRunCheck, setIsFirstRunCheck] = useState<boolean | null>(null);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
   const firestore = useFirestore();
@@ -63,13 +63,13 @@ export function MainNav() {
       const playersRef = collection(firestore, "players");
       getDocs(query(playersRef, limit(1)))
         .then(snapshot => {
-          setIsFirstRun(snapshot.empty);
+          setIsFirstRunCheck(snapshot.empty);
         })
         .catch(() => {
-          setIsFirstRun(false);
+          setIsFirstRunCheck(false);
         });
     } else {
-      setIsFirstRun(false);
+      setIsFirstRunCheck(false);
     }
   }, [user, firestore]);
 
@@ -88,8 +88,8 @@ export function MainNav() {
 
   const isUserSuperAdmin = !!user?.email && SUPER_ADMIN_EMAILS.includes(normalizedUserEmail);
   
-  const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || (matchedProfiles !== null && !isMatchedProfilesLoading)) && isFirstRun !== null;
-  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRun === true || isUserSuperAdmin);
+  const isAuthDetermined = !isUserLoading && !isProfileLoading && (!emailMatchQuery || (matchedProfiles !== null && !isMatchedProfilesLoading)) && isFirstRunCheck !== null;
+  const isAuthorized = !!user && (!!currentPlayer || (matchedProfiles && matchedProfiles.length > 0) || isFirstRunCheck === true || isUserSuperAdmin);
   const isAuthChecking = !!user && !isAuthDetermined;
 
   const handleLogin = async () => {

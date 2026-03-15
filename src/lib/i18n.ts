@@ -20,7 +20,7 @@ const baseDict = {
     showAll: "Show All",
     collapse: "Collapse",
     teams: {
-      All: "For all Team"
+      All: "All Team"
     },
     admin: "Admin",
     captain: "Captain",
@@ -137,7 +137,7 @@ const baseDict = {
   },
   players: {
     title: "Squad Management",
-    subtitle: "The heart of the club. Browse the full squad directory to see teammate profiles, squad numbers, positions, and current status. ",
+    subtitle: "The heart of the club. Browse the full squad directory to see teammate profiles, squad numbers, positions, and current status.",
     addPlayer: "Add Player",
     manageTeams: "Manage Teams",
     manageKits: "Manage Kits",
@@ -238,7 +238,7 @@ const baseDict = {
     deploymentNoteDesc: "If the Google Sign-In window does not appear, please ensure your App Hosting domain is added to the \"Authorized Domains\" list in the Firebase Console under Authentication > Settings.",
     toasts: {
       statusUpdated: "Status Updated",
-      statusDesc: (status: string) => `Attendance set to ${status}.`,
+      statusDesc: (status: string) => `Attendance set to ${status === 'Declined' ? 'Declined' : status}.`,
       confirmDesc: "You're in!",
       updateDesc: "Status updated",
       guestAdded: "Guest Added",
