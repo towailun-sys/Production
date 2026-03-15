@@ -278,7 +278,7 @@ export function GameAttendanceSection({
 
   return (
     <div className="mt-6 space-y-4 pt-6 border-t border-dashed">
-      {!readOnly && (
+      {!readOnly && user && (
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <Badge variant={myRecord?.status === 'Confirmed' ? 'default' : 'outline'} className={cn(
@@ -317,6 +317,20 @@ export function GameAttendanceSection({
         ) : (
           <div className="p-4 flex flex-wrap gap-2">
             {confirmedRecords.map((record) => {
+              if (record.isGuest) {
+                return (
+                  <Badge 
+                    key={record.id} 
+                    variant="outline" 
+                    className="h-8 px-3 font-bold bg-white text-foreground border-primary/20 shadow-sm hover:bg-primary/5 transition-colors rounded-lg flex items-center gap-1.5"
+                  >
+                    <UserPlus className="h-3 w-3 text-primary shrink-0" />
+                    <span className="truncate max-w-[120px]">{record.guestName}</span>
+                    <span className="text-[9px] text-muted-foreground font-bold bg-muted px-1 rounded uppercase tracking-tighter">{dict.attendance.guest}</span>
+                  </Badge>
+                );
+              }
+
               const p = allPlayers?.find(player => player.id === record.playerId);
               if (!p) return null;
               
@@ -745,4 +759,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-

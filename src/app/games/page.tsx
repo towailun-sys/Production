@@ -39,7 +39,6 @@ import {
   MapPin, 
   Plus, 
   MoreVertical,
-  ChevronRight,
   ChevronDown,
   ChevronUp,
   Pencil,
@@ -53,14 +52,18 @@ import {
   Banknote,
   History,
   CalendarDays,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  CheckCircle2,
+  XCircle,
+  UserPlus,
+  Crown,
+  Search
 } from "lucide-react";
-import { Game, GameType, Player, Team, Kit } from "@/lib/types";
+import { Game, GameType, Player, Team, Kit, Attendance } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { useCollection, useFirestore, useMemoFirebase, useUser, useDoc } from "@/firebase";
 import { collection, doc, setDoc, deleteDoc, query, orderBy } from "firebase/firestore";
-import Link from "next/link";
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError, type SecurityRuleContext } from '@/firebase/errors';
 import { useTranslation } from "@/components/language-provider";
@@ -74,8 +77,10 @@ export default function GamesPage() {
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isRosterOpen, setIsRosterOpen] = useState(false);
   const [isOutdatedExpanded, setIsOutdatedExpanded] = useState(false);
   const [editingGame, setEditingGame] = useState<Game | null>(null);
+  const [rosterGame, setRosterGame] = useState<Game | null>(null);
 
   const playerRef = useMemoFirebase(() => {
     if (isUserLoading || !user) return null;
@@ -94,6 +99,12 @@ export default function GamesPage() {
     return collection(firestore, "kits");
   }, [firestore, user, isUserLoading]);
   const { data: kits } = useCollection<Kit>(kitsQuery);
+
+  const playersQuery = useMemoFirebase(() => {
+    if (isUserLoading || !user) return null;
+    return collection(firestore, "players");
+  }, [firestore, user, isUserLoading]);
+  const { data: allPlayers } = useCollection<Player>(playersQuery);
 
   const [formData, setFormData] = useState<{
     type: GameType;
@@ -217,6 +228,11 @@ export default function GamesPage() {
     setTimeout(() => {
       setIsEditOpen(true);
     }, 150);
+  };
+
+  const handleViewRoster = (game: Game) => {
+    setRosterGame(game);
+    setIsRosterOpen(true);
   };
 
   const handleUpdateGame = () => {
@@ -416,12 +432,17 @@ export default function GamesPage() {
                     </div>
                   )}
 
-                  {game.additionalDetails && (
-                    <div className="flex items-start gap-2 text-[11px] text-muted-foreground mt-3 bg-muted/20 p-3 rounded-xl border border-dashed">
-                      <Info className="h-3.5 w-3.5 mt-0.5 shrink-0 text-destructive" />
-                      <p className="leading-relaxed whitespace-pre-wrap">{game.additionalDetails}</p>
-                    </div>
-                  )}
+                  <div className="flex flex-wrap gap-3 pt-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleViewRoster(game)}
+                      className="gap-2 font-bold text-xs bg-primary/5 border-primary/20 text-primary hover:bg-primary/10"
+                    >
+                      <Users className="h-3.5 w-3.5" />
+                      {dict.attendance.rosterTitle}
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="flex flex-row md:flex-col items-center gap-3 justify-between md:justify-center border-t md:border-none pt-4 md:pt-0">
@@ -855,7 +876,232 @@ export default function GamesPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {rosterGame && (
+          <GameRosterDialog 
+            game={rosterGame} 
+            players={allPlayers || []} 
+            isOpen={isRosterOpen} 
+            onOpenChange={setIsRosterOpen} 
+          />
+        )}
       </main>
     </div>
+  );
+}
+
+function GameRosterDialog({ 
+  game, 
+  players, 
+  isOpen, 
+  onOpenChange 
+}: { 
+  game: Game; 
+  players: Player[]; 
+  isOpen: boolean; 
+  onOpenChange: (open: boolean) => void;
+}) {
+  const firestore = useFirestore();
+  const { dict } = useTranslation();
+  const { toast } = useToast();
+  const [search, setSearch] = useState("");
+  const [guestName, setGuestName] = useState("");
+
+  const attendanceQuery = useMemoFirebase(() => {
+    return collection(firestore, "games", game.id, "attendanceRecords");
+  }, [firestore, game.id]);
+  const { data: attendanceRecords } = useCollection<Attendance>(attendanceQuery);
+
+  const filteredPlayers = players.filter(p => 
+    p.name.toLowerCase().includes(search.toLowerCase()) || 
+    p.nickname?.toLowerCase().includes(search.toLowerCase()) ||
+    p.number?.toString().includes(search)
+  );
+
+  const handleUpdateStatus = (playerId: string, status: 'Confirmed' | 'Declined' | 'Pending') => {
+    const recordRef = doc(firestore, "games", game.id, "attendanceRecords", playerId);
+    const userRecordRef = doc(firestore, "users", playerId, "game_attendances", game.id);
+
+    const data = {
+      id: playerId,
+      gameId: game.id,
+      playerId: playerId,
+      status: status,
+      lastUpdated: new Date().toISOString()
+    };
+
+    if (status === 'Pending') {
+      deleteDoc(recordRef);
+      deleteDoc(userRecordRef);
+      toast({ title: "Status Reset", description: "Attendance status cleared." });
+    } else {
+      setDoc(recordRef, data, { merge: true });
+      setDoc(userRecordRef, data, { merge: true });
+      toast({ title: "Status Updated", description: `Player marked as ${status}.` });
+    }
+  };
+
+  const handleAddGuest = () => {
+    if (!guestName.trim()) return;
+    const guestId = `guest-${Math.random().toString(36).substring(2, 9)}`;
+    const recordRef = doc(firestore, "games", game.id, "attendanceRecords", guestId);
+
+    const data = {
+      id: guestId,
+      gameId: game.id,
+      playerId: guestId,
+      status: 'Confirmed' as const,
+      isGuest: true,
+      guestName: guestName.trim(),
+      lastUpdated: new Date().toISOString()
+    };
+
+    setDoc(recordRef, data);
+    setGuestName("");
+    toast({ title: dict.attendance.toasts.guestAdded, description: dict.attendance.toasts.guestAddedDesc });
+  };
+
+  const handleDeleteGuest = (guestId: string) => {
+    deleteDoc(doc(firestore, "games", game.id, "attendanceRecords", guestId));
+    toast({ title: "Guest Removed" });
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px] max-h-[85vh] flex flex-col p-0 overflow-hidden rounded-2xl">
+        <DialogHeader className="p-6 border-b">
+          <DialogTitle className="font-headline flex items-center gap-3">
+            <Users className="h-5 w-5 text-primary" />
+            {dict.attendance.rosterTitle}
+          </DialogTitle>
+        </DialogHeader>
+        
+        <div className="flex-1 overflow-y-auto p-6 space-y-8">
+          {/* Guest Addition */}
+          <section className="space-y-4">
+            <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+              <UserPlus className="h-3.5 w-3.5" />
+              {dict.attendance.addGuest}
+            </h4>
+            <div className="flex gap-2">
+              <Input 
+                placeholder={dict.attendance.guestName} 
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+                className="h-11"
+              />
+              <Button onClick={handleAddGuest} className="bg-primary font-bold h-11 px-6 shrink-0">
+                <Plus className="h-4 w-4 mr-2" />
+                {dict.common.join}
+              </Button>
+            </div>
+          </section>
+
+          {/* Player Management */}
+          <section className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <Users className="h-3.5 w-3.5" />
+                {dict.players.title}
+              </h4>
+              <div className="relative max-w-[200px] w-full">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input 
+                  placeholder="Search..." 
+                  className="pl-8 h-8 text-xs bg-muted/30 border-none"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              {filteredPlayers.map((player) => {
+                const record = attendanceRecords?.find(r => r.playerId === player.id);
+                const status = record?.status || 'Pending';
+                
+                return (
+                  <div key={player.id} className="flex items-center justify-between p-3 border rounded-xl hover:bg-muted/10 transition-colors">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-9 w-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-primary/5">
+                        {player.number || player.name[0]}
+                      </div>
+                      <div className="flex flex-col min-w-0">
+                        <div className="font-bold text-sm truncate flex items-center gap-1.5">
+                          {player.name}
+                          {player.isCaptain && <Crown className="h-3 w-3 text-accent" />}
+                        </div>
+                        {player.nickname && <span className="text-[10px] text-muted-foreground">"{player.nickname}"</span>}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <Button 
+                        variant={status === 'Confirmed' ? 'default' : 'outline'} 
+                        size="sm"
+                        className={cn(
+                          "h-8 px-2.5 rounded-lg text-[10px] font-bold",
+                          status === 'Confirmed' ? "bg-primary text-white" : "text-muted-foreground"
+                        )}
+                        onClick={() => handleUpdateStatus(player.id, status === 'Confirmed' ? 'Pending' : 'Confirmed')}
+                      >
+                        <CheckCircle2 className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button 
+                        variant={status === 'Declined' ? 'destructive' : 'outline'} 
+                        size="sm"
+                        className={cn(
+                          "h-8 px-2.5 rounded-lg text-[10px] font-bold",
+                          status === 'Declined' ? "bg-destructive text-white" : "text-muted-foreground"
+                        )}
+                        onClick={() => handleUpdateStatus(player.id, status === 'Declined' ? 'Pending' : 'Declined')}
+                      >
+                        <XCircle className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+
+          {/* Guests List */}
+          {attendanceRecords?.some(r => r.isGuest) && (
+            <section className="space-y-4">
+              <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                <UserPlus className="h-3.5 w-3.5" />
+                {dict.attendance.guest}
+              </h4>
+              <div className="space-y-2">
+                {attendanceRecords.filter(r => r.isGuest).map((guest) => (
+                  <div key={guest.id} className="flex items-center justify-between p-3 border border-dashed rounded-xl bg-primary/5">
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-full bg-primary/20 text-primary flex items-center justify-center font-bold text-xs">
+                        G
+                      </div>
+                      <span className="font-bold text-sm">{guest.guestName}</span>
+                    </div>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-destructive hover:bg-destructive/10 rounded-lg"
+                      onClick={() => handleDeleteGuest(guest.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+        
+        <DialogFooter className="p-6 border-t">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full font-bold h-11">
+            {dict.common.collapse}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
