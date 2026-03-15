@@ -568,12 +568,8 @@ export default function DashboardPage() {
 
   const welcomeName = currentPlayer?.nickname || currentPlayer?.name || user?.displayName || dict.common.player;
   
-  // FILTERING LOGIC:
-  // Shows games the signed-in player can join (matches their teams or 'All').
-  // This applies to everyone, including Admins on the dashboard.
   const filteredGames = (upcomingGames || []).filter(game => {
     if (!currentPlayer) return false;
-    // Show games for 'All' teams or games matching the user's specific teams
     return game.team === 'All' || (currentPlayer.teams && currentPlayer.teams.includes(game.team));
   });
 
@@ -675,7 +671,7 @@ export default function DashboardPage() {
                     <h2 className="text-xl md:text-2xl font-headline flex items-center gap-2">
                       <Calendar className="h-6 w-6 text-primary" />{dict.nav.dashboard}
                       <Badge variant="outline" className="hidden sm:inline-flex ml-2 bg-primary/10 text-primary border-primary/20 font-bold">
-                        {currentPlayer.isAdmin ? dict.dashboard.fullAccess : dict.dashboard.teamView(currentPlayer.teams?.length ? currentPlayer.teams?.map(getTeamName).join(', ') : dict.dashboard.noTeam)}
+                        {dict.dashboard.teamView(currentPlayer.teams?.length ? currentPlayer.teams?.map(getTeamName).join(', ') : dict.dashboard.noTeam)}
                       </Badge>
                     </h2>
                   </div>
