@@ -57,7 +57,8 @@ import {
   XCircle,
   UserPlus,
   Crown,
-  Search
+  Search,
+  RotateCcw
 } from "lucide-react";
 import { Game, GameType, Player, Team, Kit, Attendance } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -933,11 +934,17 @@ function GameRosterDialog({
     if (status === 'Pending') {
       deleteDoc(recordRef);
       deleteDoc(userRecordRef);
-      toast({ title: "Status Reset", description: "Attendance status cleared." });
+      toast({ 
+        title: dict.attendance.toasts.statusUpdated, 
+        description: dict.common.pending 
+      });
     } else {
       setDoc(recordRef, data, { merge: true });
       setDoc(userRecordRef, data, { merge: true });
-      toast({ title: "Status Updated", description: `Player marked as ${status}.` });
+      toast({ 
+        title: dict.attendance.toasts.statusUpdated, 
+        description: dict.attendance.toasts.statusDesc(status) 
+      });
     }
   };
 
@@ -1039,24 +1046,38 @@ function GameRosterDialog({
                       <Button 
                         variant={status === 'Confirmed' ? 'default' : 'outline'} 
                         size="sm"
+                        title={dict.common.confirm}
                         className={cn(
                           "h-8 px-2.5 rounded-lg text-[10px] font-bold",
                           status === 'Confirmed' ? "bg-primary text-white" : "text-muted-foreground"
                         )}
-                        onClick={() => handleUpdateStatus(player.id, status === 'Confirmed' ? 'Pending' : 'Confirmed')}
+                        onClick={() => handleUpdateStatus(player.id, 'Confirmed')}
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" />
                       </Button>
                       <Button 
                         variant={status === 'Declined' ? 'destructive' : 'outline'} 
                         size="sm"
+                        title={dict.common.decline}
                         className={cn(
                           "h-8 px-2.5 rounded-lg text-[10px] font-bold",
                           status === 'Declined' ? "bg-destructive text-white" : "text-muted-foreground"
                         )}
-                        onClick={() => handleUpdateStatus(player.id, status === 'Declined' ? 'Pending' : 'Declined')}
+                        onClick={() => handleUpdateStatus(player.id, 'Declined')}
                       >
                         <XCircle className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button 
+                        variant={status === 'Pending' ? 'secondary' : 'outline'} 
+                        size="sm"
+                        title={dict.common.pending}
+                        className={cn(
+                          "h-8 px-2.5 rounded-lg text-[10px] font-bold",
+                          status === 'Pending' ? "bg-muted-foreground/30 text-foreground" : "text-muted-foreground"
+                        )}
+                        onClick={() => handleUpdateStatus(player.id, 'Pending')}
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" />
                       </Button>
                     </div>
                   </div>
